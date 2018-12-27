@@ -264,7 +264,7 @@ CollisionInfo CollideSph2Sph(Object3Dsphere * sph1, Object3Dsphere * sph2, bool 
 
 // --------------------------------------------------------------------------------------
 
-CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool autoDeal)
+CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool autoDeal, bool isStuckY)
 {
 
 	CollisionInfo cInfo;
@@ -280,7 +280,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	glm::vec3 cubeX = glm::vec3(cube->GetRotationMatrix() * glm::vec4(1.0f, 0.0f, 0.0f, 0.0f));		// width direction
 	glm::vec3 cubeY = glm::vec3(cube->GetRotationMatrix() * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));		// height direction
 	glm::vec3 cubeZ = glm::vec3(cube->GetRotationMatrix() * glm::vec4(0.0f, 0.0f, 1.0f, 0.0f));		// depth direction
-	
+
 	// normalize them to be the x, y, z unit vector
 
 	glm::vec3 cubeXNorm = glm::normalize(cubeX);
@@ -323,7 +323,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	// --------------
 	// detect collide
 
-	glm::vec3 closest2Sph = pSph - closestWC; 
+	glm::vec3 closest2Sph = pSph - closestWC;
 	float dis = vecMod(closest2Sph);
 	if (dis > rSph)
 	{
@@ -351,7 +351,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	//}
 
 	// determine which face is colliding
-	
+
 	CubeFace collideFace;
 	glm::vec3 xStar;																		// #NOTE xStar: sphere center to the collide point vector in WC
 	if (closestLC.x == halfW) {
@@ -472,7 +472,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 
 	glm::vec3 v1_after = v1_xstar_prime * xStar + v1_subxstar;
 	glm::vec3 v2_after = v2_xstar_prime * xStar + v2_subxstar;
-	
+
 
 	if (v12touch_yzstar == glm::vec3(0)/* || I_xstar_abs == 0*/)			// #INNORMAL when I_xstar_abs == 0, maybe a static friction
 	{
@@ -481,6 +481,8 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 		cInfo.v1After = v1_after;
 		cInfo.v2After = v2_after;
 		cInfo.angularImpulse1 = cInfo.angularImpulse2 = glm::vec3(0);
+
+		if (isStuckY) cInfo.v1After.y = cInfo.v2After.y = 0;
 
 		if (autoDeal)
 		{
@@ -500,15 +502,15 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 
 	if (fsType == CollisionFreeStuckType::BothFree)
 	{
-		m_equivalent = 1 / (((rSph * rSph) / (I1) + 1 / m1) + ((r2_abs * r2_abs) / (I2 * I2) + 1 / m2));
+		m_equivalent = 1 / (((rSph * rSph) / (I1)+1 / m1) + ((r2_abs * r2_abs) / (I2 * I2) + 1 / m2));
 	}
 	else if (fsType == CollisionFreeStuckType::Stuck1st)
 	{
-		m_equivalent = 1 / ((r2_abs * r2_abs) / (I2) + 1 / m2);
+		m_equivalent = 1 / ((r2_abs * r2_abs) / (I2)+1 / m2);
 	}
 	else if (fsType == CollisionFreeStuckType::Stuck2nd)
 	{
-		m_equivalent = 1 / ((rSph * rSph) / (I1) + 1 / m1);
+		m_equivalent = 1 / ((rSph * rSph) / (I1)+1 / m1);
 	}
 
 	float I_yzstar_abs = std::min(0.5f * (f1 + f2) * I_xstar_abs, vecMod(v12touch_yzstar) * m_equivalent);		// #INNORMAL when rotate on the desk, the left one would be very small!!
@@ -533,22 +535,22 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 			force_N_abs = std::max(0.0f, glm::dot(sphere->GetForce(), xStar));
 			//force_N_abs = vecMod(sphere->GetForce());
 		}
-		
+
 		I_yzstar_abs = std::min(force_N_abs * deltaTime, vecMod(v12touch_yzstar) * m_equivalent);
 		//printf("I_yzstar_abs: %.4f\n", I_yzstar_abs);
 	}
 
 
 	// --(2)--
-	glm::vec3 v12_yzstar_norm = ((vecMod(v12touch_yzstar) < 0.0001f ) ? glm::vec3(0) : glm::normalize(v12touch_yzstar)), v21_yzstar_norm = -v12_yzstar_norm;
+	glm::vec3 v12_yzstar_norm = ((vecMod(v12touch_yzstar) < 0.0001f) ? glm::vec3(0) : glm::normalize(v12touch_yzstar)), v21_yzstar_norm = -v12_yzstar_norm;
 	// --(3)--
 	glm::vec3 delta_L1(0), delta_L2(0);
 
 	//if (I_yzstar_abs != 0) printf("I_yzstar_abs = %.4f\n", I_yzstar_abs);
 	glm::vec3 delta_L1WC = I_yzstar_abs == 0 ? glm::vec3(0) : glm::cross(r1, I_yzstar_abs * v21_yzstar_norm);
-	printVec3("delta_L1WC#1", delta_L1WC);
+	//printVec3("delta_L1WC#1", delta_L1WC);
 	delta_L1 == glm::vec3(glm::inverse(sphere->GetModelMatrix()) * glm::vec4(delta_L1WC, 0.0f));
-	printVec3("delta_L1#1", delta_L1);
+	//printVec3("delta_L1#1", delta_L1);
 	// #INNORMAL when rotate on the desk, it's too small
 
 	glm::vec3 delta_L2WC = glm::cross(r2, I_yzstar_abs * v12_yzstar_norm + I12_xstar);
@@ -580,9 +582,10 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	v1_after += delta_v1;
 	v2_after += delta_v2;
 
-
 	cInfo.v1After = v1_after;
 	cInfo.v2After = v2_after;
+
+	if (isStuckY) cInfo.v1After.y = cInfo.v2After.y = 0;
 
 	if (autoDeal)
 	{
@@ -595,7 +598,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 
 // --------------------------------------------------------------------------------------
 
-void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal)
+void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal, bool isStuckY)
 {
 	std::vector<Object3Dsphere*>::iterator sph_it = spheres.begin();
 	std::vector<Object3Dcube*>::iterator cube_it = cubes.begin();
@@ -603,7 +606,7 @@ void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3D
 	for (/*sph_it = spheres.begin()*/; sph_it < spheres.end(); sph_it++)
 	{
 		for (cube_it = cubes.begin(); cube_it < cubes.end(); cube_it++)
-			CollideSph2Cube(*sph_it, *cube_it, true);
+			CollideSph2Cube(*sph_it, *cube_it, autoDeal, isStuckY);
 	}
 
 }
@@ -661,10 +664,10 @@ void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground)
 
 	if (p_sph.x > x_wall_pos || p_sph.x < x_wall_neg || p_sph.z > z_wall_pos || p_sph.z < z_wall_neg || p_sph.y - r_sph > y_surface + 5)
 	{
-		printf("#1\n");
+		//printf("#1\n");
 		return;
 	}
-	printf("#2\n");
+	//printf("#2\n");
 
 
 	// ---------------------------------------------------
@@ -682,8 +685,8 @@ void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground)
 		//printf("|v_sph_y| - |g_y * deltaTime * 2.0f| = %.4f\n", abs(v_sph.y) - abs(g_y * deltaTime * 2.0f));
 		if (abs(v_sph.y) > abs(g_y * deltaTime * 1.0f))
 		{
-			printf("#3\n");
-			CollideSph2Cube(sphere, ground, true);
+			//printf("#3\n");
+			CollideSph2Cube(sphere, ground, true, false);
 			return;
 		}
 
@@ -693,7 +696,7 @@ void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground)
 
 		if (vecMod(v_sph) < 0.01f)
 		{
-			printf("#4\n");
+			//printf("#4\n");
 			sphere->SetStatic();
 			sphere->SetPosition(glm::vec3(p_sph.x, y_surface + r_sph, p_sph.z));
 			return;
@@ -714,7 +717,7 @@ void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground)
 		// if slow enough, stop it
 		if (vecMod(delta_v_sph) > vecMod(v_sph))			// #NOTE the sign has been got wrong.. wtf!!
 		{
-			printf("#5\n");
+			//printf("#5\n");
 			sphere->SetStatic();
 			sphere->SetPosition(glm::vec3(p_sph.x, y_surface + r_sph, p_sph.z));
 			return;
@@ -722,7 +725,7 @@ void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground)
 
 		// else slow it
 
-		printf("#6\n");
+		//printf("#6\n");
 		sphere->AddVelocity(glm::vec3(delta_v_sph.x, -v_sph.y, delta_v_sph.z));
 		printVec3(sphere->GetVelocity());
 		sphere->SetPosition(glm::vec3(p_sph.x, y_surface + r_sph, p_sph.z));
@@ -1524,8 +1527,9 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, boo
 	v1_after.y = 0;
 
 	cInfo.v1After = v1_after;
+	cInfo.v1After.y = 0;
 	cInfo.v2After = v2_after;
-
+	cInfo.v2After.y = 0;
 
 	// --------------
 	// deal collision

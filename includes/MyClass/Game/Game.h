@@ -18,6 +18,7 @@
 #include <MyClass/Object/Object3Dcylinder.h>
 #include <MyClass/Object/Object3Dsphere.h>
 #include <MyClass/Object/Collision.h>
+#include <MyClass/Object/ParticleGenerator.h>
 
 
 enum GameState {
@@ -44,13 +45,14 @@ class Game
         void ProcessInput();
         void Update(float dt);
         void Render();
+        Camera *GameCamera;
 
 
     private:
         // Camera
-        Camera *gameCamera;
         // Shader
         Shader *gameShader;
+		Shader *particleShader;
         // Balls
         std::vector<Object3Dsphere*> gameBalls;
 		// Players
@@ -58,6 +60,7 @@ class Game
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 
+		ParticleGenerator* particleGenerator;
 
 };
 

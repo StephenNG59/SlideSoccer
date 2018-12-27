@@ -12,7 +12,7 @@
 void Object3Dsphere::calcOmega()
 {
 	glm::vec3 L = angularMomentum;
-	printf("calculating omega using %.2f, %.2f, %.2f\n", angularMomentum.x, angularMomentum.y, angularMomentum.z);
+	//printf("calculating omega using %.2f, %.2f, %.2f\n", angularMomentum.x, angularMomentum.y, angularMomentum.z);
 
 	omega = L / inertiaMoment;
 }

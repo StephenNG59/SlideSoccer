@@ -17,6 +17,9 @@ float currentTime = 0;
 // Light
 float lightRadius = 5.0f;
 
+// Sensitivity
+extern float keySensitivity;
+
 
 Game::Game(unsigned int Width, unsigned int Height) 
     : State(GAME_ACTIVE), Keys(), Width(Width), Height(Height)
@@ -29,16 +32,18 @@ Game::~Game()
 
 }
 
+
 void Game::Init()
 {
     // build and compile our shader program
 	// ------------------------------------
     gameShader = new Shader("shaders/test/colorsVS.glsl", "shaders/test/colorsFS.glsl");
+	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
 
 
 	// ------------------------------------
-    gameCamera = new Camera(glm::vec3(0.0f, 5.0f, 30.0f), glm::vec3(0, -5.0f, 0));
-    gameCamera->SetPerspective(glm::radians(45.0f), (float)Width / (float)Height, 0.1f, 100.0f);
+    GameCamera = new Camera(glm::vec3(0.0f, 5.0f, 30.0f), glm::vec3(0, -5.0f, 0));
+    GameCamera->SetPerspective(glm::radians(45.0f), (float)Width / (float)Height, 0.1f, 100.0f);
 
 	// -- Objects --
 
@@ -60,13 +65,13 @@ void Game::Init()
 	wall_s.SetMass(0);
 	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, 0.5f * groundDepth));
 
-	gameBalls.push_back(new Object3Dsphere(0.4f, 20, 16));
+	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
 	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
-	gameBalls[0]->SetPosition(glm::vec3(0, -4.8, 0));
+	gameBalls[0]->SetPosition(glm::vec3(0, -4.6, 0));
 	gameBalls[0]->SetERestitution(0.5f);
 	gameBalls[0]->SetGravity(glm::vec3(0));
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
 		gamePlayers[i]->SetPosition(glm::vec3(i * 3 - 12, -4.8, i * 2 - 9));
@@ -77,6 +82,8 @@ void Game::Init()
 		gamePlayers[i]->SetGravity(glm::vec3(0, 0, 0));
 		gamePlayers[i]->SetERestitution(1.0f);
 	}
+	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
+	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 
 
 	gameWalls.push_back(&wall_e);
@@ -94,14 +101,16 @@ void Game::Init()
 	gameShader->setFloat("pointLights[0].quadratic", 0.032);
 	//gameShader->setFloat("pointLights[0].quadratic", 0.0019);
 
+	particleGenerator = new ParticleGenerator(particleShader, GameCamera, 500);
 }
+
 
 void Game::Update(float dt)
 {
     //CollideSph2Cube(gameBalls, gameTables, true);
 	CollideSph2Ground(gameBalls, &ground);
 	//CollideSph2Sph(gameBalls, true);
-	CollideSph2Cube(gameBalls, gameWalls, true);
+	CollideSph2Cube(gameBalls, gameWalls, true, true);
 	CollideSph2Sph(gamePlayers, true);
 	CollideSph2Wall(gamePlayers, gameWalls, true);
 	CollideSph2Sph(gamePlayers, gameBalls, true);
@@ -127,7 +136,7 @@ void Game::Update(float dt)
 	currentTime += dt;
 
 	glm::vec3 lightPos = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
-	gameShader->setVec3("viewPos", gameCamera->GetPosition());
+	gameShader->setVec3("viewPos", GameCamera->GetPosition());
 	gameShader->setVec3("pointLights[0].position", lightPos); 
 
 	// light properties
@@ -141,21 +150,63 @@ void Game::Update(float dt)
 	gameShader->setVec3("pointLights[0].diffuse", diffuseColor);
 	gameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
 
+	particleGenerator->Update(dt, *gamePlayers[0], 2);
 }
+
 
 void Game::Render()
 {
 	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
 	{
-		(*it)->Draw(*gameCamera, *gameShader);
+		(*it)->Draw(*GameCamera, *gameShader);
 	}
     for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
     {
-        (*it)->Draw(*gameCamera, *gameShader);
+        (*it)->Draw(*GameCamera, *gameShader);
     }
 	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
 	{
-		(*it)->Draw(*gameCamera, *gameShader);
+		(*it)->Draw(*GameCamera, *gameShader);
 	}
-	ground.Draw(*gameCamera, *gameShader);
+	ground.Draw(*GameCamera, *gameShader);
+
+	particleGenerator->Draw();
+}
+
+
+void Game::ProcessInput()
+{
+	if (this->Keys[GLFW_KEY_UP])
+	{
+		this->gamePlayers[0]->SetVelocity(glm::vec3(0, 0, -2.0f));
+	}
+	if (this->Keys[GLFW_KEY_DOWN])
+	{
+		this->gamePlayers[0]->SetVelocity(glm::vec3(0, 0, 2.0f));
+	}
+	if (this->Keys[GLFW_KEY_J])
+	{
+		this->gamePlayers[0]->AddOmega(glm::vec3(0, 0.2f, 0));
+	}
+	if (this->Keys[GLFW_KEY_K])
+	{
+		this->gamePlayers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
+	}
+
+	if (this->Keys[GLFW_KEY_W])
+	{
+		GameCamera->RotateDownByDegree(-keySensitivity);
+	}
+	if (this->Keys[GLFW_KEY_S])
+	{
+		GameCamera->RotateDownByDegree(keySensitivity);
+	}
+	if (this->Keys[GLFW_KEY_A])
+	{
+		GameCamera->RotateRightByDegree(-keySensitivity);
+	}
+	if (this->Keys[GLFW_KEY_D])
+	{
+		GameCamera->RotateRightByDegree(keySensitivity);
+	}
 }

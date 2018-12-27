@@ -53,5 +53,12 @@
     <ClCompile Include="src\pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\includes\MyClass\Object\ParticleGenerator.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\particle\fs.glsl" />
+    <None Include="shaders\particle\vs.glsl" />
   </ItemGroup>
 </Project>

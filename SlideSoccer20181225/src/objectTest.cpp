@@ -18,9 +18,10 @@
 
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processInput(GLFWwindow *window);
+//void processInput(GLFWwindow *window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -43,6 +44,9 @@ float collideDelta = 0.0f;
 const float collideCD = 0.02f;
 bool collideCDing = false;
 
+
+// Game
+Game myGame(SCR_WIDTH, SCR_HEIGHT);
 // lighting
 //glm::vec3 lightPos;
 //float lightRadius = 4.0f;
@@ -87,11 +91,18 @@ int main()
 	std::cout << glGetString(GL_VERSION) << std::endl;
 
 
+	// register callback function
+	// --------------------------
+	glfwSetKeyCallback(window, key_callback);
+
+
 	// configure global opengl state
 	// -----------------------------
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
 
-	Game myGame(SCR_WIDTH, SCR_HEIGHT);
+	// game initialization
+	// -------------------
 	myGame.Init();
 
 	//// build and compile our shader program
@@ -210,7 +221,7 @@ int main()
 
 		// input
 		// -----
-		// processInput(window);
+		//processInput(window);
 
 		// render
 		// ------
@@ -270,6 +281,7 @@ int main()
 		wall_e.Draw(camera, lightingShader);*/
 
 
+		myGame.ProcessInput();
 		myGame.Update(deltaTime);
 		myGame.Render();
 
@@ -286,44 +298,6 @@ int main()
 	return 0;
 }
 
-// process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
-// ---------------------------------------------------------------------------------------------------------
-void processInput(GLFWwindow *window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-	{
-		camera.RotateDownByDegree(-keySensitivity);
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-	{
-		camera.RotateDownByDegree(keySensitivity);
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-	{
-		camera.RotateRightByDegree(keySensitivity);
-	}
-
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-	{
-		camera.RotateRightByDegree(-keySensitivity);
-	}
-
-	//if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
-	//{
-	//	if (vecMod(ball.GetForce()) < 5.0f)
-	//		ball.AddForce(glm::vec3(0.0f, 0.0f, -0.05f));
-	//}
-	//if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
-	//{
-	//	if (vecMod(ball.GetForce()) < 5.0f)
-	//		ball.AddForce(glm::vec3(0.0f, 0.0f, 0.05f));
-	//}
-}
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
@@ -351,8 +325,8 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = xpos;
 	lastY = ypos;
 
-	camera.OrientLeftByDegree(-xoffset * mouseSensitivity);
-	camera.OrientUpByDegree(yoffset * mouseSensitivity);
+	myGame.GameCamera->OrientLeftByDegree(-xoffset * mouseSensitivity);
+	myGame.GameCamera->OrientUpByDegree(yoffset * mouseSensitivity);
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
@@ -361,4 +335,18 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	camera.GoForward(scrollSensitivity * yoffset);
 	//camera.Fov += scrollSensitivity * yoffset;
+}
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
+{
+	// When a user presses the escape key, we set the WindowShouldClose property to true, closing the application
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GL_TRUE);
+	if (key >= 0 && key < 1024)
+	{
+		if (action == GLFW_PRESS)
+			myGame.Keys[key] = GL_TRUE;
+		else if (action == GLFW_RELEASE)
+			myGame.Keys[key] = GL_FALSE;
+	}
 }
