@@ -67,20 +67,22 @@ void Game::Init()
 
 	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
 	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
-	gameBalls[0]->SetPosition(glm::vec3(0, -4.6, 0));
+	gameBalls[0]->SetPosition(glm::vec3(0, -4.8, 0));
 	gameBalls[0]->SetERestitution(0.5f);
 	gameBalls[0]->SetGravity(glm::vec3(0));
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
 		gamePlayers[i]->SetPosition(glm::vec3(i * 3 - 12, -4.8, i * 2 - 9));
 		gamePlayers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 		gamePlayers[i]->SetFriction(1.0f);
-		gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20));
+		gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
 		gamePlayers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
 		gamePlayers[i]->SetGravity(glm::vec3(0, 0, 0));
 		gamePlayers[i]->SetERestitution(1.0f);
+		gamePlayers[i]->SetLinearFriction(0.25f);
+		gamePlayers[i]->SetConstantFriction(5);
 	}
 	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
 	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
@@ -107,17 +109,12 @@ void Game::Init()
 
 void Game::Update(float dt)
 {
-    //CollideSph2Cube(gameBalls, gameTables, true);
-	CollideSph2Ground(gameBalls, &ground);
-	//CollideSph2Sph(gameBalls, true);
+	//CollideSph2Ground(gameBalls, &ground);
 	CollideSph2Cube(gameBalls, gameWalls, true, true);
 	CollideSph2Sph(gamePlayers, true);
 	CollideSph2Wall(gamePlayers, gameWalls, true);
 	CollideSph2Sph(gamePlayers, gameBalls, true);
-	//CollideSph2Wall(gamePlayers[0], gameWalls[0], true);
-	//CollideSph2Wall(gamePlayers[0], gameWalls[1], true);
-	//CollideSph2Wall(gamePlayers[0], gameWalls[2], true);
-	//CollideSph2Wall(gamePlayers[0], gameWalls[3], true);
+
 
     for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
     {
@@ -135,6 +132,7 @@ void Game::Update(float dt)
 	// Light update
 	currentTime += dt;
 
+	gameShader->use();
 	glm::vec3 lightPos = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
 	gameShader->setVec3("viewPos", GameCamera->GetPosition());
 	gameShader->setVec3("pointLights[0].position", lightPos); 
@@ -174,15 +172,23 @@ void Game::Render()
 }
 
 
-void Game::ProcessInput()
+void Game::ProcessInput(float dt)
 {
 	if (this->Keys[GLFW_KEY_UP])
 	{
-		this->gamePlayers[0]->SetVelocity(glm::vec3(0, 0, -2.0f));
+		this->gamePlayers[0]->AddVelocity(glm::vec3(0, 0, -25.0f) * dt);
 	}
 	if (this->Keys[GLFW_KEY_DOWN])
 	{
-		this->gamePlayers[0]->SetVelocity(glm::vec3(0, 0, 2.0f));
+		this->gamePlayers[0]->AddVelocity(glm::vec3(0, 0, 25.0f) * dt);
+	}
+	if (this->Keys[GLFW_KEY_LEFT])
+	{
+		this->gamePlayers[0]->AddVelocity(glm::vec3(-25.0f, 0, 0) * dt);
+	}
+	if (this->Keys[GLFW_KEY_RIGHT])
+	{
+		this->gamePlayers[0]->AddVelocity(glm::vec3(25.0f, 0, 0) * dt);
 	}
 	if (this->Keys[GLFW_KEY_J])
 	{

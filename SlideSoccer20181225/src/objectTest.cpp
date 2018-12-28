@@ -281,7 +281,7 @@ int main()
 		wall_e.Draw(camera, lightingShader);*/
 
 
-		myGame.ProcessInput();
+		myGame.ProcessInput(deltaTime);
 		myGame.Update(deltaTime);
 		myGame.Render();
 

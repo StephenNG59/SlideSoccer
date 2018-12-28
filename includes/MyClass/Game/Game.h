@@ -42,8 +42,8 @@ class Game
         // Initialization
         void Init();
         // Gameloop
-        void ProcessInput();
-        void Update(float dt);
+		void ProcessInput(float dt);
+		void Update(float dt);
         void Render();
         Camera *GameCamera;
 

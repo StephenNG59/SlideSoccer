@@ -169,6 +169,8 @@ class Object3D
 		glm::vec3 acceleration = glm::vec3(0);
 
 		float air_resistance_factor = 0;
+		float constant_friction = 0;
+		float linear_friction = 0;
 
 		void calcAcceleration();
 		virtual void calcInertiaMoment();
@@ -218,6 +220,11 @@ class Object3D
 		float GetAirResistanceFactor();
 		void SetAirResistanceFactor(float aff);
 		virtual glm::vec3 calcAirResistAcc();
+
+		float GetConstantFriction();
+		void SetConstantFriction(float f);
+		float GetLinearFriction();
+		void SetLinearFriction(float f);
 
 
 // -- Helpers --

@@ -147,15 +147,19 @@ void Object3D::UpdatePhysics(float deltaTime)
 	//}
 		//printVec3(acceleration);
 	glm::vec3 airResistAcc = calcAirResistAcc();
-	//printVec3("airresist", airResistAcc);
 	velocity += (acceleration + airResistAcc) * deltaTime;
-	//printVec3("positionbefore", position);
+	if (vecMod(velocity) > 0.00001f)
+	{
+		glm::vec3 v_dir = glm::normalize(velocity);
+		velocity = glm::clamp(velocity, glm::vec3(0), velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime);
+	}
+	else if (constant_friction > 0 || linear_friction > 0)
+	{
+		velocity = glm::vec3(0);
+	}
 	position += velocity * deltaTime;
-	//printVec3("velocit", velocity);
-	//printVec3("positionafter", position);
-	//omega = velocity;
 
-	//// angular velocity
+	// angular velocity
 	glm::vec3 airResistAngularAcc(0);
 	float omegaAbsValue = vecMod(omega);
 	if (omegaAbsValue != 0)
@@ -165,14 +169,11 @@ void Object3D::UpdatePhysics(float deltaTime)
 			airResistAngularAcc = calcAirResistAngularAcc();
 		}
 		AddOmega(airResistAngularAcc * deltaTime);
-	//	omega += airResistAngularAcc * deltaTime;
 		rotationMatrix = glm::rotate(rotationMatrix, omegaAbsValue * deltaTime, omega);
 	}
 
 	calcModelMatrix();
-	//// update model matrix
-	//modelMatrix = glm::translate(modelMatrix, deltaPos);
-	//modelMatrix = rotationMatrix;
+
 }
 
 
@@ -334,6 +335,26 @@ glm::vec3 Object3D::calcAirResistAcc()
 		else
 			return (-velocity * air_resistance_factor / mass * 5.0f);
 	else return glm::vec3(0);
+}
+
+float Object3D::GetConstantFriction()
+{
+	return constant_friction;
+}
+
+void Object3D::SetConstantFriction(float f)
+{
+	constant_friction = f;
+}
+
+float Object3D::GetLinearFriction()
+{
+	return linear_friction;
+}
+
+void Object3D::SetLinearFriction(float f)
+{
+	linear_friction = f;
 }
 
 // #NOTE now the angular air friction in the air is the same as on the desk, which will look weird!
