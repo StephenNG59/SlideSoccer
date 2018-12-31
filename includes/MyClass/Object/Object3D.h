@@ -11,6 +11,7 @@
 
 #include <MyClass/Shader/shader.h>
 #include <MyClass/camera.h>
+#include <MyClass/model.h>
 
 
 enum ObjectShapeType
@@ -84,6 +85,18 @@ class Object3D
 		std::vector<float> verticeUVs;
 		std::vector<unsigned int> indices;
 		unsigned int VBO, VAO, EBO;
+
+
+// -- Model --
+
+	protected:
+
+		Model * objectModel;
+
+	public:
+
+		bool UseModel = false;
+		void AddModel(const char* path);
 
 
 // -- Model matrix --

@@ -30,6 +30,15 @@ ObjectShapeType Object3D::GetType()
 }
 
 
+// -- Model --
+
+void Object3D::AddModel(const char* path)
+{
+	objectModel = new Model(path);
+	UseModel = true;
+}
+
+
 // -- Model matrix --
 
 // #TODO# - add scale, rotation and so on...
@@ -295,6 +304,12 @@ void Object3D::bindTexture(Shader shader)
 
 void Object3D::Draw(Camera camera, Shader shader)
 {
+	if (UseModel)
+	{
+		objectModel->Draw(camera, shader, modelMatrix);
+		return;
+	}
+
 	if (!isVAOcalculated)
 	{
 		calculateVAO();

@@ -11,6 +11,7 @@
 #include <assimp/postprocess.h>
 
 #include <MyClass/mesh.h>
+#include <MyClass/camera.h>
 #include <MyClass/Shader/shader.h>
 
 #include <string>
@@ -32,6 +33,10 @@ public:
     string directory;
     bool gammaCorrection;
 
+	glm::mat4 ModelMatrix = glm::mat4();
+	//glm::vec3 Position = glm::vec3(0);
+	//glm::vec3 Scale = glm::vec3(1);
+
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
@@ -40,11 +45,23 @@ public:
     }
 
     // draws the model, and thus all its meshes
-    void Draw(Shader shader)
+    void Draw(Camera camera, Shader shader)
     {
-        for(unsigned int i = 0; i < meshes.size(); i++)
-            meshes[i].Draw(shader);
+		Draw(camera, shader, ModelMatrix);
     }
+
+	void Draw(Camera camera, Shader shader, glm::mat4 modelMatrix)
+	{
+		shader.use();
+		shader.setMat4("projection", camera.GetProjectionMatrix());
+		shader.setMat4("view", camera.GetViewMatrix());
+		shader.setMat4("model", modelMatrix);
+
+		shader.setFloat("material.shininess", 32.0f);
+
+		for (unsigned int i = 0; i < meshes.size(); i++)
+			meshes[i].Draw(shader);
+	}
     
 private:
     /*  Functions   */

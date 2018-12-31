@@ -84,13 +84,13 @@ public:
             string name = textures[i].type;
             if(name == "diffuseTex")
             {
-                shader.setInt("material.diffuseTex[" + std::to_string(++diffuseNr - 1) + "]", i);
+                shader.setInt("material.diffuseTex[" + std::to_string(diffuseNr++) + "]", i);
 				//std::cout << "material.diffuseTex[" + std::to_string(++diffuseNr - 2) + "]" << std::endl;
 				// number = std::to_string(diffuseNr++);
             }
 			else if(name == "specularTex")
             {
-                shader.setInt("material.specularTex[" + std::to_string(specularNr++ - 1) + "]", i);
+                shader.setInt("material.specularTex[" + std::to_string(specularNr++) + "]", i);
 				// number = std::to_string(specularNr++); // transfer unsigned int to stream
             }
             else if(name == "normalTex")

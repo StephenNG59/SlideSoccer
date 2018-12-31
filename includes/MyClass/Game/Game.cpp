@@ -86,6 +86,7 @@ void Game::Init()
 	}
 	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
 	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
+	gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
 
 
 	gameWalls.push_back(&wall_e);
@@ -109,14 +110,15 @@ void Game::Init()
 
 	// model
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
-	model = new Model("resources/objects/ball/1212.obj");
+	//model = new Model("resources/objects/ball/1212.obj");
+	//model = new Model("resources/objects/grass/grass.obj");
 }
 
 
 void Game::Update(float dt)
 {
 	//CollideSph2Ground(gameBalls, &ground);
-	/*CollideSph2Cube(gameBalls, gameWalls, true, true);
+	CollideSph2Cube(gameBalls, gameWalls, true, true);
 	CollideSph2Sph(gamePlayers, true);
 	CollideSph2Wall(gamePlayers, gameWalls, true);
 	CollideSph2Sph(gamePlayers, gameBalls, true);
@@ -133,16 +135,15 @@ void Game::Update(float dt)
 	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
 	{
 		(*it)->UpdatePhysics(dt);
-	}*/
+	}
 
-	// Light update
 	currentTime += dt;
-
+	
+	// Light update
 	gameShader->use();
 	glm::vec3 lightPos = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
 	gameShader->setVec3("viewPos", GameCamera->GetPosition());
 	gameShader->setVec3("pointLights[0].position", lightPos); 
-
 	// light properties
 	glm::vec3 lightColor;
 	lightColor.r = sin(currentTime * 2.0f);
@@ -160,7 +161,7 @@ void Game::Update(float dt)
 
 void Game::Render()
 {
-	/*for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
+	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
 	{
 		(*it)->Draw(*GameCamera, *gameShader);
 	}
@@ -174,21 +175,10 @@ void Game::Render()
 	}
 	ground.Draw(*GameCamera, *gameShader);
 
-	particleGenerator->Draw();*/
+	particleGenerator->Draw();
 
-	// view/projection transformations
-	glm::mat4 projection = glm::perspective(glm::radians(GameCamera->Fov), 0.6f, 0.1f, 100.0f);
-	glm::mat4 view = GameCamera->GetViewMatrix();
-	gameShader->setMat4("projection", projection);
-	gameShader->setMat4("view", view);
-
-	// render the loaded model
-	glm::mat4 modelMatrix;
-	modelMatrix = glm::translate(modelMatrix, glm::vec3(0.0f, -1.75f, 0.0f)); // translate it down so it's at the center of the scene
-	modelMatrix = glm::scale(modelMatrix, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
-	gameShader->setMat4("model", modelMatrix);
-
-	model->Draw(*gameShader);
+	gameShader->setFloat("material.shininess", 32);
+	//model->Draw(*GameCamera, *gameShader, gamePlayers[0]->GetModelMatrix());
 }
 
 
