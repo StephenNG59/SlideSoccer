@@ -40,7 +40,7 @@ typedef struct __texture {
 	ObjectTextureType type;
 	unsigned int texture;
 	bool isActive = true;
-} Texture;
+} MyTexture;
 
 const unsigned int texKindNum = 4;
 
@@ -123,11 +123,11 @@ class Object3D
 		glm::vec3 emission = glm::vec3(1.0f);
 		float shininess = 32.0f;
 
-		std::vector<Texture> texAmbient;
-		std::vector<Texture> texDiffuse;
-		std::vector<Texture> texSpecular;
-		std::vector<Texture> texEmission;
-		std::vector<Texture> textures[texKindNum] = {
+		std::vector<MyTexture> texAmbient;
+		std::vector<MyTexture> texDiffuse;
+		std::vector<MyTexture> texSpecular;
+		std::vector<MyTexture> texEmission;
+		std::vector<MyTexture> textures[texKindNum] = {
 			texAmbient,
 			texDiffuse,
 			texSpecular,

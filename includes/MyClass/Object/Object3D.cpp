@@ -233,7 +233,7 @@ int Object3D::AddTexture(unsigned int texture, ObjectTextureType type)
 	if (textures[type].size() >= 3)		// too much texture for this type
 		return -1;
 
-	Texture newTex = {
+	MyTexture newTex = {
 		textureNum,		// id
 		type,			// type
 		texture,		// texture
@@ -254,7 +254,7 @@ int Object3D::AddTexture(const char *texturePath, ObjectTextureType type)
 		return -1;
 
 	unsigned int texture = loadTexture(texturePath);
-	Texture newTex = {
+	MyTexture newTex = {
 		textureNum,		// id
 		type,			// type
 		texture,		// texture
@@ -280,7 +280,8 @@ void Object3D::bindTexture(Shader shader)
 		{
 			if (textures[i][j].isActive)
 			{
-				shader.setInt("material." + ObjectTextureTypeToString[i] + "Tex[" + std::to_string(j) + "]", texIndex);	// e.g. 'materialEmission2'
+				// e.g. material.ambientTex[i]
+				shader.setInt("material." + ObjectTextureTypeToString[i] + "Tex[" + std::to_string(j) + "]", texIndex);
 				glActiveTexture(GL_TEXTURE0 + texIndex);
 				glBindTexture(GL_TEXTURE_2D, textures[i][j].texture);
 			}

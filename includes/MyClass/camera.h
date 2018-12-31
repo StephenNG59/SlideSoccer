@@ -92,6 +92,7 @@ public:
 	{
 		eyeCor += distance * rightVecNorm;
 		centerCor += distance * rightVecNorm;
+		viewMatrix = glm::lookAt(eyeCor, centerCor, upVecNorm);
 	}
 
 	// Go forward
@@ -99,6 +100,7 @@ public:
 	{
 		eyeCor += distance * lookVecNorm;
 		centerCor += distance * lookVecNorm;
+		viewMatrix = glm::lookAt(eyeCor, centerCor, upVecNorm);
 	}
 
 	// Orient camera direction w.r.t up axis

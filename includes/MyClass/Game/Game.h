@@ -13,6 +13,7 @@
 
 #include <MyClass/camera.h>
 #include <MyClass/Shader/shader.h>
+#include <MyClass/model.h>
 #include <MyClass/Object/Object3D.h>
 #include <MyClass/Object/Object3Dcube.h>
 #include <MyClass/Object/Object3Dcylinder.h>
@@ -59,8 +60,10 @@ class Game
 		std::vector<Object3Dcylinder*> gamePlayers;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
-
+		// Particle 
 		ParticleGenerator* particleGenerator;
+		// Model
+		Model *model;
 
 };
 
