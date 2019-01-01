@@ -91,7 +91,9 @@ void Game::Init()
 	}
 	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
 	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
-	gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
+	//gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
+	//gamePlayers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
+	gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
 
 
 	gameWalls.push_back(&wall_e);
