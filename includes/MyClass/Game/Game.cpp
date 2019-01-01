@@ -112,6 +112,13 @@ void Game::Init()
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
+
+	gameShader->use();
+	gameShader->setBool("dirLights[0].isExist", true);
+	gameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
+	gameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
+	gameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
+	gameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
 }
 
 
