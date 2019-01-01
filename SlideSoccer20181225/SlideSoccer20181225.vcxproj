@@ -179,6 +179,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\includes\MyClass\Object\ParticleGenerator.cpp" />
+    <ClCompile Include="..\includes\MyClass\Skybox\Skybox.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="src\glad.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -191,6 +194,19 @@
   <ItemGroup>
     <None Include="shaders\particle\fs.glsl" />
     <None Include="shaders\particle\vs.glsl" />
+    <None Include="shaders\skybox\skyboxFS.glsl" />
+    <None Include="shaders\skybox\skyboxVS.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\skybox\back.jpg" />
+    <Image Include="resources\textures\skybox\back2.jpg" />
+    <Image Include="resources\textures\skybox\back2.png" />
+    <Image Include="resources\textures\skybox\back2.tga" />
+    <Image Include="resources\textures\skybox\bottom.jpg" />
+    <Image Include="resources\textures\skybox\front.jpg" />
+    <Image Include="resources\textures\skybox\left.jpg" />
+    <Image Include="resources\textures\skybox\right.jpg" />
+    <Image Include="resources\textures\skybox\top.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

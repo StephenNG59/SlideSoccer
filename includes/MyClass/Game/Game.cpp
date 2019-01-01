@@ -45,6 +45,10 @@ void Game::Init()
     GameCamera = new Camera(glm::vec3(0.0f, 5.0f, 30.0f), glm::vec3(0, -5.0f, 0));
     GameCamera->SetPerspective(glm::radians(45.0f), (float)Width / (float)Height, 0.1f, 100.0f);
 
+
+	stbi_set_flip_vertically_on_load(true);
+
+
 	// -- Objects --
 
 	// ground
@@ -74,10 +78,11 @@ void Game::Init()
 	for (int i = 0; i < 6; i++)
 	{
 		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
-		gamePlayers[i]->SetPosition(glm::vec3(i * 3 - 12, -4.8, i * 2 - 9));
+		glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
+		gamePlayers[i]->SetPosition(pos);
 		gamePlayers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 		gamePlayers[i]->SetFriction(1.0f);
-		gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
+		//gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
 		gamePlayers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
 		gamePlayers[i]->SetGravity(glm::vec3(0, 0, 0));
 		gamePlayers[i]->SetERestitution(1.0f);
@@ -131,6 +136,7 @@ void Game::Update(float dt)
 	CollideSph2Sph(gamePlayers, gameBalls, true);
 
 
+
     for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
     {
         (*it)->UpdatePhysics(dt);
@@ -143,6 +149,9 @@ void Game::Update(float dt)
 	{
 		(*it)->UpdatePhysics(dt);
 	}
+
+
+
 
 	currentTime += dt;
 	

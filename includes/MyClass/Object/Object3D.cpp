@@ -157,10 +157,16 @@ void Object3D::UpdatePhysics(float deltaTime)
 		//printVec3(acceleration);
 	glm::vec3 airResistAcc = calcAirResistAcc();
 	velocity += (acceleration + airResistAcc) * deltaTime;
+	// velocity reduced due to friction
 	if (vecMod(velocity) > 0.00001f)
 	{
 		glm::vec3 v_dir = glm::normalize(velocity);
-		velocity = glm::clamp(velocity, glm::vec3(0), velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime);
+		// this is wrong: velocity = glm::clamp(velocity, glm::vec3(0), velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime);
+		glm::vec3 v_after = velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime;
+		// if velocity is opposite, which is impossible
+		if (v_dir.x * v_after.x < 0)
+			v_after = glm::vec3(0);
+		velocity = v_after;
 	}
 	else if (constant_friction > 0 || linear_friction > 0)
 	{
@@ -204,7 +210,7 @@ unsigned int Object3D::loadTexture(char const * path/*, bool flip_y = true*/)
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 
-	stbi_set_flip_vertically_on_load(true);
+	//stbi_set_flip_vertically_on_load(true);
 
 	int width, height, nrComponents;
 	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);

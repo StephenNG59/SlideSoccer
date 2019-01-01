@@ -59,9 +59,41 @@
     <ClCompile Include="..\includes\MyClass\model.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\includes\MyClass\Skybox\Skybox.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\particle\fs.glsl" />
     <None Include="shaders\particle\vs.glsl" />
+    <None Include="shaders\skybox\skyboxVS.glsl" />
+    <None Include="shaders\skybox\skyboxFS.glsl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\textures\skybox\back.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\back2.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\back2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\back2.tga" />
+    <Image Include="resources\textures\skybox\bottom.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\front.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\left.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\right.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="resources\textures\skybox\top.jpg">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>
