@@ -24,7 +24,6 @@ class ParticleGenerator
 		// Constructor
 		ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount);
 
-		// TODO: 添加camera到粒子系统中
 		// Update all particles
 		void Update(float dt, Object3Dcylinder &cy, unsigned int newParticles);
 

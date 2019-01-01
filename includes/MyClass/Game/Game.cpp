@@ -92,6 +92,7 @@ void Game::Init()
 	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
 	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 	gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
+	//gamePlayers[0]->AddModel("resources/objects/grass/grass!.obj");
 
 
 	gameWalls.push_back(&wall_e);
@@ -102,7 +103,7 @@ void Game::Init()
 
     // point light 1
 	gameShader->use();		// don't forget to do this !!!!!!!!
-	gameShader->setBool("pointLights[0].isExist", true);
+	//gameShader->setBool("pointLights[0].isExist", true);
 	gameShader->setFloat("pointLights[0].constant", 1.0f);
 	gameShader->setFloat("pointLights[0].linear", 0.09);
 	//gameShader->setFloat("pointLights[0].linear", 0.22);
@@ -121,8 +122,8 @@ void Game::Init()
 	gameShader->use();
 	gameShader->setBool("dirLights[0].isExist", true);
 	gameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
-	gameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
-	gameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
+	gameShader->setVec3("dirLights[0].ambient", 0.25, 0.25, 0.25);
+	gameShader->setVec3("dirLights[0].diffuse", 0.55, 0.55, 0.55);
 	gameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
 }
 
