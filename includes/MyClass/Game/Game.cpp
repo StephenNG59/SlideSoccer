@@ -42,82 +42,17 @@ void Game::Init()
 	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
 	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
 
-
 	// ------------------------------------
     GameCamera = new Camera(CAMERA_POS_1, CAMERA_CENTER_1);
     GameCamera->SetPerspective(glm::radians(45.0f), (float)SCRwidth / (float)SCRheight, CAMERA_ZNEAR, CAMERA_ZFAR);
 
-
 	stbi_set_flip_vertically_on_load(true);
 
-
 	// -- Objects --
+	createObjects();
 
-	// ground
-	glm::vec3 groundPos = glm::vec3(0, -5.0f, 0.0f);
-	ground.SetMass(0);
-	ground.SetPosition(groundPos);
-	ground.SetFriction(0.8f);
-	// wall-e
-	wall_e.SetMass(0);
-	wall_e.SetPosition(groundPos + glm::vec3(0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
-	// wall-w
-	wall_w.SetMass(0);
-	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
-	// wall-n
-	wall_n.SetMass(0);
-	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, -0.5f * groundDepth));
-	// wall-s
-	wall_s.SetMass(0);
-	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, 0.5f * groundDepth));
-
-	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
-	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
-	gameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
-	gameBalls[0]->SetERestitution(0.5f);
-	gameBalls[0]->SetGravity(glm::vec3(0));
-
-	for (int i = 0; i < 6; i++)
-	{
-		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
-		//glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
-		glm::vec3 pos = glm::vec3(i * 3 - 12, 0, i * 2 - 9);
-		gamePlayers[i]->SetPosition(pos);
-		gamePlayers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
-		gamePlayers[i]->SetFriction(1.0f);
-		//gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
-		gamePlayers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
-		gamePlayers[i]->SetGravity(glm::vec3(0, 0, 0));
-		gamePlayers[i]->SetERestitution(1.0f);
-		gamePlayers[i]->SetLinearFriction(0.25f);
-		gamePlayers[i]->SetConstantFriction(5);
-	}
-	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
-	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
-	//gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
-	//gamePlayers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
-	//gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
-	gameBalls[0]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.03f));
-
-
-	gameWalls.push_back(&wall_e);
-	gameWalls.push_back(&wall_w);
-	gameWalls.push_back(&wall_n);
-	gameWalls.push_back(&wall_s);
-
-
-    // point light 0
-	GameShader->use();		// don't forget to do this !!!!!!!!
-	GameShader->setBool("pointLights[0].isExist", true);
-	GameShader->setFloat("pointLights[0].constant", 1.0f);
-	GameShader->setFloat("pointLights[0].linear", 0.09);
-	GameShader->setFloat("pointLights[0].quadratic", 0.032);
-	// direction light 0
-	GameShader->setBool("dirLights[0].isExist", true);
-	GameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
-	GameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
-	GameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
-	GameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
+	// -- Lights --
+	initLights();
 
 	// particle generator
 	particleGenerator = new ParticleGenerator(particleShader, GameCamera, 500);
@@ -129,38 +64,10 @@ void Game::Init()
 	model = new Model("resources/objects/scene/slidesoccer scene.obj");
 
 	// Skybox
-	std::vector<std::string> facesPath1 = {
-		"resources/textures/skybox/1/right.jpg",
-		"resources/textures/skybox/1/left.jpg",
-		"resources/textures/skybox/1/top.jpg",
-		"resources/textures/skybox/1/bottom.jpg",
-		"resources/textures/skybox/1/front.jpg",
-		"resources/textures/skybox/1/back.jpg"
-	};
-	std::vector<std::string> facesPath2 = {
-		"resources/textures/skybox/2/back.tga",		// left
-		"resources/textures/skybox/2/front.tga",	// right
-		"resources/textures/skybox/2/top.tga",		// top
-		"resources/textures/skybox/2/bottom.tga",	// bottom
-		"resources/textures/skybox/2/left.tga",		// back
-		"resources/textures/skybox/2/right.tga",	// front
-	};
-	std::vector<std::string> facesPath3 = {
-		"resources/textures/skybox/3/left.tga",
-		"resources/textures/skybox/3/right.tga",
-		"resources/textures/skybox/3/top.tga",
-		"resources/textures/skybox/3/bottom.tga",
-		"resources/textures/skybox/3/back.tga",
-		"resources/textures/skybox/3/front.tga",
-	};
-	std::vector<std::string> shadersPath = {
-		"shaders/skybox/skyboxVS.glsl", "shaders/skybox/skyboxFS.glsl"
-	};
-	GameSkybox = new Skybox(facesPath3, shadersPath);
-
+	initSkybox();
 
 	// Shadow
-	this->shadowInit();
+	this->initShadow();
 
 }
 
@@ -213,7 +120,6 @@ void Game::Update(float dt)
 	particleGenerator->Update(dt, *gamePlayers[0], 2);
 }
 
-
 void Game::Render(Shader *renderShader)
 {
 	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
@@ -237,7 +143,6 @@ void Game::Render(Shader *renderShader)
 
 	GameSkybox->Draw(*GameCamera);
 }
-
 
 void Game::RenderWithShadow()
 {
@@ -343,9 +248,121 @@ void Game::ProcessInput(float dt)
 	}
 }
 
+void Game::createObjects()
+{
+	// ground
+	glm::vec3 groundPos = glm::vec3(0, -5.0f, 0.0f);
+	ground.SetMass(0);
+	ground.SetPosition(groundPos);
+	ground.SetFriction(0.8f);
+	// wall-e
+	wall_e.SetMass(0);
+	wall_e.SetPosition(groundPos + glm::vec3(0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
+	// wall-w
+	wall_w.SetMass(0);
+	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
+	// wall-n
+	wall_n.SetMass(0);
+	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, -0.5f * groundDepth));
+	// wall-s
+	wall_s.SetMass(0);
+	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, 0.5f * groundDepth));
+
+	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
+	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+	gameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
+	gameBalls[0]->SetERestitution(0.5f);
+	gameBalls[0]->SetGravity(glm::vec3(0));
+
+	for (int i = 0; i < 6; i++)
+	{
+		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
+		//glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
+		glm::vec3 pos = glm::vec3(i * 3 - 12, 0, i * 2 - 9);
+		gamePlayers[i]->SetPosition(pos);
+		gamePlayers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+		gamePlayers[i]->SetFriction(1.0f);
+		//gamePlayers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
+		gamePlayers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
+		gamePlayers[i]->SetGravity(glm::vec3(0, 0, 0));
+		gamePlayers[i]->SetERestitution(1.0f);
+		gamePlayers[i]->SetLinearFriction(0.25f);
+		gamePlayers[i]->SetConstantFriction(5);
+	}
+	gamePlayers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
+	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
+	//gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
+	//gamePlayers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
+	//gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
+	gameBalls[0]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.03f));
+
+
+	gameWalls.push_back(&wall_e);
+	gameWalls.push_back(&wall_w);
+	gameWalls.push_back(&wall_n);
+	gameWalls.push_back(&wall_s);
+}
+
+void Game::initLights()
+{
+	// point light 0
+	GameShader->use();		// don't forget to do this !!!!!!!!
+	GameShader->setBool("pointLights[0].isExist", true);
+	GameShader->setFloat("pointLights[0].constant", 1.0f);
+	GameShader->setFloat("pointLights[0].linear", 0.09);
+	GameShader->setFloat("pointLights[0].quadratic", 0.032);
+	// direction light 0
+	GameShader->setBool("dirLights[0].isExist", true);
+	GameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
+	GameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
+	GameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
+	GameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
+}
+
+void Game::initSkybox()
+{
+	// left right top bottom back front
+	std::vector<std::string> facesPath1 = {
+		"resources/textures/skybox/1/right.jpg",
+		"resources/textures/skybox/1/left.jpg",
+		"resources/textures/skybox/1/top.jpg",
+		"resources/textures/skybox/1/bottom.jpg",
+		"resources/textures/skybox/1/front.jpg",
+		"resources/textures/skybox/1/back.jpg"
+	};
+	std::vector<std::string> facesPath2 = {
+		"resources/textures/skybox/2/back.tga",		// left
+		"resources/textures/skybox/2/front.tga",	// right
+		"resources/textures/skybox/2/top.tga",		// top
+		"resources/textures/skybox/2/bottom.tga",	// bottom
+		"resources/textures/skybox/2/left.tga",		// back
+		"resources/textures/skybox/2/right.tga",	// front
+	};
+	std::vector<std::string> facesPath3 = {
+		"resources/textures/skybox/3/left.tga",
+		"resources/textures/skybox/3/right.tga",
+		"resources/textures/skybox/3/top.tga",
+		"resources/textures/skybox/3/bottom.tga",
+		"resources/textures/skybox/3/back.tga",
+		"resources/textures/skybox/3/front.tga",
+	};
+	std::vector<std::string> facesPath5 = {
+		"resources/textures/skybox/5/L.jpg",
+		"resources/textures/skybox/5/r.jpg",
+		"resources/textures/skybox/5/u.jpg",
+		"resources/textures/skybox/5/d.jpg",
+		"resources/textures/skybox/5/b.jpg",
+		"resources/textures/skybox/5/F.jpg",
+	};
+
+	std::vector<std::string> shadersPath = {
+		"shaders/skybox/skyboxVS.glsl", "shaders/skybox/skyboxFS.glsl"
+	};
+	GameSkybox = new Skybox(facesPath2, shadersPath);
+}
 
 // Generate a depth texture, stored in depthMap
-void Game::shadowInit()
+void Game::initShadow()
 {
 	// Configure depth map FBO
 	glGenFramebuffers(1, &depthMapFBO);

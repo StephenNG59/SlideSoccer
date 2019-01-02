@@ -60,7 +60,10 @@ class Game
 
     private:
 
+		// Create objects
+		void createObjects();
 		// Lights position
+		void initLights();
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players
@@ -73,9 +76,11 @@ class Game
 		ParticleGenerator* particleGenerator;
 		// Model
 		Model *model;
+		// Skybox
+		void initSkybox();
 		// Shadow map
 		unsigned int depthMap, depthMapFBO;
-		void shadowInit();
+		void initShadow();
 
 };
 

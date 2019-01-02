@@ -25,7 +25,7 @@ constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
 
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
-const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 5.0f, 30.0f);
+const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 15.0f, 50.0f);
 const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_1 = glm::vec3(0, 1, 0);
 const glm::vec3 CAMERA_POS_2 = glm::vec3(0.0f, 30.0f, 0.0f);
