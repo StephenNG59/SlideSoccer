@@ -109,36 +109,6 @@ int main()
 
 	Model model("resources/objects/grass/grass!.obj");
 
-	// Skybox
-	std::vector<std::string> facesPath1 = {
-		"resources/textures/skybox/1/right.jpg",
-		"resources/textures/skybox/1/left.jpg",
-		"resources/textures/skybox/1/top.jpg",
-		"resources/textures/skybox/1/bottom.jpg",
-		"resources/textures/skybox/1/front.jpg",
-		"resources/textures/skybox/1/back.jpg"
-	};
-	std::vector<std::string> facesPath2 = {
-		"resources/textures/skybox/2/back.tga",		// left
-		"resources/textures/skybox/2/front.tga",	// right
-		"resources/textures/skybox/2/top.tga",		// top
-		"resources/textures/skybox/2/bottom.tga",	// bottom
-		"resources/textures/skybox/2/left.tga",		// back
-		"resources/textures/skybox/2/right.tga",	// front
-	};
-	std::vector<std::string> facesPath3 = {
-		"resources/textures/skybox/3/left.tga",
-		"resources/textures/skybox/3/right.tga",
-		"resources/textures/skybox/3/top.tga",
-		"resources/textures/skybox/3/bottom.tga",	
-		"resources/textures/skybox/3/back.tga",
-		"resources/textures/skybox/3/front.tga",
-	};
-	std::vector<std::string> shadersPath = {
-		"shaders/skybox/skyboxVS.glsl", "shaders/skybox/skyboxFS.glsl"
-	};
-	Skybox skybox(facesPath3, shadersPath);
-
 	// uncomment this call to draw in wireframe polygons.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -167,9 +137,7 @@ int main()
 		myGame.Update(deltaTime);
 		myGame.Render();
 
-		model.Draw(*(myGame.GameCamera), *(myGame.gameShader));
-
-		skybox.Draw(*(myGame.GameCamera));
+		model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
 
 
 		// glfw: swap buffers and poll IO events

@@ -37,7 +37,7 @@ void Game::Init()
 {
     // build and compile our shader program
 	// ------------------------------------
-    gameShader = new Shader("shaders/test/colorsVS.glsl", "shaders/test/colorsFS.glsl");
+    GameShader = new Shader("shaders/test/colorsVS.glsl", "shaders/test/colorsFS.glsl");
 	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
 
 
@@ -102,15 +102,18 @@ void Game::Init()
 	gameWalls.push_back(&wall_s);
 
 
-    // point light 1
-	gameShader->use();		// don't forget to do this !!!!!!!!
-	gameShader->setBool("pointLights[0].isExist", true);
-	gameShader->setFloat("pointLights[0].constant", 1.0f);
-	gameShader->setFloat("pointLights[0].linear", 0.09);
-	//gameShader->setFloat("pointLights[0].linear", 0.22);
-	gameShader->setFloat("pointLights[0].quadratic", 0.032);
-	//gameShader->setFloat("pointLights[0].quadratic", 0.0019);
-
+    // point light 0
+	GameShader->use();		// don't forget to do this !!!!!!!!
+	GameShader->setBool("pointLights[0].isExist", true);
+	GameShader->setFloat("pointLights[0].constant", 1.0f);
+	GameShader->setFloat("pointLights[0].linear", 0.09);
+	GameShader->setFloat("pointLights[0].quadratic", 0.032);
+	// direction light 0
+	GameShader->setBool("dirLights[0].isExist", true);
+	GameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
+	GameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
+	GameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
+	GameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
 
 	// particle generator
 	particleGenerator = new ParticleGenerator(particleShader, GameCamera, 500);
@@ -120,12 +123,37 @@ void Game::Init()
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
 
-	gameShader->use();
-	gameShader->setBool("dirLights[0].isExist", true);
-	gameShader->setVec3("dirLights[0].direction", -1.0, -1.0, 0);
-	gameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
-	gameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
-	gameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
+	// Skybox
+	std::vector<std::string> facesPath1 = {
+		"resources/textures/skybox/1/right.jpg",
+		"resources/textures/skybox/1/left.jpg",
+		"resources/textures/skybox/1/top.jpg",
+		"resources/textures/skybox/1/bottom.jpg",
+		"resources/textures/skybox/1/front.jpg",
+		"resources/textures/skybox/1/back.jpg"
+	};
+	std::vector<std::string> facesPath2 = {
+		"resources/textures/skybox/2/back.tga",		// left
+		"resources/textures/skybox/2/front.tga",	// right
+		"resources/textures/skybox/2/top.tga",		// top
+		"resources/textures/skybox/2/bottom.tga",	// bottom
+		"resources/textures/skybox/2/left.tga",		// back
+		"resources/textures/skybox/2/right.tga",	// front
+	};
+	std::vector<std::string> facesPath3 = {
+		"resources/textures/skybox/3/left.tga",
+		"resources/textures/skybox/3/right.tga",
+		"resources/textures/skybox/3/top.tga",
+		"resources/textures/skybox/3/bottom.tga",
+		"resources/textures/skybox/3/back.tga",
+		"resources/textures/skybox/3/front.tga",
+	};
+	std::vector<std::string> shadersPath = {
+		"shaders/skybox/skyboxVS.glsl", "shaders/skybox/skyboxFS.glsl"
+	};
+	GameSkybox = new Skybox(facesPath3, shadersPath);
+
+
 }
 
 
@@ -158,10 +186,10 @@ void Game::Update(float dt)
 	currentTime += dt;
 	
 	// Light update
-	gameShader->use();
+	GameShader->use();
 	glm::vec3 lightPos = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
-	gameShader->setVec3("viewPos", GameCamera->GetPosition());
-	gameShader->setVec3("pointLights[0].position", lightPos); 
+	GameShader->setVec3("viewPos", GameCamera->GetPosition());
+	GameShader->setVec3("pointLights[0].position", lightPos); 
 	// light properties
 	glm::vec3 lightColor;
 	lightColor.r = sin(currentTime * 2.0f);
@@ -169,9 +197,9 @@ void Game::Update(float dt)
 	lightColor.b = sin(currentTime * 0.7f);
 	glm::vec3 ambientColor = lightColor * glm::vec3(0.1);	// low influence
 	glm::vec3 diffuseColor = lightColor * glm::vec3(0.5);	// middle influence
-	gameShader->setVec3("pointLights[0].ambient", ambientColor);
-	gameShader->setVec3("pointLights[0].diffuse", diffuseColor);
-	gameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+	GameShader->setVec3("pointLights[0].ambient", ambientColor);
+	GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
+	GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
 
 	particleGenerator->Update(dt, *gamePlayers[0], 2);
 }
@@ -181,22 +209,24 @@ void Game::Render()
 {
 	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *gameShader);
+		(*it)->Draw(*GameCamera, *GameShader);
 	}
     for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
     {
-        (*it)->Draw(*GameCamera, *gameShader);
+        (*it)->Draw(*GameCamera, *GameShader);
     }
 	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *gameShader);
+		(*it)->Draw(*GameCamera, *GameShader);
 	}
-	ground.Draw(*GameCamera, *gameShader);
+	ground.Draw(*GameCamera, *GameShader);
 
 	particleGenerator->Draw();
 
-	gameShader->setFloat("material.shininess", 32);
+	GameShader->setFloat("material.shininess", 32);
 	//model->Draw(*GameCamera, *gameShader, gamePlayers[0]->GetModelMatrix());
+
+	GameSkybox->Draw(*GameCamera);
 }
 
 

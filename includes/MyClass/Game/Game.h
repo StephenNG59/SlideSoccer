@@ -49,14 +49,16 @@ class Game
         void Render();
         // Camera
         Camera *GameCamera;
-		// Players
-		std::vector<Object3Dcylinder*> gamePlayers;
         // Shader
-        Shader *gameShader;
+        Shader *GameShader;
+		// Skybox
+		Skybox *GameSkybox;
 
 
     private:
 		Shader *particleShader;
+		// Players
+		std::vector<Object3Dcylinder*> gamePlayers;
         // Balls
         std::vector<Object3Dsphere*> gameBalls;
         // Walls and Ground
