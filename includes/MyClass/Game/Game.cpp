@@ -1,7 +1,8 @@
+#include "pch.h"
 #include "Game.h"
 
 float groundWidth = 30.0f, groundHeight = 0.2f, groundDepth = 20.0f;
-float wallThick = 1.0f, wallHeight = 2.0f;
+float wallThick = 1.0f, wallHeight = 5.0f;
 Object3Dcube ground(glm::vec3(groundWidth, groundHeight, groundDepth));
 Object3Dcube wall_e(glm::vec3(wallThick, wallHeight, groundDepth));
 Object3Dcube wall_w(glm::vec3(wallThick, wallHeight, groundDepth));
@@ -43,7 +44,7 @@ void Game::Init()
 
 
 	// ------------------------------------
-    GameCamera = new Camera(glm::vec3(0.0f, 5.0f, 30.0f), glm::vec3(0, -5.0f, 0));
+    GameCamera = new Camera(CAMERA_POS_1, CAMERA_CENTER_1);
     GameCamera->SetPerspective(glm::radians(45.0f), (float)SCRwidth / (float)SCRheight, CAMERA_ZNEAR, CAMERA_ZFAR);
 
 
@@ -72,7 +73,7 @@ void Game::Init()
 
 	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
 	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
-	gameBalls[0]->SetPosition(glm::vec3(0, -4.8, 0));
+	gameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	gameBalls[0]->SetERestitution(0.5f);
 	gameBalls[0]->SetGravity(glm::vec3(0));
 
@@ -96,6 +97,7 @@ void Game::Init()
 	//gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
 	//gamePlayers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
 	//gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
+	gameBalls[0]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.03f));
 
 
 	gameWalls.push_back(&wall_e);
@@ -124,6 +126,7 @@ void Game::Init()
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
+	model = new Model("resources/objects/scene/slidesoccer scene.obj");
 
 	// Skybox
 	std::vector<std::string> facesPath1 = {
@@ -164,6 +167,9 @@ void Game::Init()
 
 void Game::Update(float dt)
 {
+
+	GameCamera->Update(dt);
+
 	//CollideSph2Ground(gameBalls, &ground);
 	CollideSph2Cube(gameBalls, gameWalls, true, true);
 	CollideSph2Sph(gamePlayers, true);
@@ -190,9 +196,9 @@ void Game::Update(float dt)
 	
 	// Light update
 	GameShader->use();
-	glm::vec3 lightPos = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
+	lightsPos[0] = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
 	GameShader->setVec3("viewPos", GameCamera->GetPosition());
-	GameShader->setVec3("pointLights[0].position", lightPos); 
+	GameShader->setVec3("pointLights[0].position", lightsPos[0]); 
 	// light properties
 	glm::vec3 lightColor;
 	lightColor.r = sin(currentTime * 2.0f);
@@ -222,12 +228,12 @@ void Game::Render(Shader *renderShader)
 	{
 		(*it)->Draw(*GameCamera, *renderShader);
 	}
-	ground.Draw(*GameCamera, *renderShader);
+	//ground.Draw(*GameCamera, *renderShader);
 
 	particleGenerator->Draw();
 
 	GameShader->setFloat("material.shininess", 32);
-	//model->Draw(*GameCamera, *gameShader, gamePlayers[0]->GetModelMatrix());
+	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(3.0f)));
 
 	GameSkybox->Draw(*GameCamera);
 }
@@ -240,15 +246,13 @@ void Game::RenderWithShadow()
 	glm::mat4 lightProjection, lightView;
 	glm::mat4 lightSpaceMatrix;
 	glm::vec3 lightPos = glm::vec3(10, 50, 0);
-	GLfloat near_plane = 1.0f, far_plane = 100.0f;
+	GLfloat near_plane = 1.0f, far_plane = vecMod(lightPos) * 2;
 	lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
-	//lightProjection = glm::perspective(45.0f, (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
 	lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
 	lightSpaceMatrix = lightProjection * lightView;
 	// - now render scene from light's point of view
 	DepthShader->use();
 	DepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
-	//glUniformMatrix4fv(glGetUniformLocation(simpleDepthShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
 
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
@@ -260,14 +264,8 @@ void Game::RenderWithShadow()
 	glViewport(0, 0, SCRwidth, SCRheight);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	GameShader->use();
-	// Set projection and view matrix and camera position, which will be done in Draw() of Objects.
 	// Set light uniforms
 	GameShader->setVec3("shadowLightPos", lightPos);
-	/*std::cout << "--------------" << std::endl;
-	for (int i = 0; i < 15; i++)
-	{
-		std::cout << lightSpaceMatrix[i / 4][i % 4] << std::endl;
-	}*/
 	GameShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
 	int shadowMapID = 7;
@@ -329,6 +327,19 @@ void Game::ProcessInput(float dt)
 	if (this->Keys[GLFW_KEY_MINUS])
 	{
 		GameCamera->GoForward(-keySensitivity);
+	}
+
+	if (this->Keys[GLFW_KEY_F1])
+	{
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_1, CAMERA_SMOOTHMOVING_TIME);
+	}
+	if (this->Keys[GLFW_KEY_F2])
+	{
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_2, CAMERA_SMOOTHMOVING_TIME);
+	}
+	if (this->Keys[GLFW_KEY_F5])
+	{
+		//this->Reset();
 	}
 }
 

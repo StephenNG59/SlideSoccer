@@ -1,4 +1,5 @@
-#include "stdafx.h"
+#include "pch.h"
+
 #include "object3Dcylinder.h"
 
 

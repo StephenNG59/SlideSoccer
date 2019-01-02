@@ -1,17 +1,7 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "Collision.h"
 
 extern float deltaTime;
-
-void printVec3(std::string name, glm::vec3 v)
-{
-	std::cout << name << ": ";
-	std::cout << v.x << " # " << v.y << " # " << v.z << std::endl;
-}
-void printVec3(glm::vec3 v)
-{
-	std::cout << "vec3: " << v.x << " # " << v.y << " # " << v.z << std::endl;
-}
 
 
 CollisionFreeStuckType checkFStype(float m1, float m2)

@@ -21,6 +21,7 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 			p.Position -= p.Velocity * dt;
 			p.Color.a -= dt * 2.5;
 		}
+		if (p.Color.a < 0) p.Life = 0;
 	}
 
 	float omegaY = cy.GetOmega().y;

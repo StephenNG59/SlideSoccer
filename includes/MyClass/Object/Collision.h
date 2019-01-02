@@ -67,6 +67,5 @@ void CollideSph2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object
 
 void DealCollision(Object3D * obj1, Object3D * obj2, CollisionInfo cInfo);
 
-void printVec3(std::string name, glm::vec3 v);
-void printVec3(glm::vec3 v);
+
 

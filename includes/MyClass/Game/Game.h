@@ -1,13 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-constexpr float CAMERA_ZNEAR = 0.1f;
-constexpr float CAMERA_ZFAR = 1000.0f;
-
-constexpr unsigned int SHADOW_WIDTH = 1024;
-constexpr unsigned int SHADOW_HEIGHT = 1024;
-
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
@@ -55,6 +48,7 @@ class Game
 		void Update(float dt);
         void Render(Shader *renderShader);
 		void RenderWithShadow();
+
         // Camera
         Camera *GameCamera;
         // Shader
@@ -65,6 +59,9 @@ class Game
 
 
     private:
+
+		// Lights position
+		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players
 		std::vector<Object3Dcylinder*> gamePlayers;

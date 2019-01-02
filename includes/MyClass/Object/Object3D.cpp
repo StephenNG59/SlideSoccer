@@ -1,20 +1,11 @@
-#include "stdafx.h"
+#include "pch.h"
+
 #include "object3D.h"
 #include "object3Dcube.h"
 #include "object3Dcylinder.h"
 #include "object3Dsphere.h"
 #include "Collision.h"
 
-
-float vecMod(glm::vec3 v)
-{
-	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-
-float vecMod(glm::vec2 v)
-{
-	return sqrt(v.x * v.x + v.y * v.y);
-}
 
 
 // -- Get info --
@@ -32,10 +23,11 @@ ObjectShapeType Object3D::GetType()
 
 // -- Model --
 
-void Object3D::AddModel(const char* path)
+void Object3D::AddModel(const char* path, glm::vec3 modelScale)
 {
 	objectModel = new Model(path);
 	UseModel = true;
+	this->modelScale = modelScale;
 }
 
 
@@ -312,7 +304,7 @@ void Object3D::Draw(Camera camera, Shader shader)
 {
 	if (UseModel)
 	{
-		objectModel->Draw(camera, shader, modelMatrix);
+		objectModel->Draw(camera, shader, glm::scale(modelMatrix, modelScale));
 		return;
 	}
 
