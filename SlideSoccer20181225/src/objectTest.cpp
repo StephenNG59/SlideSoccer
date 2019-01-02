@@ -25,17 +25,15 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 
-// settings
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+
 
 // camera
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
-float mouseSensitivity = 0.1f;
-float scrollSensitivity = 0.35f;
 float keySensitivity = 0.25f;
+float scrollSensitivity = 0.35f;
+float mouseSensitivity = 0.1f;
 Camera camera(glm::vec3(0.0f, 0.0f, 30.0f), glm::vec3(0, -5.0f, 0));	// (eye coord), (center coord)
 
 
@@ -49,11 +47,7 @@ bool collideCDing = false;
 
 // Game
 Game myGame(SCR_WIDTH, SCR_HEIGHT);
-// lighting
-//glm::vec3 lightPos;
-//float lightRadius = 4.0f;
 
-//Object3Dsphere ball = Object3Dsphere(0.5f, 32, 20);
 
 int main()
 {
