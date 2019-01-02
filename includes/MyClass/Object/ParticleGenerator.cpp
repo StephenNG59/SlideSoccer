@@ -8,7 +8,8 @@ ParticleGenerator::ParticleGenerator(Shader * shader, Camera * camera, unsigned 
 	this->init();
 }
 
-void ParticleGenerator::Update(GLfloat dt, Object3Dcylinder &cy, unsigned int newParticles)
+
+void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newParticles)
 {
 	// Update all particles
 	for (int i = 0; i < this->amount; i++)
