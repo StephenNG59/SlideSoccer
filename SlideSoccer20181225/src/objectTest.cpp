@@ -135,7 +135,8 @@ int main()
 
 		myGame.ProcessInput(deltaTime);
 		myGame.Update(deltaTime);
-		myGame.Render();
+		//myGame.Render(myGame.GameShader);
+		myGame.RenderWithShadow();
 
 		model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
 

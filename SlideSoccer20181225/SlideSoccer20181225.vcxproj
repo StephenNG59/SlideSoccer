@@ -192,6 +192,8 @@
     <ClCompile Include="src\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\depth\depthFS.glsl" />
+    <None Include="shaders\depth\depthVS.glsl" />
     <None Include="shaders\particle\fs.glsl" />
     <None Include="shaders\particle\vs.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />

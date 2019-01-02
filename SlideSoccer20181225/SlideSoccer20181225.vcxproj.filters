@@ -68,6 +68,8 @@
     <None Include="shaders\particle\vs.glsl" />
     <None Include="shaders\skybox\skyboxVS.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />
+    <None Include="shaders\depth\depthVS.glsl" />
+    <None Include="shaders\depth\depthFS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\skybox\back.jpg">

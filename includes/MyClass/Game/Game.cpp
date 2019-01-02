@@ -21,8 +21,8 @@ float lightRadius = 5.0f;
 extern float keySensitivity;
 
 
-Game::Game(unsigned int Width, unsigned int Height) 
-    : State(GAME_ACTIVE), Keys(), Width(Width), Height(Height)
+Game::Game(unsigned int screenWidth, unsigned int screenHeight) 
+    : State(GAME_ACTIVE), Keys(), SCRwidth(screenWidth), SCRheight(screenHeight)
 {
 
 }
@@ -37,13 +37,14 @@ void Game::Init()
 {
     // build and compile our shader program
 	// ------------------------------------
-    GameShader = new Shader("shaders/test/colorsVS.glsl", "shaders/test/colorsFS.glsl");
+    GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl");
 	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
+	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
 
 
 	// ------------------------------------
     GameCamera = new Camera(glm::vec3(0.0f, 5.0f, 30.0f), glm::vec3(0, -5.0f, 0));
-    GameCamera->SetPerspective(glm::radians(45.0f), (float)Width / (float)Height, 0.1f, 100.0f);
+    GameCamera->SetPerspective(glm::radians(45.0f), (float)SCRwidth / (float)SCRheight, CAMERA_ZNEAR, CAMERA_ZFAR);
 
 
 	stbi_set_flip_vertically_on_load(true);
@@ -78,7 +79,8 @@ void Game::Init()
 	for (int i = 0; i < 6; i++)
 	{
 		gamePlayers.push_back(new Object3Dcylinder(1.5f, 1.5f, 0.2f, 20));
-		glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
+		//glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
+		glm::vec3 pos = glm::vec3(i * 3 - 12, 0, i * 2 - 9);
 		gamePlayers[i]->SetPosition(pos);
 		gamePlayers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 		gamePlayers[i]->SetFriction(1.0f);
@@ -93,7 +95,7 @@ void Game::Init()
 	gamePlayers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 	//gamePlayers[0]->AddModel("resources/objects/ball/1212.obj");
 	//gamePlayers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
-	gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
+	//gamePlayers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
 
 
 	gameWalls.push_back(&wall_e);
@@ -154,6 +156,9 @@ void Game::Init()
 	GameSkybox = new Skybox(facesPath3, shadersPath);
 
 
+	// Shadow
+	this->shadowInit();
+
 }
 
 
@@ -181,8 +186,6 @@ void Game::Update(float dt)
 	}
 
 
-
-
 	currentTime += dt;
 	
 	// Light update
@@ -205,21 +208,21 @@ void Game::Update(float dt)
 }
 
 
-void Game::Render()
+void Game::Render(Shader *renderShader)
 {
 	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *GameShader);
+		(*it)->Draw(*GameCamera, *renderShader);
 	}
     for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
     {
-        (*it)->Draw(*GameCamera, *GameShader);
+        (*it)->Draw(*GameCamera, *renderShader);
     }
 	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *GameShader);
+		(*it)->Draw(*GameCamera, *renderShader);
 	}
-	ground.Draw(*GameCamera, *GameShader);
+	ground.Draw(*GameCamera, *renderShader);
 
 	particleGenerator->Draw();
 
@@ -229,6 +232,51 @@ void Game::Render()
 	GameSkybox->Draw(*GameCamera);
 }
 
+
+void Game::RenderWithShadow()
+{
+	// 1. Render depth of scene to texture (from light's perspective)
+	// - Get light projection/view matrix.
+	glm::mat4 lightProjection, lightView;
+	glm::mat4 lightSpaceMatrix;
+	glm::vec3 lightPos = glm::vec3(10, 50, 0);
+	GLfloat near_plane = 1.0f, far_plane = 100.0f;
+	lightProjection = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, near_plane, far_plane);
+	//lightProjection = glm::perspective(45.0f, (GLfloat)SHADOW_WIDTH / (GLfloat)SHADOW_HEIGHT, near_plane, far_plane);
+	lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0, 1.0, 0.0));
+	lightSpaceMatrix = lightProjection * lightView;
+	// - now render scene from light's point of view
+	DepthShader->use();
+	DepthShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+	//glUniformMatrix4fv(glGetUniformLocation(simpleDepthShader.Program, "lightSpaceMatrix"), 1, GL_FALSE, glm::value_ptr(lightSpaceMatrix));
+
+	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+		glClear(GL_DEPTH_BUFFER_BIT);
+		Render(DepthShader);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// 2. Render scene as normal 
+	glViewport(0, 0, SCRwidth, SCRheight);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	GameShader->use();
+	// Set projection and view matrix and camera position, which will be done in Draw() of Objects.
+	// Set light uniforms
+	GameShader->setVec3("shadowLightPos", lightPos);
+	/*std::cout << "--------------" << std::endl;
+	for (int i = 0; i < 15; i++)
+	{
+		std::cout << lightSpaceMatrix[i / 4][i % 4] << std::endl;
+	}*/
+	GameShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
+
+	int shadowMapID = 7;
+	GameShader->setInt("shadowMap", shadowMapID);
+	glActiveTexture(GL_TEXTURE0 + shadowMapID);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	Render(GameShader);
+
+}
 
 void Game::ProcessInput(float dt)
 {
@@ -282,4 +330,32 @@ void Game::ProcessInput(float dt)
 	{
 		GameCamera->GoForward(-keySensitivity);
 	}
+}
+
+
+// Generate a depth texture, stored in depthMap
+void Game::shadowInit()
+{
+	// Configure depth map FBO
+	glGenFramebuffers(1, &depthMapFBO);
+	// Create depth texture
+	glGenTextures(1, &depthMap);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+	glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+	// Use our generated depth texture (depthMap) as the depth buffer of the frame buffer (depthMapFBO)
+	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+	// Tell OpenGL not to use any color data in frame buffer to render
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	// Unbind frame buffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 }

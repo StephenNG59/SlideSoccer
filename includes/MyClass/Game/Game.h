@@ -1,6 +1,13 @@
 #ifndef GAME_H
 #define GAME_H
 
+constexpr float CAMERA_ZNEAR = 0.1f;
+constexpr float CAMERA_ZFAR = 1000.0f;
+
+constexpr unsigned int SHADOW_WIDTH = 1024;
+constexpr unsigned int SHADOW_HEIGHT = 1024;
+
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
@@ -37,7 +44,7 @@ class Game
         // Game state
         GameState State;
         bool Keys[1024];
-        unsigned int Width, Height;
+        unsigned int SCRwidth, SCRheight;
         // Constructor/Deconstructor
         Game(unsigned int Width, unsigned int Height);
         ~Game();
@@ -46,11 +53,13 @@ class Game
         // Gameloop
 		void ProcessInput(float dt);
 		void Update(float dt);
-        void Render();
+        void Render(Shader *renderShader);
+		void RenderWithShadow();
         // Camera
         Camera *GameCamera;
         // Shader
         Shader *GameShader;
+		Shader *DepthShader;
 		// Skybox
 		Skybox *GameSkybox;
 
@@ -67,6 +76,9 @@ class Game
 		ParticleGenerator* particleGenerator;
 		// Model
 		Model *model;
+		// Shadow map
+		unsigned int depthMap, depthMapFBO;
+		void shadowInit();
 
 };
 
