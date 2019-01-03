@@ -62,9 +62,6 @@
     <ClCompile Include="..\includes\MyClass\Skybox\Skybox.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\const.h">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\particle\fs.glsl" />
