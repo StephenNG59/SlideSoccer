@@ -38,7 +38,7 @@ void Game::Init()
 {
     // build and compile our shader program
 	// ------------------------------------
-    GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl");
+    GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl", "shaders/game/gameGS.glsl");
 	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
 	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
 
@@ -71,54 +71,21 @@ void Game::Init()
 
 }
 
-
 void Game::Update(float dt)
 {
 
 	GameCamera->Update(dt);
 
-	//CollideSph2Ground(gameBalls, &ground);
-	CollideSph2Cube(gameBalls, gameWalls, true, true);
-	CollideSph2Sph(gamePlayers, true);
-	CollideSph2Wall(gamePlayers, gameWalls, true);
-	CollideSph2Sph(gamePlayers, gameBalls, true);
-
-
-
-    for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
-    {
-        (*it)->UpdatePhysics(dt);
-	};
-    for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
-    {
-        (*it)->UpdatePhysics(dt);
-    }
-	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
-	{
-		(*it)->UpdatePhysics(dt);
-	}
-
+	updateObjects(dt);
 
 	currentTime += dt;
+	GameShader->setFloat("time", currentTime);
 	
-	// Light update
-	GameShader->use();
-	lightsPos[0] = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
-	GameShader->setVec3("viewPos", GameCamera->GetPosition());
-	GameShader->setVec3("pointLights[0].position", lightsPos[0]); 
-	// light properties
-	glm::vec3 lightColor;
-	lightColor.r = sin(currentTime * 2.0f);
-	lightColor.g = sin(currentTime * 1.2f);
-	lightColor.b = sin(currentTime * 0.7f);
-	glm::vec3 ambientColor = lightColor * glm::vec3(0.1);	// low influence
-	glm::vec3 diffuseColor = lightColor * glm::vec3(0.5);	// middle influence
-	GameShader->setVec3("pointLights[0].ambient", ambientColor);
-	GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
-	GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+	updateLights(currentTime);
 
 	particleGenerator->Update(dt, *gamePlayers[0], 2);
 }
+
 
 void Game::Render(Shader *renderShader)
 {
@@ -180,6 +147,7 @@ void Game::RenderWithShadow()
 	Render(GameShader);
 
 }
+
 
 void Game::ProcessInput(float dt)
 {
@@ -246,7 +214,15 @@ void Game::ProcessInput(float dt)
 	{
 		//this->Reset();
 	}
+	if (this->Keys[GLFW_KEY_B])
+	{
+		gameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
+	}
 }
+
+
+// ------------------------------
+// -- Initialization Functions --
 
 void Game::createObjects()
 {
@@ -272,7 +248,7 @@ void Game::createObjects()
 	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	gameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	gameBalls[0]->SetERestitution(0.5f);
-	gameBalls[0]->SetGravity(glm::vec3(0));
+	gameBalls[0]->SetGravity(glm::vec3(0, 0, 0));
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -386,4 +362,50 @@ void Game::initShadow()
 	// Unbind frame buffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+}
+
+
+// ----------------------
+// -- Update Functions --
+
+void Game::updateObjects(float dt)
+{
+	//CollideSph2Ground(gameBalls, &ground);
+	CollideSph2Cube(gameBalls, gameWalls, true, true);
+	CollideSph2Sph(gamePlayers, true);
+	CollideSph2Wall(gamePlayers, gameWalls, true);
+	CollideSph2Sph(gamePlayers, gameBalls, true);
+
+
+	for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
+	{
+		(*it)->UpdatePhysics(dt);
+	};
+	for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
+	{
+		(*it)->UpdatePhysics(dt);
+	}
+	for (std::vector<Object3Dcylinder*>::iterator it = gamePlayers.begin(); it < gamePlayers.end(); it++)
+	{
+		(*it)->UpdatePhysics(dt);
+	}
+}
+
+void Game::updateLights(float currentTime)
+{
+	// Light update
+	GameShader->use();
+	lightsPos[0] = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
+	GameShader->setVec3("viewPos", GameCamera->GetPosition());
+	GameShader->setVec3("pointLights[0].position", lightsPos[0]);
+	// light properties
+	glm::vec3 lightColor;
+	lightColor.r = sin(currentTime * 2.0f);
+	lightColor.g = sin(currentTime * 1.2f);
+	lightColor.b = sin(currentTime * 0.7f);
+	glm::vec3 ambientColor = lightColor * glm::vec3(0.1);	// low influence
+	glm::vec3 diffuseColor = lightColor * glm::vec3(0.5);	// middle influence
+	GameShader->setVec3("pointLights[0].ambient", ambientColor);
+	GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
+	GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
 }

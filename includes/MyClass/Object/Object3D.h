@@ -191,12 +191,17 @@ class Object3D
 		virtual void calcOmega();
 		virtual void calcAngularMomentum();
 
+		glm::vec3 explosionGravity;
+		float explosionVelocity;
+		float explosionOffset;
+
 	public:
 
 		void SetStatic();
 
 		bool IsTouchingDesk = false;
 		bool IsCollidable = false;
+		bool IsExploding = false;
 
 		float GetMass();
 		void SetMass(float m);
@@ -237,6 +242,8 @@ class Object3D
 		void SetConstantFriction(float f);
 		float GetLinearFriction();
 		void SetLinearFriction(float f);
+
+		void StartExplosion(float initVelocity, glm::vec3 fallingGravity);
 
 
 // -- Helpers --

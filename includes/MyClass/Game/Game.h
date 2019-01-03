@@ -34,15 +34,19 @@ class Game
 {
     
     public:
+
         // Game state
         GameState State;
         bool Keys[1024];
         unsigned int SCRwidth, SCRheight;
+
         // Constructor/Deconstructor
         Game(unsigned int Width, unsigned int Height);
         ~Game();
+
         // Initialization
         void Init();
+
         // Gameloop
 		void ProcessInput(float dt);
 		void Update(float dt);
@@ -51,19 +55,23 @@ class Game
 
         // Camera
         Camera *GameCamera;
+
         // Shader
         Shader *GameShader;
 		Shader *DepthShader;
+
 		// Skybox
 		Skybox *GameSkybox;
 
 
     private:
 
-		// Create objects
+		// Objects
 		void createObjects();
+		void updateObjects(float dt);
 		// Lights position
 		void initLights();
+		void updateLights(float currentTime);
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players

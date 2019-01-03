@@ -66,10 +66,18 @@ struct SpotLight {
     vec3 specular;       
 };
 
-in vec3 FragPos;
-in vec3 Normal;
-in vec2 TexCoords;
-in vec4 FragPosLightSpace;
+
+in GS_FS {
+	vec3 FragPos;
+	vec3 Normal;
+	vec2 TexCoords;
+	vec4 FragPosLightSpace;
+} fs_in;
+
+//in vec3 FragPos;
+//in vec3 Normal;
+//in vec2 TexCoords;
+//in vec4 FragPosLightSpace;
 
 uniform vec3 viewPos;
 uniform Material material;
@@ -102,38 +110,38 @@ void main()
 	vec3 ambient = light.ambient * material.ambient;
 
 	// diffuse
-	vec3 norm = normalize(Normal);
-	vec3 lightDir = normalize(light.position - FragPos);
+	vec3 norm = normalize(fs_in.Normal);
+	vec3 lightDir = normalize(light.position - fs_in.FragPos);
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = light.diffuse * material.diffuse;
 
 	// specular
-	vec3 viewDir = normalize(viewPos - FragPos);
+	vec3 viewDir = normalize(viewPos - fs_in.FragPos);
 
 	// emission
 	vec3 emission = vec3(0.0f);
 	for (int i = 0; i < emissionTexNum; i++)
 	{
-		emission += vec3(texture(material.emissionTex[i], TexCoords));
+		emission += vec3(texture(material.emissionTex[i], fs_in.TexCoords));
 	}
 
 	vec3 result;
 	for(int i = 0; i < NR_LIGHT_NUM; i++)
 	{
 		if (pointLights[i].isExist)
-			result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
+			result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir);
 		if (dirLights[i].isExist)
 			result += CalcDirLight(dirLights[i], norm, viewDir);
 		if (spotLights[i].isExist)
-			result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);
+			result += CalcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir);
 	}
 
 	result += emission;
 	
 	// Calculate shadow
-	float shadow = ShadowCalculation(FragPosLightSpace);
+	float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
 	result = result * (1.0 - shadow);
-//	result = vec3(FragPosLightSpace);
+//	result = vec3(fs_in.FragPosLightSpace);
 
 	FragColor = vec4(result, 1.0);
 }
@@ -155,7 +163,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 ambientMat = vec3(0.0f);
 	for (int i = 0; i < ambientTexNum; i++)
 	{
-		ambientMat += vec3(texture(material.ambientTex[i], TexCoords));
+		ambientMat += vec3(texture(material.ambientTex[i], fs_in.TexCoords));
 	}
 	if (ambientTexNum == 0)
 		ambientMat += material.ambient;
@@ -164,7 +172,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 diffuseMat = vec3(0.0f);
 	for (int i = 0; i < diffuseTexNum; i++)
 	{
-		diffuseMat += vec3(texture(material.diffuseTex[i], TexCoords));
+		diffuseMat += vec3(texture(material.diffuseTex[i], fs_in.TexCoords));
 	}
 	if (diffuseTexNum == 0)
 		diffuseMat += material.diffuse;
@@ -173,7 +181,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 specularMat = vec3(0.0f);
 	for (int i = 0; i < specularTexNum; i++)
 	{
-		specularMat += vec3(texture(material.specularTex[i], TexCoords));
+		specularMat += vec3(texture(material.specularTex[i], fs_in.TexCoords));
 	}
 	if (specularTexNum == 0)
 		specularMat += material.specular;
@@ -199,7 +207,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 	vec3 ambientMat = vec3(0.0f);
 	for (int i = 0; i < ambientTexNum; i++)
 	{
-		ambientMat += vec3(texture(material.ambientTex[i], TexCoords));
+		ambientMat += vec3(texture(material.ambientTex[i], fs_in.TexCoords));
 	}
 	if (ambientTexNum == 0)
 		ambientMat += material.ambient;
@@ -208,7 +216,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 	vec3 diffuseMat = vec3(0.0f);
 	for (int i = 0; i < diffuseTexNum; i++)
 	{
-		diffuseMat += vec3(texture(material.diffuseTex[i], TexCoords));
+		diffuseMat += vec3(texture(material.diffuseTex[i], fs_in.TexCoords));
 	}
 	if (diffuseTexNum == 0)
 		diffuseMat += material.diffuse;
@@ -218,7 +226,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
 	vec3 specularMat = vec3(0.0f);
 	for (int i = 0; i < specularTexNum; i++)
 	{
-		specularMat += vec3(texture(material.specularTex[i], TexCoords));
+		specularMat += vec3(texture(material.specularTex[i], fs_in.TexCoords));
 	}
 	if (specularTexNum == 0)
 		specularMat += material.specular;
@@ -248,7 +256,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 ambientMat = vec3(0.0f);
 	for (int i = 0; i < ambientTexNum; i++)
 	{
-		ambientMat += vec3(texture(material.ambientTex[i], TexCoords));
+		ambientMat += vec3(texture(material.ambientTex[i], fs_in.TexCoords));
 	}
 	if (ambientTexNum == 0)
 		ambientMat += material.ambient;
@@ -257,7 +265,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 diffuseMat = vec3(0.0f);
 	for (int i = 0; i < diffuseTexNum; i++)
 	{
-		diffuseMat += vec3(texture(material.diffuseTex[i], TexCoords));
+		diffuseMat += vec3(texture(material.diffuseTex[i], fs_in.TexCoords));
 	}
 	if (diffuseTexNum == 0)
 		diffuseMat += material.diffuse;
@@ -266,7 +274,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
 	vec3 specularMat = vec3(0.0f);
 	for (int i = 0; i < specularTexNum; i++)
 	{
-		specularMat += vec3(texture(material.specularTex[i], TexCoords));
+		specularMat += vec3(texture(material.specularTex[i], fs_in.TexCoords));
 	}
 	if (specularTexNum == 0)
 		specularMat += material.specular;
@@ -290,8 +298,8 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     // Get depth of current fragment from light's perspective
     float currentDepth = projCoords.z;
     // Calculate bias (based on depth map resolution and slope)
-    vec3 normal = normalize(Normal);
-    vec3 lightDir = normalize(shadowLightPos - FragPos);
+    vec3 normal = normalize(fs_in.Normal);
+    vec3 lightDir = normalize(shadowLightPos - fs_in.FragPos);
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
     // Check whether current frag pos is in shadow
     // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
