@@ -1,20 +1,11 @@
-#include "stdafx.h"
+#include "pch.h"
+
 #include "object3D.h"
 #include "object3Dcube.h"
 #include "object3Dcylinder.h"
 #include "object3Dsphere.h"
 #include "Collision.h"
 
-
-float vecMod(glm::vec3 v)
-{
-	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-
-float vecMod(glm::vec2 v)
-{
-	return sqrt(v.x * v.x + v.y * v.y);
-}
 
 
 // -- Get info --
@@ -32,10 +23,11 @@ ObjectShapeType Object3D::GetType()
 
 // -- Model --
 
-void Object3D::AddModel(const char* path)
+void Object3D::AddModel(const char* path, glm::vec3 modelScale)
 {
 	objectModel = new Model(path);
 	UseModel = true;
+	this->modelScale = modelScale;
 }
 
 
@@ -152,27 +144,51 @@ void Object3D::UpdatePhysics(float deltaTime)
 	//}
 	/*else
 	{*/
-		calcAcceleration();
+	// First time after loading
+	if (deltaTime > 1.0f) return;
+
+	if (IsExploding)
+	{
+		explosionOffset += deltaTime * explosionVelocity;
+	}
+	
+	calcAcceleration();
 	//}
 		//printVec3(acceleration);
 	glm::vec3 airResistAcc = calcAirResistAcc();
+	if (type == ObjectShapeType::Cylinder)
+	{
+		//printVec3("velocity#0", velocity);
+	}
 	velocity += (acceleration + airResistAcc) * deltaTime;
-	// velocity reduced due to friction
-	if (vecMod(velocity) > 0.00001f)
+
+
+	if (gravity == glm::vec3(0))
 	{
-		glm::vec3 v_dir = glm::normalize(velocity);
-		// this is wrong: velocity = glm::clamp(velocity, glm::vec3(0), velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime);
-		glm::vec3 v_after = velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime;
-		// if velocity is opposite, which is impossible
-		if (v_dir.x * v_after.x < 0)
-			v_after = glm::vec3(0);
-		velocity = v_after;
+		// velocity reduced due to friction
+		if (vecMod(velocity) > 0.00001f)
+		{
+			glm::vec3 v_dir = glm::normalize(velocity);
+			// this is wrong: velocity = glm::clamp(velocity, glm::vec3(0), velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime);
+			glm::vec3 v_after = velocity - constant_friction * v_dir * deltaTime - linear_friction * velocity * deltaTime;
+			// if velocity is opposite, which is impossible
+			if (v_dir.x * v_after.x < 0)
+				v_after = glm::vec3(0);
+			velocity = v_after;
+			if (type == ObjectShapeType::Cylinder)
+			{
+				//printVec3("velocity#2", velocity);
+			}
+		}
+		else if (constant_friction > 0 || linear_friction > 0)
+		{
+			velocity = glm::vec3(0);
+		}
 	}
-	else if (constant_friction > 0 || linear_friction > 0)
-	{
-		velocity = glm::vec3(0);
-	}
+	
+
 	position += velocity * deltaTime;
+	
 
 	// angular velocity
 	glm::vec3 airResistAngularAcc(0);
@@ -310,9 +326,17 @@ void Object3D::bindTexture(Shader shader)
 
 void Object3D::Draw(Camera camera, Shader shader)
 {
+	if (IsExploding)
+	{
+		shader.setBool("isExploding", true);
+		gravity = explosionGravity;
+		shader.setFloat("explosionOffset", explosionOffset);
+	}
+
 	if (UseModel)
 	{
-		objectModel->Draw(camera, shader, modelMatrix);
+		objectModel->Draw(camera, shader, glm::scale(modelMatrix, modelScale));
+		shader.setBool("isExploding", false);
 		return;
 	}
 
@@ -345,6 +369,9 @@ void Object3D::Draw(Camera camera, Shader shader)
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, verticeNum, GL_UNSIGNED_INT, 0);
 	// glDrawArrays(GL_TRIANGLES, 0, verticeNum);
+
+	shader.setBool("isExploding", false);
+
 }
 
 
@@ -377,6 +404,13 @@ float Object3D::GetLinearFriction()
 void Object3D::SetLinearFriction(float f)
 {
 	linear_friction = f;
+}
+
+void Object3D::StartExplosion(float initVelocity, glm::vec3 fallingGravity)
+{
+	IsExploding = true;
+	explosionGravity = fallingGravity;
+	explosionVelocity = initVelocity;
 }
 
 // #NOTE now the angular air friction in the air is the same as on the desk, which will look weird!

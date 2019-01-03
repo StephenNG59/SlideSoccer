@@ -45,8 +45,6 @@ typedef struct __texture {
 
 const unsigned int texKindNum = 4;
 
-float vecMod(glm::vec3 v);
-float vecMod(glm::vec2 v);
 
 class Object3D
 {
@@ -92,11 +90,12 @@ class Object3D
 	protected:
 
 		Model * objectModel;
+		glm::vec3 modelScale = glm::vec3(1);
 
 	public:
 
 		bool UseModel = false;
-		void AddModel(const char* path);
+		void AddModel(const char* path, glm::vec3 modelScale = glm::vec3(1));
 
 
 // -- Model matrix --
@@ -192,12 +191,17 @@ class Object3D
 		virtual void calcOmega();
 		virtual void calcAngularMomentum();
 
+		glm::vec3 explosionGravity;
+		float explosionVelocity;
+		float explosionOffset;
+
 	public:
 
 		void SetStatic();
 
 		bool IsTouchingDesk = false;
 		bool IsCollidable = false;
+		bool IsExploding = false;
 
 		float GetMass();
 		void SetMass(float m);
@@ -238,6 +242,8 @@ class Object3D
 		void SetConstantFriction(float f);
 		float GetLinearFriction();
 		void SetLinearFriction(float f);
+
+		void StartExplosion(float initVelocity, glm::vec3 fallingGravity);
 
 
 // -- Helpers --

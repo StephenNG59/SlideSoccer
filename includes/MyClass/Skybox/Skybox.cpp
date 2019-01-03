@@ -40,7 +40,7 @@ void Skybox::init(std::vector<std::string> facesPath, std::vector<std::string> s
 		 1.0f, -1.0f, -1.0f,
 		 1.0f,  1.0f, -1.0f,
 		-1.0f,  1.0f, -1.0f,
-
+			 
 		-1.0f, -1.0f,  1.0f,
 		-1.0f, -1.0f, -1.0f,
 		-1.0f,  1.0f, -1.0f,
@@ -74,7 +74,7 @@ void Skybox::init(std::vector<std::string> facesPath, std::vector<std::string> s
 		 1.0f, -1.0f, -1.0f,
 		 1.0f, -1.0f, -1.0f,
 		-1.0f, -1.0f,  1.0f,
-		 1.0f, -1.0f,  1.0f
+		 1.0f, -1.0f,  1.0f 
 	};
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);

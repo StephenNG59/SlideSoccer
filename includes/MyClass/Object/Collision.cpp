@@ -1,17 +1,7 @@
-#include "stdafx.h"
+#include "pch.h"
 #include "Collision.h"
 
 extern float deltaTime;
-
-void printVec3(std::string name, glm::vec3 v)
-{
-	std::cout << name << ": ";
-	std::cout << v.x << " # " << v.y << " # " << v.z << std::endl;
-}
-void printVec3(glm::vec3 v)
-{
-	std::cout << "vec3: " << v.x << " # " << v.y << " # " << v.z << std::endl;
-}
 
 
 CollisionFreeStuckType checkFStype(float m1, float m2)
@@ -613,8 +603,10 @@ void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3D
 
 // --------------------------------------------------------------------------------------
 
-void CollideSph2Sph(std::vector<Object3Dsphere*> &spheres, bool autoDeal)
+CollisionInfo CollideSph2Sph(std::vector<Object3Dsphere*> &spheres, bool autoDeal)
 {
+	CollisionInfo cInfo;
+
 	std::vector<Object3Dsphere*>::iterator sph1_it = spheres.begin();
 	std::vector<Object3Dsphere*>::iterator sph2_it;
 
@@ -622,9 +614,15 @@ void CollideSph2Sph(std::vector<Object3Dsphere*> &spheres, bool autoDeal)
 	{
 		for (sph2_it = sph1_it + 1; sph2_it < spheres.end(); sph2_it++)
 		{
-			CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			cInfo = CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
 		}
 	}
+
+	return cInfo;
 }
 
 // --------------------------------------------------------------------------------------
@@ -906,6 +904,7 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dcylinder * sph2, b
 	}
 
 	cInfo.relation = RelationType::Ambiguous;
+	cInfo.collidePos = p1 + r1_abs * xStar;
 
 
 	// if collide and the speed smaller than specific value, make it stop
@@ -983,6 +982,9 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dcylinder * sph2, b
 	glm::vec3 v2touch = (w2 == glm::vec3(0.0f)) ? (v2) : (v2 + glm::cross(w2, r2));
 	glm::vec3 v12touch = v1touch - v2touch, v21touch = -v12touch;
 	glm::vec3 v12touch_yzstar = v12touch - glm::dot(v12touch, xStar) * xStar, v21touch_yzstar = -v12touch_yzstar;
+
+	cInfo.relativeSpeed = v12touch;
+	cInfo.yzstarSpeed = v12touch_yzstar;
 
 	// glm::vec3 vTouch12Norm = glm::normalize(v1touch - v2touch), vTouch21Norm = -vTouch12Norm;
 
@@ -1071,8 +1073,10 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dcylinder * sph2, b
 
 }
 
-void CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres, bool autoDeal)
+CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres, bool autoDeal)
 {
+	CollisionInfo cInfo;
+
 	std::vector<Object3Dcylinder*>::iterator sph1_it = spheres.begin();
 	std::vector<Object3Dcylinder*>::iterator sph2_it;
 
@@ -1080,9 +1084,15 @@ void CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres, bool autoDeal)
 	{
 		for (sph2_it = sph1_it + 1; sph2_it < spheres.end(); sph2_it++)
 		{
-			CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			cInfo = CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
 		}
 	}
+
+	return cInfo;
 }
 
 CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bool autoDeal)
@@ -1153,6 +1163,7 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 	}
 	// if (dis < rSph && is moving apart relatively) { relation = Breaking; } 
 	cInfo.relation = RelationType::Ambiguous;
+	cInfo.collidePos = closestWC;
 
 
 	glm::vec3 v = sphere->GetVelocity();
@@ -1236,6 +1247,8 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 
 
 	glm::vec3 v12touch_yzstar = v12touch - glm::dot(v12touch, xStar) * xStar, v21touch_yzstar = -v12touch_yzstar;
+	cInfo.relativeSpeed = v12touch;
+	cInfo.yzstarSpeed = v12touch_yzstar;
 
 	// momentum change caused by yzstar part of the impulse
 
@@ -1300,8 +1313,10 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 
 }
 
-void CollideSph2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object3Dcube*> &walls, bool autoDeal)
+CollisionInfo CollideSph2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object3Dcube*> &walls, bool autoDeal)
 {
+	CollisionInfo cInfo;
+
 	std::vector<Object3Dcylinder*>::iterator sph_it = spheres.begin();
 	std::vector<Object3Dcube*>::iterator wall_it;
 
@@ -1309,9 +1324,15 @@ void CollideSph2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object
 	{
 		for (wall_it = walls.begin(); wall_it < walls.end(); wall_it++)
 		{
-			CollideSph2Wall(*sph_it, *wall_it, autoDeal);
+			cInfo = CollideSph2Wall(*sph_it, *wall_it, autoDeal);
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
 		}
 	}
+
+	return cInfo;
 }
 
 CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, bool autoDeal)
@@ -1377,6 +1398,7 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, boo
 	}
 
 	cInfo.relation = RelationType::Ambiguous;
+	cInfo.collidePos = p1 + r1_abs * xStar;
 
 
 	// if collide and the speed smaller than specific value, make it stop
@@ -1454,6 +1476,8 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, boo
 	glm::vec3 v2touch = (w2 == glm::vec3(0.0f)) ? (v2) : (v2 + glm::cross(w2, r2));
 	glm::vec3 v12touch = v1touch - v2touch, v21touch = -v12touch;
 	glm::vec3 v12touch_yzstar = v12touch - glm::dot(v12touch, xStar) * xStar, v21touch_yzstar = -v12touch_yzstar;
+	cInfo.relativeSpeed = v12touch;
+	cInfo.yzstarSpeed = v12touch_yzstar;
 
 	// glm::vec3 vTouch12Norm = glm::normalize(v1touch - v2touch), vTouch21Norm = -vTouch12Norm;
 
@@ -1542,8 +1566,10 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, boo
 	return cInfo;
 }
 
-void CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vector<Object3Dsphere*> &spheres2, bool autoDeal)
+CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vector<Object3Dsphere*> &spheres2, bool autoDeal)
 {
+	CollisionInfo cInfo;
+
 	std::vector<Object3Dcylinder*>::iterator sph1_it = spheres1.begin();
 	std::vector<Object3Dsphere*>::iterator sph2_it;
 
@@ -1551,7 +1577,13 @@ void CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vector<Object
 	{
 		for (sph2_it = spheres2.begin(); sph2_it < spheres2.end(); sph2_it++)
 		{
-			CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			cInfo = CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
 		}
 	}
+
+	return cInfo;
 }

@@ -1,4 +1,4 @@
-screenshots/
+# screenshots/
 
 
 ## Ignore Visual Studio temporary files, build results, and
@@ -263,6 +263,8 @@ paket-files/
 __pycache__/
 *.pyc
 
+
+!*/resources/*.*
 
 
 

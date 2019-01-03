@@ -21,6 +21,7 @@
 #include <MyClass/Object/Collision.h>
 #include <MyClass/Object/ParticleGenerator.h>
 #include <MyClass/Skybox/Skybox.h>
+#include <MyClass/Text/TextManager.h>
 
 
 enum GameState {
@@ -34,37 +35,66 @@ class Game
 {
     
     public:
+
         // Game state
         GameState State;
         bool Keys[1024];
-        unsigned int Width, Height;
+        unsigned int SCRwidth, SCRheight;
+
         // Constructor/Deconstructor
         Game(unsigned int Width, unsigned int Height);
         ~Game();
+
         // Initialization
         void Init();
+
         // Gameloop
 		void ProcessInput(float dt);
 		void Update(float dt);
-        void Render();
+        void Render(Shader *renderShader);
+		void RenderWithShadow();
+
         // Camera
         Camera *GameCamera;
-		// Players
-		std::vector<Object3Dcylinder*> gamePlayers;
+
         // Shader
-        Shader *gameShader;
+        Shader *GameShader;
+		Shader *DepthShader;
+		Shader *TextShader;
+
+		// Skybox
+		Skybox *GameSkybox;
+
+		// Text
+		TextManager *GameTextManager;
 
 
     private:
+
+		// Objects
+		void createObjects();
+		void updateObjects(float dt);
+		// Lights position
+		void initLights();
+		void updateLights(float currentTime);
+		glm::vec3 lightsPos[5];
 		Shader *particleShader;
+		// Players
+		std::vector<Object3Dcylinder*> gamePlayers;
         // Balls
         std::vector<Object3Dsphere*> gameBalls;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 
-		ParticleGenerator* particleGenerator;
+		ParticleGenerator* particleGenerator_tail;
+		ParticleGenerator* particleGenerator_collide;
 		// Model
 		Model *model;
+		// Skybox
+		void initSkybox();
+		// Shadow map
+		unsigned int depthMap, depthMapFBO;
+		void initShadow();
 
 };
 
