@@ -22,6 +22,7 @@ void ParticleGenerator::Update(float dt)
 		{	// particle is alive, thus update
 			p.Position -= p.Velocity * dt;
 			p.Color.a -= dt * 2.5;
+			if (p.Color.a <= 0) p.Life = 0;
 		}
 		if (p.Color.a < 0) p.Life = 0;
 	}
