@@ -71,6 +71,8 @@
     <None Include="shaders\depth\depthVS.glsl" />
     <None Include="shaders\depth\depthFS.glsl" />
     <None Include="shaders\game\gameGS.glsl" />
+    <None Include="shaders\text\textVS.glsl" />
+    <None Include="shaders\text\textFS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\skybox\back.jpg">
