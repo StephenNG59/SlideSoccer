@@ -42,6 +42,7 @@ void Game::Init()
     GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl", "shaders/game/gameGS.glsl");
 	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
 	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
+	TextShader = new Shader("shaders/text/textVS.glsl", "shaders/text/textFS.glsl");
 
 	// ------------------------------------
     GameCamera = new Camera(CAMERA_POS_1, CAMERA_CENTER_1);
@@ -70,6 +71,9 @@ void Game::Init()
 
 	// Shadow
 	this->initShadow();
+
+	// Text manager
+	GameTextManager = new TextManager(*TextShader);
 
 }
 
@@ -115,6 +119,8 @@ void Game::Render(Shader *renderShader)
 	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(3.0f)));
 
 	GameSkybox->Draw(*GameCamera);
+
+	GameTextManager->Render(*TextShader);
 }
 
 void Game::RenderWithShadow()

@@ -21,6 +21,7 @@
 #include <MyClass/Object/Collision.h>
 #include <MyClass/Object/ParticleGenerator.h>
 #include <MyClass/Skybox/Skybox.h>
+#include <MyClass/Text/TextManager.h>
 
 
 enum GameState {
@@ -59,9 +60,13 @@ class Game
         // Shader
         Shader *GameShader;
 		Shader *DepthShader;
+		Shader *TextShader;
 
 		// Skybox
 		Skybox *GameSkybox;
+
+		// Text
+		TextManager *GameTextManager;
 
 
     private:

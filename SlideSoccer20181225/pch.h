@@ -41,14 +41,6 @@ float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
 
-// Holds all state information relevant to a character as loaded using FreeType
-struct Character {
-	unsigned int TextureID;   // ID handle of the glyph texture
-	glm::ivec2 Size;    // Size of glyph
-	glm::ivec2 Bearing;  // Offset from baseline to left/top of glyph
-	unsigned int Advance;    // Horizontal offset to advance to next glyph
-};
-
 
 #include "targetver.h"
 #include <stdio.h>
