@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "TextManager.h"
 
+extern unsigned int screenWidth;
+extern unsigned int screenHeight;
+
+
 TextManager::TextManager(Shader &shader)
 {
 	this->Init(shader);
@@ -8,7 +12,7 @@ TextManager::TextManager(Shader &shader)
 
 void TextManager::Init(Shader &textShader)
 {
-	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(SCR_WIDTH), 0.0f, static_cast<GLfloat>(SCR_HEIGHT));
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(screenWidth), 0.0f, static_cast<GLfloat>(screenHeight));
 	textShader.use();
 	textShader.setMat4("projection", projection);
 

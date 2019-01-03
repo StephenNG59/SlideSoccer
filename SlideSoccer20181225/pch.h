@@ -15,19 +15,19 @@
 #include <string>
 
 // settings
-constexpr unsigned int SCR_WIDTH = 800;
-constexpr unsigned int SCR_HEIGHT = 600;
-
 constexpr float CAMERA_ZNEAR = 0.1f;
 constexpr float CAMERA_ZFAR = 1000.0f;
 
 constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
+constexpr unsigned int SHADOW_MAP_ID = 7;
 
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
-const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 15.0f, 50.0f);
+const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 20.0f, 45.0f);
 const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, -5.0f, 0);
-const glm::vec3 CAMERA_UPVECNORM_1 = glm::vec3(0, 1, 0);
+const glm::vec3 CAMERA_UPVECNORM_X = glm::vec3(1, 0, 0);
+const glm::vec3 CAMERA_UPVECNORM_Y = glm::vec3(0, 1, 0);
+const glm::vec3 CAMERA_UPVECNORM_Z = glm::vec3(0, 0, 1);
 const glm::vec3 CAMERA_POS_2 = glm::vec3(0.0f, 30.0f, 0.0f);
 const glm::vec3 CAMERA_CENTER_2 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_2 = glm::vec3(0, 0, -1);

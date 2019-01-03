@@ -31,6 +31,15 @@ enum GameState {
     GAME_WIN = 3
 };
 
+
+struct Player {
+	unsigned int id;
+	unsigned int score;
+
+
+};
+
+
 class Game
 {
     
@@ -39,7 +48,8 @@ class Game
         // Game state
         GameState State;
         bool Keys[1024];
-        unsigned int SCRwidth, SCRheight;
+		unsigned int ViewportX = 0, ViewportY = 0;
+        unsigned int ViewportW, ViewportH;
 
         // Constructor/Deconstructor
         Game(unsigned int Width, unsigned int Height);

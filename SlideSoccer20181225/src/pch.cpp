@@ -4,6 +4,7 @@
 
 // 一般情况下，忽略此文件，但如果你使用的是预编译标头，请保留它。
 
+
 float vecMod(glm::vec3 v)
 {
 	return sqrt(v.x * v.x + v.y * v.y + v.z * v.z);

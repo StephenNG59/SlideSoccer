@@ -10,7 +10,7 @@
 #include <stb_image.h>
 
 #include <MyClass/Shader/shader.h>
-#include <MyClass/camera.h>
+#include <MyClass/Camera.h>
 #include <MyClass/model.h>
 
 

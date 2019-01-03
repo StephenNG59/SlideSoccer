@@ -65,6 +65,9 @@
     <ClCompile Include="..\includes\MyClass\Text\TextManager.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\includes\MyClass\Camera.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\particle\fs.glsl" />

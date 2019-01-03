@@ -24,7 +24,7 @@ extern float keySensitivity;
 
 
 Game::Game(unsigned int screenWidth, unsigned int screenHeight) 
-    : State(GAME_ACTIVE), Keys(), SCRwidth(screenWidth), SCRheight(screenHeight)
+    : State(GAME_ACTIVE), Keys(), ViewportW(screenWidth), ViewportH(screenHeight)
 {
 
 }
@@ -46,7 +46,7 @@ void Game::Init()
 
 	// ------------------------------------
     GameCamera = new Camera(CAMERA_POS_1, CAMERA_CENTER_1);
-    GameCamera->SetPerspective(glm::radians(45.0f), (float)SCRwidth / (float)SCRheight, CAMERA_ZNEAR, CAMERA_ZFAR);
+    GameCamera->SetPerspective(glm::radians(45.0f), (float)ViewportW / (float)ViewportH, CAMERA_ZNEAR, CAMERA_ZFAR);
 
 	stbi_set_flip_vertically_on_load(true);
 
@@ -77,11 +77,41 @@ void Game::Init()
 
 }
 
+float cameraCDtime = 0.1f;
+float cameraFromLastMove = 0;
 void Game::Update(float dt)
 {
+	//cameraFromLastMove += dt;
+	//if (cameraFromLastMove >= cameraCDtime)
+	//{
+	//	glm::vec3 pos = gamePlayers[0]->GetPosition();
+	//	GameCamera->SmoothlyMoveTo(pos + glm::vec3(0, 25, 0), pos, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
+	//	cameraFromLastMove = 0;
+	//}
+	
+	if (GameCamera->Status == CameraStatus::IsTracking)
+	{
+		CameraTrackingTarget target = GameCamera->GetTarget();
+		
+		glm::vec3 pos;
+		if (target == CameraTrackingTarget::NoTracking)
+		{
+			GameCamera->Status = CameraStatus::IsFree;
+		}
+		if (target == CameraTrackingTarget::Ball)
+		{
+			pos = gameBalls[0]->GetPosition();
+		}
+		else
+		{
+			pos = gamePlayers[target - 1]->GetPosition();
+		}
+
+		GameCamera->TranslateTo(pos);
+	}
 
 	GameCamera->Update(dt);
-
+	
 	updateObjects(dt);
 
 	currentTime += dt;
@@ -92,6 +122,8 @@ void Game::Update(float dt)
 	particleGenerator_tail->Update(dt, *gamePlayers[1], 2);
 
 	particleGenerator_collide->Update(dt);
+
+
 
 }
 
@@ -145,14 +177,14 @@ void Game::RenderWithShadow()
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// 2. Render scene as normal 
-	glViewport(0, 0, SCRwidth, SCRheight);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glViewport(ViewportX, ViewportY, ViewportW, ViewportH);
+	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// comment this to support two viewports
 	GameShader->use();
 	// Set light uniforms
 	GameShader->setVec3("shadowLightPos", lightPos);
 	GameShader->setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-	int shadowMapID = 7;
+	int shadowMapID = SHADOW_MAP_ID;
 	GameShader->setInt("shadowMap", shadowMapID);
 	glActiveTexture(GL_TEXTURE0 + shadowMapID);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
@@ -216,11 +248,35 @@ void Game::ProcessInput(float dt)
 
 	if (this->Keys[GLFW_KEY_F1])
 	{
-		GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_1, CAMERA_SMOOTHMOVING_TIME);
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
 	}
 	if (this->Keys[GLFW_KEY_F2])
 	{
-		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_2, CAMERA_SMOOTHMOVING_TIME);
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, -CAMERA_UPVECNORM_Z, CAMERA_SMOOTHMOVING_TIME);
+	}
+	if (this->Keys[GLFW_KEY_F3])
+	{
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
+	}
+	if (this->Keys[GLFW_KEY_F4])
+	{
+		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, -CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
+	}
+	if (this->Keys[GLFW_KEY_GRAVE_ACCENT])	/// '`'
+	{
+		GameCamera->SetTrackingTarget(CameraTrackingTarget::NoTracking);
+	}
+	if (this->Keys[GLFW_KEY_0])
+	{
+		GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
+	}
+	if (this->Keys[GLFW_KEY_1])
+	{
+		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player1);
+	}
+	if (this->Keys[GLFW_KEY_2])
+	{
+		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player2);
 	}
 	if (this->Keys[GLFW_KEY_F5])
 	{
