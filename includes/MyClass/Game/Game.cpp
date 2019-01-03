@@ -14,6 +14,7 @@ Object3Dsphere ball3(0.4f, 32, 20);
 
 // Time
 float currentTime = 0;
+float timeFromLastCollide = 0;
 
 // Light
 float lightRadius = 5.0f;
@@ -55,7 +56,8 @@ void Game::Init()
 	initLights();
 
 	// particle generator
-	particleGenerator = new ParticleGenerator(particleShader, GameCamera, 500);
+	particleGenerator_tail = new ParticleGenerator(particleShader, GameCamera, 50);
+	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200);
 
 	// model
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
@@ -79,11 +81,14 @@ void Game::Update(float dt)
 	updateObjects(dt);
 
 	currentTime += dt;
-	GameShader->setFloat("time", currentTime);
 	
 	updateLights(currentTime);
 
-	particleGenerator->Update(dt, *gamePlayers[0], 2);
+	particleGenerator_tail->Update(dt, *gamePlayers[0], 2);
+	particleGenerator_tail->Update(dt, *gamePlayers[1], 2);
+
+	particleGenerator_collide->Update(dt);
+
 }
 
 
@@ -103,7 +108,8 @@ void Game::Render(Shader *renderShader)
 	}
 	//ground.Draw(*GameCamera, *renderShader);
 
-	particleGenerator->Draw();
+	particleGenerator_tail->Draw();
+	particleGenerator_collide->Draw();
 
 	GameShader->setFloat("material.shininess", 32);
 	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(3.0f)));
@@ -212,7 +218,10 @@ void Game::ProcessInput(float dt)
 	}
 	if (this->Keys[GLFW_KEY_F5])
 	{
-		//this->Reset();
+		for (Object3Dcylinder * P : gamePlayers)
+		{
+			P->SetStatic();
+		}
 	}
 	if (this->Keys[GLFW_KEY_B])
 	{
@@ -232,19 +241,15 @@ void Game::createObjects()
 	ground.SetPosition(groundPos);
 	ground.SetFriction(0.8f);
 	// wall-e
-	wall_e.SetMass(0);
 	wall_e.SetPosition(groundPos + glm::vec3(0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
 	// wall-w
-	wall_w.SetMass(0);
 	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
 	// wall-n
-	wall_n.SetMass(0);
 	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, -0.5f * groundDepth));
 	// wall-s
-	wall_s.SetMass(0);
 	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, 0.5f * groundDepth));
 
-	gameBalls.push_back(new Object3Dsphere(0.8f, 20, 16));
+	gameBalls.push_back(new Object3Dsphere(3.0f, 20, 16));
 	gameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	gameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	gameBalls[0]->SetERestitution(0.5f);
@@ -277,6 +282,11 @@ void Game::createObjects()
 	gameWalls.push_back(&wall_w);
 	gameWalls.push_back(&wall_n);
 	gameWalls.push_back(&wall_s);
+	for (Object3Dcube * gameWall : gameWalls)
+	{
+		gameWall->SetMass(0);
+		//gameWall->SetERestitution(1.2f);		// dangerous
+	}
 }
 
 void Game::initLights()
@@ -372,8 +382,22 @@ void Game::updateObjects(float dt)
 {
 	//CollideSph2Ground(gameBalls, &ground);
 	CollideSph2Cube(gameBalls, gameWalls, true, true);
-	CollideSph2Sph(gamePlayers, true);
-	CollideSph2Wall(gamePlayers, gameWalls, true);
+	CollisionInfo cInfo = CollideSph2Sph(gamePlayers, true);
+	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous)
+	{
+		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
+		//timeFromLastCollide = 0;
+	}
+
+	cInfo = CollideSph2Wall(gamePlayers, gameWalls, true);
+	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous)
+	{
+		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
+		//timeFromLastCollide = 0;
+	}
+
+	//timeFromLastCollide += dt;
+
 	CollideSph2Sph(gamePlayers, gameBalls, true);
 
 

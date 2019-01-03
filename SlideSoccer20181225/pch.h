@@ -32,6 +32,10 @@ const glm::vec3 CAMERA_POS_2 = glm::vec3(0.0f, 30.0f, 0.0f);
 const glm::vec3 CAMERA_CENTER_2 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_2 = glm::vec3(0, 0, -1);
 
+constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
+
+constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
+
 float vecMod(glm::vec3 v);
 float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);

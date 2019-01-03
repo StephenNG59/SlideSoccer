@@ -6,6 +6,7 @@
 #include <MyClass/Shader/shader.h>
 #include <MyClass/Object/Object3D.h>
 #include <MyClass/Object/Object3Dcylinder.h>
+#include <MyClass/Object/Collision.h>
 
 
 struct Particle {
@@ -22,13 +23,16 @@ class ParticleGenerator
 	public:
 
 		// Constructor
-		ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount);
+		ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount, glm::vec3 color = glm::vec3(0.2, 0.2, 0.7));
 
 		// Update all particles
+		void Update(float dt);
 		void Update(float dt, Object3Dcylinder &cy, unsigned int newParticles);
 
 		// Render all particles
 		void Draw();
+
+		glm::vec3 Color;
 
 
 	private:
@@ -54,4 +58,6 @@ class ParticleGenerator
 		// Respawns particle
 		void respawnParticle(Particle &particle, Object3Dcylinder &cy);
 
+public:
+	void SpawnParticle(CollisionInfo cInfo, unsigned int particleNum);
 };

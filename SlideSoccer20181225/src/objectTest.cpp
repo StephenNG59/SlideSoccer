@@ -40,6 +40,7 @@ Camera camera(glm::vec3(0.0f, 0.0f, 30.0f), glm::vec3(0, -5.0f, 0));	// (eye coo
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+float currentFrame = 0.0f;
 float collideDelta = 0.0f;
 const float collideCD = 0.02f;
 bool collideCDing = false;
@@ -101,7 +102,7 @@ int main()
 	// -------------------
 	myGame.Init();
 
-	Model model("resources/objects/grass/grass!.obj");
+	//Model model("resources/objects/grass/grass!.obj");
 
 	// uncomment this call to draw in wireframe polygons.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -110,7 +111,7 @@ int main()
 	{
 		// per-frame time logic
 		// --------------------
-		float currentFrame = glfwGetTime();
+		currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 
@@ -132,7 +133,8 @@ int main()
 		//myGame.Render(myGame.GameShader);
 		myGame.RenderWithShadow();
 
-		model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
+
+		//model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
 
 
 		// glfw: swap buffers and poll IO events

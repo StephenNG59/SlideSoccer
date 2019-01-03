@@ -103,9 +103,13 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir);
 float ShadowCalculation(vec4 fragPosLightSpace);
 
+float shadow;
 
 void main()
 {
+	// Calculate shadow
+	shadow = ShadowCalculation(fs_in.FragPosLightSpace);
+
 	// ambient
 	vec3 ambient = light.ambient * material.ambient;
 
@@ -136,11 +140,10 @@ void main()
 			result += CalcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir);
 	}
 
+	result *= (1 - shadow);
 	result += emission;
 	
-	// Calculate shadow
-	float shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-	result = result * (1.0 - shadow);
+//	result = result * (1.0 - shadow);
 //	result = vec3(fs_in.FragPosLightSpace);
 
 	FragColor = vec4(result, 1.0);

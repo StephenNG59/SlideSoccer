@@ -81,7 +81,8 @@ class Game
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 
-		ParticleGenerator* particleGenerator;
+		ParticleGenerator* particleGenerator_tail;
+		ParticleGenerator* particleGenerator_collide;
 		// Model
 		Model *model;
 		// Skybox
