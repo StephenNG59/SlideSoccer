@@ -53,8 +53,10 @@ void Game::Init()
 	// -- Objects --
 	createObjects();
 
+
 	// -- Lights --
 	initLights();
+
 
 	// particle generator
 	particleGenerator_tail = new ParticleGenerator(particleShader, GameCamera, 50);
@@ -66,8 +68,10 @@ void Game::Init()
 	//model = new Model("resources/objects/grass/grass.obj");
 	model = new Model("resources/objects/scene/slidesoccer scene.obj");
 
+
 	// Skybox
 	initSkybox();
+
 
 	// Shadow
 	this->initShadow();
