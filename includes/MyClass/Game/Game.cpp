@@ -233,6 +233,7 @@ void Game::ProcessInput(float dt)
 		{
 			GameState = GameStateType::GAME_MAINMENU;
 			GameTextManager->UpdateAspect(screenWidth, screenHeight);
+			GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
 		}
 	}
 	if (this->KeysPressed[GLFW_KEY_ENTER])
@@ -241,6 +242,10 @@ void Game::ProcessInput(float dt)
 		{
 			GameState = GameStateType::GAME_PLAYING;
 			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
+			// TODO: reset position here.
+			GameCamera->SetTrackingTarget(CameraTrackingTarget::Player1);
+			GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
+
 		}
 	}
 

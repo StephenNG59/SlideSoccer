@@ -2,7 +2,6 @@
 #include "Camera.h"
 
 
-
 Camera::Camera(glm::vec3 eyeCor /*= glm::vec3(0.0f, 0.0f, 10.0f)*/, glm::vec3 centerCor /*= glm::vec3(0.0f, 0.0f, 0.0f)*/, glm::vec3 upVec /*= glm::vec3(0.0f, 1.0f, 0.0f)*/) : EyeCor(eyeCor), CenterCor(centerCor), UpVecNorm(upVec)
 {
 	updateCameraVectors();
@@ -18,6 +17,7 @@ Camera::Camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY,
 
 void Camera::SmoothlyMoveTo(glm::vec3 destPos, glm::vec3 destCenter, glm::vec3 destUpVec, float totalTime)
 {
+	PreviousStatus = Status;
 	Status = CameraStatus::IsSmoothlyMoving;
 	movingTotalTime = totalTime;
 
@@ -41,7 +41,7 @@ void Camera::Update(float dt)
 			CenterCor = destCenter;
 			UpVecNorm = destUpVecNorm;
 			updateCameraVectors();
-			Status = CameraStatus::CameraIsFree;		// TODO: if previous status is tracking?
+			Status = PreviousStatus;
 			return;
 		}
 

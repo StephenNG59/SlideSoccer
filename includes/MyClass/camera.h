@@ -34,6 +34,8 @@ public:
 
 	// Status
 	CameraStatus Status = CameraStatus::CameraIsFree;
+	CameraStatus PreviousStatus = CameraStatus::CameraIsFree;
+
 
 	// Coordinates
 	glm::vec3 EyeCor;
@@ -132,6 +134,7 @@ public:
 	void ShowStatus();
 
 
+private:
 };
 
 
