@@ -28,8 +28,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 // camera
-unsigned int screenWidth = 800;
-unsigned int screenHeight = 600;
+unsigned int screenWidth = 1366;
+unsigned int screenHeight = 768;
 float lastX = screenWidth / 2.0f;
 float lastY = screenHeight / 2.0f;
 bool firstMouse = true;
@@ -65,7 +65,9 @@ int main()
 
 	// create a window
 	// ---------------
-	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", NULL, NULL);
+	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+	//GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -206,6 +208,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	// When a user presses the escape key, we set the WindowShouldClose property to true, closing the application
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && myGame.GameState == GameStateType::GAME_MAINMENU)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	//if (key == GLFW_KEY_F11)
+	//	glfwSetWindow
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)

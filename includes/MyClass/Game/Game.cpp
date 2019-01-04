@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Game.h"
 
-float groundWidth = 30.0f, groundHeight = 0.2f, groundDepth = 20.0f;
+float groundWidth = 70.0f, groundHeight = 0.2f, groundDepth = 50.0f;
 float wallThick = 1.0f, wallHeight = 5.0f;
 Object3Dcube ground(glm::vec3(groundWidth, groundHeight, groundDepth));
 Object3Dcube wall_e(glm::vec3(wallThick, wallHeight, groundDepth));
@@ -118,8 +118,7 @@ void Game::RenderAll()
 	else if (GameState == GameStateType::GAME_PLAYING)
 		RenderWithDoubleCamera();
 
-	GameTextManager->Render(*TextShader);
-
+	//GameTextManager->Render(*TextShader);
 	
 }
 
@@ -128,6 +127,7 @@ void Game::RenderWithDoubleCamera()
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
 	RenderWithShadow();
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
 	RenderWithShadow();
@@ -135,7 +135,8 @@ void Game::RenderWithDoubleCamera()
 	ViewportY = 0;
 	ViewportW = screenWidth;
 	ViewportH = screenHeight;
-	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 200.0f, 500.0f, 3.5f, glm::vec3(0.5, 0.8f, 0.2f));
+	//glViewport(0, 0, screenWidth, screenHeight);
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[1]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
 }
 
 void Game::RenderScene(Shader *renderShader)
@@ -158,7 +159,7 @@ void Game::RenderScene(Shader *renderShader)
 	particleGenerator_collide->Draw();
 
 	GameShader->setFloat("material.shininess", 32);
-	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(3.0f)));
+	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
 
 	GameSkybox->Draw(*GameCamera);
 
@@ -211,8 +212,9 @@ void Game::RenderInMainMenu()
 	ViewportW = screenWidth;
 	RenderWithShadow();
 
-	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 60.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
-	//0.3, 0.7f, 0.9f
+	GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.5 * screenWidth, 0.5 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+	GameTextManager->RenderText(*TextShader, "press -Enter- to begin", 0.5 * screenWidth, 0.4 * screenHeight, 0.7f, glm::vec3(0.3, 0.2f, 0.4f));
+
 }
 
 void Game::ProcessInput(float dt)
@@ -220,19 +222,19 @@ void Game::ProcessInput(float dt)
 
 	if (this->KeysCurrent[GLFW_KEY_UP])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -25.0f) * dt);
+		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
 	}
 	if (this->KeysCurrent[GLFW_KEY_DOWN])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, 25.0f) * dt);
+		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
 	}
 	if (this->KeysCurrent[GLFW_KEY_LEFT])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(-25.0f, 0, 0) * dt);
+		this->gameKickers[0]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
 	}
 	if (this->KeysCurrent[GLFW_KEY_RIGHT])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(25.0f, 0, 0) * dt);
+		this->gameKickers[0]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
 	}
 	if (this->KeysCurrent[GLFW_KEY_J])
 	{
@@ -589,7 +591,7 @@ void Game::updateLights(float currentTime)
 void Game::updateStatus()
 {
 	BallInfo bInfo = GameBalls[0]->GetBallInfo();
-	if (bInfo.Status != BallStatus::BallIsFree)
+	if (GameState == GameStateType::GAME_PLAYING && bInfo.Status != BallStatus::BallIsFree)
 	{
 		if (bInfo.Status == BallStatus::Score1)
 		{
