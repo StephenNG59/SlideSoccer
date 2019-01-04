@@ -191,7 +191,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		
 		//p.Velocity = (i % 2) ? v2 : -v2;
 		p.Velocity = -(1 + v1_abs / 20.0f) * v2;
-		p.Velocity *= ((rand() % 99 / 100.0f) + 0.02);		// 0.02 ~ 1.0
+		p.Velocity *= ((rand() % 69 / 100.0f) + 0.02);		// 0.02 ~ 0.7
 
 		p.Color = glm::vec4(0.8f * Color, 1.0f);
 

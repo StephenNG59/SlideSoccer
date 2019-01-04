@@ -11,7 +11,7 @@
 #include <assimp/postprocess.h>
 
 #include <MyClass/mesh.h>
-#include <MyClass/camera.h>
+#include <MyClass/Camera.h>
 #include <MyClass/Shader/shader.h>
 
 #include <string>

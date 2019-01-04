@@ -22,28 +22,34 @@
 #include <MyClass/Object/ParticleGenerator.h>
 #include <MyClass/Skybox/Skybox.h>
 #include <MyClass/Text/TextManager.h>
+#include <MyClass/Player/Player.h>
 
 
-enum GameState {
-    GAME_ACTIVE = 0,
-    GAME_MENU = 1,
-    GAME_PLAYING = 2,
-    GAME_WIN = 3
+enum GameStateType {
+    GAME_MAINMENU = 0,	/// Main menu
+	GAME_HELP = 1,		/// Help menu
+    GAME_PLAYING = 2,	/// Playing
+    GAME_COOLDOWN = 3	/// Score and wait for reopen
 };
+
 
 class Game
 {
     
     public:
 
-        // Game state
-        GameState State;
-        bool Keys[1024];
-        unsigned int SCRwidth, SCRheight;
-
         // Constructor/Deconstructor
         Game(unsigned int Width, unsigned int Height);
         ~Game();
+
+		// Game players
+		Player * GamePlayers[2];
+
+        // Game state
+        GameStateType GameState;
+        bool KeysCurrent[1024], KeysPressed[1024], KeysReleased[1024];
+		unsigned int ViewportX = 0, ViewportY = 0;
+        unsigned int ViewportW, ViewportH;
 
         // Initialization
         void Init();
@@ -51,10 +57,13 @@ class Game
         // Gameloop
 		void ProcessInput(float dt);
 		void Update(float dt);
-        void Render(Shader *renderShader);
+		void RenderAll();
+		void RenderWithDoubleCamera();
+		void RenderScene(Shader *renderShader);
 		void RenderWithShadow();
+		void RenderInMainMenu();
 
-        // Camera
+		// Camera
         Camera *GameCamera;
 
         // Shader
@@ -62,6 +71,8 @@ class Game
 		Shader *DepthShader;
 		Shader *TextShader;
 
+        // Balls
+        std::vector<Object3Dsphere*> GameBalls;
 		// Skybox
 		Skybox *GameSkybox;
 
@@ -71,6 +82,8 @@ class Game
 
     private:
 
+		// Camera
+		void updateCameras(float dt);
 		// Objects
 		void createObjects();
 		void updateObjects(float dt);
@@ -80,9 +93,7 @@ class Game
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players
-		std::vector<Object3Dcylinder*> gamePlayers;
-        // Balls
-        std::vector<Object3Dsphere*> gameBalls;
+		std::vector<Object3Dcylinder*> gameKickers;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 
@@ -95,7 +106,8 @@ class Game
 		// Shadow map
 		unsigned int depthMap, depthMapFBO;
 		void initShadow();
-
+		// Status
+		void updateStatus();
 };
 
 #endif

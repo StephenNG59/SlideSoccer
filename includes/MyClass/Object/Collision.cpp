@@ -588,17 +588,30 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 
 // --------------------------------------------------------------------------------------
 
-void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal, bool isStuckY)
+CollisionInfo CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal, bool isStuckY)
 {
+	CollisionInfo cInfo;
+
 	std::vector<Object3Dsphere*>::iterator sph_it = spheres.begin();
 	std::vector<Object3Dcube*>::iterator cube_it = cubes.begin();
 
 	for (/*sph_it = spheres.begin()*/; sph_it < spheres.end(); sph_it++)
 	{
 		for (cube_it = cubes.begin(); cube_it < cubes.end(); cube_it++)
-			CollideSph2Cube(*sph_it, *cube_it, autoDeal, isStuckY);
+		{
+			cInfo = CollideSph2Cube(*sph_it, *cube_it, autoDeal, isStuckY);
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				if ((*cube_it)->IsGoal1)
+					(*sph_it)->SetBallStatus(BallStatus::Score1);
+				else if ((*cube_it)->IsGoal2)
+					(*sph_it)->SetBallStatus(BallStatus::Score2);
+				return cInfo;
+			}
+		}
 	}
 
+	return cInfo;
 }
 
 // --------------------------------------------------------------------------------------

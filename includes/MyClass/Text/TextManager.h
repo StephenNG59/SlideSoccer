@@ -34,5 +34,8 @@ public:
 
 private:
 	unsigned int textVAO, textVBO;
+	Shader *textShader;
 
+public:
+	void UpdateAspect(int width, int height);
 };

@@ -9,7 +9,7 @@
 
 #include <MyClass/Shader/shader.h>
 #include <MyClass/model.h>
-#include <MyClass/camera.h>
+#include <MyClass/Camera.h>
 #include <MyClass/Object/Object3D.h>
 #include <MyClass/Object/Object3Dcube.h>
 #include <MyClass/Object/Object3Dcylinder.h>
@@ -28,8 +28,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 
 // camera
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
+unsigned int screenWidth = 1366;
+unsigned int screenHeight = 768;
+float lastX = screenWidth / 2.0f;
+float lastY = screenHeight / 2.0f;
 bool firstMouse = true;
 float keySensitivity = 0.25f;
 float scrollSensitivity = 0.35f;
@@ -47,7 +49,7 @@ bool collideCDing = false;
 
 
 // Game
-Game myGame(SCR_WIDTH, SCR_HEIGHT);
+Game myGame(screenWidth, screenHeight);
 
 
 
@@ -63,7 +65,9 @@ int main()
 
 	// create a window
 	// ---------------
-	GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Slide Soccer", NULL, NULL);
+	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
+	//GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;
@@ -105,13 +109,6 @@ int main()
 
 	//Model model("resources/objects/grass/grass!.obj");
 
-
-#pragma region text render
-	
-
-	
-#pragma endregion text render
-
 	
 	// uncomment this call to draw in wire frame polygons.
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -140,7 +137,7 @@ int main()
 		myGame.ProcessInput(deltaTime);
 		myGame.Update(deltaTime);
 		//myGame.Render(myGame.GameShader);
-		myGame.RenderWithShadow();
+		myGame.RenderAll();
 
 
 		//model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
@@ -165,7 +162,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
 	// make sure the viewport matches the new window dimensions; note that width and 
 	// height will be significantly larger than specified on retina displays.
-	glViewport(0, 0, width, height);
+	//glViewport(0, 0, width, height);
+	screenWidth = width;
+	screenHeight = height;
+
+	if (myGame.GameState == GAME_PLAYING)
+		myGame.GameTextManager->UpdateAspect(0.5 * width, height);
+	else
+		myGame.GameTextManager->UpdateAspect(width, height);
+
+	myGame.GameCamera->SetPerspective(myGame.GameCamera->Fov, (float)screenWidth / (float)screenHeight, CAMERA_ZNEAR, CAMERA_ZFAR);
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -200,13 +206,21 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	// When a user presses the escape key, we set the WindowShouldClose property to true, closing the application
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && myGame.GameState == GameStateType::GAME_MAINMENU)
 		glfwSetWindowShouldClose(window, GL_TRUE);
+	//if (key == GLFW_KEY_F11)
+	//	glfwSetWindow
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
-			myGame.Keys[key] = GL_TRUE;
+		{
+			myGame.KeysPressed[key] = GL_TRUE;
+			myGame.KeysCurrent[key] = GL_TRUE;
+		}
 		else if (action == GLFW_RELEASE)
-			myGame.Keys[key] = GL_FALSE;
+		{
+			myGame.KeysReleased[key] = GL_TRUE;
+			myGame.KeysCurrent[key] = GL_FALSE;
+		}
 	}
 }

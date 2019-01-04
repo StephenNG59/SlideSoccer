@@ -137,12 +137,12 @@ void Object3D::ChangePosition(glm::vec3 delta)
 }
 void Object3D::UpdatePhysics(float deltaTime)
 {
-	//// linear velocity
+	/*//// linear velocity
 	//if (IsTouchingDesk)
 	//{
 	//	acceleration = glm::vec3(0);
 	//}
-	/*else
+	else
 	{*/
 	// First time after loading
 	if (deltaTime > 1.0f) return;
@@ -563,3 +563,12 @@ void Object3D::SetAirResistanceFactor(float aff)
 	air_resistance_factor = abs(aff);
 }
 
+BallInfo Object3D::GetBallInfo()
+{
+	return ballInfo;
+}
+
+void Object3D::SetBallStatus(BallStatus status)
+{
+	ballInfo.Status = status;
+}

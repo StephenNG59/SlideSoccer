@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "TextManager.h"
 
+extern unsigned int screenWidth;
+extern unsigned int screenHeight;
+
+
 TextManager::TextManager(Shader &shader)
 {
 	this->Init(shader);
@@ -8,7 +12,9 @@ TextManager::TextManager(Shader &shader)
 
 void TextManager::Init(Shader &textShader)
 {
-	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(SCR_WIDTH), 0.0f, static_cast<GLfloat>(SCR_HEIGHT));
+	this->textShader = &textShader;
+
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(screenWidth), 0.0f, static_cast<GLfloat>(screenHeight));
 	textShader.use();
 	textShader.setMat4("projection", projection);
 
@@ -20,7 +26,7 @@ void TextManager::Init(Shader &textShader)
 
 	// Load font as face
 	FT_Face face;
-	if (FT_New_Face(ft, "resources/fonts/arial.ttf", 0, &face))
+	if (FT_New_Face(ft, "resources/fonts/comic.ttf", 0, &face))
 		std::cout << "ERROR::FREETYPE: Failed to load font" << std::endl;
 
 	// Set size to load glyphs as
@@ -136,4 +142,11 @@ void TextManager::RenderText(Shader &shader, std::string text, GLfloat x, GLfloa
 	}
 	glBindVertexArray(0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void TextManager::UpdateAspect(int width, int height)
+{
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<GLfloat>(width), 0.0f, static_cast<GLfloat>(height));
+	textShader->use();
+	textShader->setMat4("projection", projection);
 }
