@@ -24,7 +24,7 @@ extern float keySensitivity;
 
 
 Game::Game(unsigned int screenWidth, unsigned int screenHeight) 
-    : State(GAME_ACTIVE), Keys(), ViewportW(screenWidth), ViewportH(screenHeight)
+    : State(GAME_MAINMENU), KeysPressed(), ViewportW(screenWidth), ViewportH(screenHeight)
 {
 
 }
@@ -95,7 +95,8 @@ void Game::Update(float dt)
 	//	GameCamera->SmoothlyMoveTo(pos + glm::vec3(0, 25, 0), pos, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
 	//	cameraFromLastMove = 0;
 	//}
-	
+
+
 	// Camera tracks target
 	if (GameCamera->Status == CameraStatus::IsTracking)
 	{
@@ -131,7 +132,7 @@ void Game::Update(float dt)
 
 	particleGenerator_collide->Update(dt);
 
-
+	updateStatus();
 
 }
 
@@ -161,6 +162,9 @@ void Game::Render(Shader *renderShader)
 	GameSkybox->Draw(*GameCamera);
 
 	GameTextManager->Render(*TextShader);
+	
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 60.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+
 }
 
 void Game::RenderWithShadow()
@@ -203,100 +207,109 @@ void Game::RenderWithShadow()
 
 void Game::ProcessInput(float dt)
 {
-	if (this->Keys[GLFW_KEY_UP])
+
+	if (this->KeysCurrent[GLFW_KEY_UP])
 	{
 		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -25.0f) * dt);
 	}
-	if (this->Keys[GLFW_KEY_DOWN])
+	if (this->KeysCurrent[GLFW_KEY_DOWN])
 	{
 		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, 25.0f) * dt);
 	}
-	if (this->Keys[GLFW_KEY_LEFT])
+	if (this->KeysCurrent[GLFW_KEY_LEFT])
 	{
 		this->gameKickers[0]->AddVelocity(glm::vec3(-25.0f, 0, 0) * dt);
 	}
-	if (this->Keys[GLFW_KEY_RIGHT])
+	if (this->KeysCurrent[GLFW_KEY_RIGHT])
 	{
 		this->gameKickers[0]->AddVelocity(glm::vec3(25.0f, 0, 0) * dt);
 	}
-	if (this->Keys[GLFW_KEY_J])
+	if (this->KeysCurrent[GLFW_KEY_J])
 	{
 		this->gameKickers[0]->AddOmega(glm::vec3(0, 0.2f, 0));
 	}
-	if (this->Keys[GLFW_KEY_K])
+	if (this->KeysCurrent[GLFW_KEY_K])
 	{
 		this->gameKickers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
 	}
 
-	if (this->Keys[GLFW_KEY_W])
+	if (this->KeysCurrent[GLFW_KEY_W])
 	{
 		GameCamera->RotateDownByDegree(-keySensitivity);
 	}
-	if (this->Keys[GLFW_KEY_S])
+	if (this->KeysCurrent[GLFW_KEY_S])
 	{
 		GameCamera->RotateDownByDegree(keySensitivity);
 	}
-	if (this->Keys[GLFW_KEY_A])
+	if (this->KeysCurrent[GLFW_KEY_A])
 	{
 		GameCamera->RotateRightByDegree(-keySensitivity);
 	}
-	if (this->Keys[GLFW_KEY_D])
+	if (this->KeysCurrent[GLFW_KEY_D])
 	{
 		GameCamera->RotateRightByDegree(keySensitivity);
 	}
 
-	if (this->Keys[GLFW_KEY_EQUAL])
+	if (this->KeysCurrent[GLFW_KEY_EQUAL])
 	{
 		GameCamera->GoForward(keySensitivity);
 	}
-	if (this->Keys[GLFW_KEY_MINUS])
+	if (this->KeysCurrent[GLFW_KEY_MINUS])
 	{
 		GameCamera->GoForward(-keySensitivity);
 	}
 
-	if (this->Keys[GLFW_KEY_F1])
+	if (this->KeysPressed[GLFW_KEY_F1])
 	{
 		GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
 	}
-	if (this->Keys[GLFW_KEY_F2])
+	if (this->KeysPressed[GLFW_KEY_F2])
 	{
 		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, -CAMERA_UPVECNORM_Z, CAMERA_SMOOTHMOVING_TIME);
 	}
-	if (this->Keys[GLFW_KEY_F3])
+	if (this->KeysPressed[GLFW_KEY_F3])
 	{
 		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
 	}
-	if (this->Keys[GLFW_KEY_F4])
+	if (this->KeysPressed[GLFW_KEY_F4])
 	{
 		GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, -CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
 	}
-	if (this->Keys[GLFW_KEY_GRAVE_ACCENT])	/// '`'
+	if (this->KeysPressed[GLFW_KEY_GRAVE_ACCENT])	/// '`'
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::NoTracking);
 	}
-	if (this->Keys[GLFW_KEY_0])
+	if (this->KeysPressed[GLFW_KEY_0])
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
 	}
-	if (this->Keys[GLFW_KEY_1])
+	if (this->KeysPressed[GLFW_KEY_1])
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player1);
 	}
-	if (this->Keys[GLFW_KEY_2])
+	if (this->KeysPressed[GLFW_KEY_2])
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player2);
 	}
-	if (this->Keys[GLFW_KEY_F5])
+	if (this->KeysReleased[GLFW_KEY_F5])
 	{
 		for (Object3Dcylinder * P : gameKickers)
 		{
 			P->SetStatic();
 		}
 	}
-	if (this->Keys[GLFW_KEY_B])
+	if (this->KeysPressed[GLFW_KEY_B])
 	{
 		GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
 	}
+
+
+	for (int i = 0; i < 1024; i++)
+	{
+		KeysPressed[i] = false;
+		KeysReleased[i] = false;
+	}
+
 }
 
 
@@ -455,21 +468,6 @@ void Game::updateObjects(float dt)
 	//CollideSph2Ground(gameBalls, &ground);
 	CollideSph2Cube(GameBalls, gameWalls, true, true);
 
-	BallInfo bInfo = GameBalls[0]->GetBallInfo();
-	if (bInfo.Status != BallStatus::BallIsFree)
-	{
-		if (bInfo.Status == BallStatus::Score1)
-		{
-			GamePlayers[0]->AddScore(1);
-		}
-		if (bInfo.Status == BallStatus::Score2)
-		{
-			GamePlayers[1]->AddScore(1);
-		}
-		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
-		GameTextManager->RenderText(*TextShader, "goal 1", 60.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
-	}
-
 	CollisionInfo cInfo = CollideSph2Sph(gameKickers, true);
 	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous)
 	{
@@ -526,4 +524,21 @@ void Game::updateLights(float currentTime)
 	GameShader->setVec3("pointLights[0].ambient", ambientColor);
 	GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
 	GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+}
+
+void Game::updateStatus()
+{
+	BallInfo bInfo = GameBalls[0]->GetBallInfo();
+	if (bInfo.Status != BallStatus::BallIsFree)
+	{
+		if (bInfo.Status == BallStatus::Score1)
+		{
+			GamePlayers[0]->AddScore(1);
+		}
+		if (bInfo.Status == BallStatus::Score2)
+		{
+			GamePlayers[1]->AddScore(1);
+		}
+		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
+	}
 }

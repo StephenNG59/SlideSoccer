@@ -26,10 +26,10 @@
 
 
 enum GameState {
-    GAME_ACTIVE = 0,
-    GAME_MENU = 1,
-    GAME_PLAYING = 2,
-    GAME_WIN = 3
+    GAME_MAINMENU = 0,	/// Main menu
+	GAME_HELP = 1,		/// Help menu
+    GAME_PLAYING = 2,	/// Playing
+    GAME_COOLDOWN = 3	/// Score and wait for reopen
 };
 
 
@@ -43,7 +43,7 @@ class Game
 
         // Game state
         GameState State;
-        bool Keys[1024];
+        bool KeysCurrent[1024], KeysPressed[1024], KeysReleased[1024];
 		unsigned int ViewportX = 0, ViewportY = 0;
         unsigned int ViewportW, ViewportH;
 
@@ -101,7 +101,8 @@ class Game
 		// Shadow map
 		unsigned int depthMap, depthMapFBO;
 		void initShadow();
-
+		// Status
+		void updateStatus();
 };
 
 #endif
