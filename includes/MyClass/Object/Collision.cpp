@@ -602,11 +602,8 @@ CollisionInfo CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector
 			cInfo = CollideSph2Cube(*sph_it, *cube_it, autoDeal, isStuckY);
 			if (cInfo.relation == RelationType::Ambiguous)
 			{
-				if ((*cube_it)->IsGoal1) {
+				if ((*cube_it)->IsGoal1)
 					(*sph_it)->SetBallStatus(BallStatus::Score1);
-					std::cout << (*sph_it)->GetBallInfo().Status << std::endl;
-					std::cout << "fsjifeiw" << std::endl;
-				}
 				else if ((*cube_it)->IsGoal2)
 					(*sph_it)->SetBallStatus(BallStatus::Score2);
 				return cInfo;

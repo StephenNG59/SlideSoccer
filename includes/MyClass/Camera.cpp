@@ -34,7 +34,8 @@ void Camera::Update(float dt)
 		glm::vec3 dPos = destPos - EyeCor;
 		glm::vec3 dCenter = destCenter - CenterCor;
 		glm::vec3 dUpVecNorm = destUpVecNorm - UpVecNorm;
-		if (vecMod(dPos) < 0.05 && vecMod(dCenter) < 0.05 && vecMod(dUpVecNorm) < 0.02)
+		testPrint(vecMod(dUpVecNorm));
+		if (vecMod(dPos) < 0.05 && vecMod(dCenter) < 0.05/* && vecMod(dUpVecNorm) < 0.02*/)
 		{
 			EyeCor = destPos;
 			CenterCor = destCenter;
@@ -214,6 +215,7 @@ void Camera::RotateCounterClockByDegree(float degree, glm::vec3 rotateAxis)
 	trans = glm::translate(trans, -glm::vec3(rotatePoint));
 
 	EyeCor = glm::vec3(trans * glm::vec4(EyeCor, 1.0f));
+	UpVecNorm = glm::vec3(trans * glm::vec4(UpVecNorm, 1.0f));
 
 	updateCameraVectors();
 	viewMatrix = glm::lookAt(EyeCor, CenterCor, UpVecNorm);

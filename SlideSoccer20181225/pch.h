@@ -26,6 +26,7 @@ const float CAMERA_SMOOTHMOVING_TIME = 0.2;
 
 const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 20.0f, 45.0f);
 const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, -5.0f, 0);
+//const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, 20.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_X = glm::vec3(1, 0, 0);
 const glm::vec3 CAMERA_UPVECNORM_Y = glm::vec3(0, 1, 0);
 const glm::vec3 CAMERA_UPVECNORM_Z = glm::vec3(0, 0, 1);
@@ -41,6 +42,8 @@ float vecMod(glm::vec3 v);
 float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
+void testPrint(std::string s);
+void testPrint(float f);
 
 enum BallStatus {
 	BallIsFree = 0,

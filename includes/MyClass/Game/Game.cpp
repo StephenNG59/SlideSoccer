@@ -12,6 +12,9 @@ Object3Dcube cube(glm::vec3(1.0f, 1.0f, 1.0f));
 Object3Dsphere ball(0.5f, 32, 20);
 Object3Dsphere ball3(0.4f, 32, 20);
 
+// Screen
+extern unsigned int screenWidth, screenHeight;
+
 // Time
 float currentTime = 0;
 float timeFromLastCollide = 0;
@@ -24,7 +27,7 @@ extern float keySensitivity;
 
 
 Game::Game(unsigned int screenWidth, unsigned int screenHeight) 
-    : State(GAME_MAINMENU), KeysPressed(), ViewportW(screenWidth), ViewportH(screenHeight)
+    : GameState(GAME_MAINMENU), KeysPressed(), ViewportW(screenWidth), ViewportH(screenHeight)
 {
 
 }
@@ -91,42 +94,11 @@ float cameraCDtime = 0.1f;
 float cameraFromLastMove = 0;
 void Game::Update(float dt)
 {
-	//cameraFromLastMove += dt;
-	//if (cameraFromLastMove >= cameraCDtime)
-	//{
-	//	glm::vec3 pos = gameKickers[0]->GetPosition();
-	//	GameCamera->SmoothlyMoveTo(pos + glm::vec3(0, 25, 0), pos, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
-	//	cameraFromLastMove = 0;
-	//}
-
-
-	// Camera tracks target
-	if (GameCamera->Status == CameraStatus::IsTracking)
-	{
-		CameraTrackingTarget target = GameCamera->GetTarget();
-		
-		glm::vec3 pos;
-		if (target == CameraTrackingTarget::NoTracking)
-		{
-			GameCamera->Status = CameraStatus::CameraIsFree;
-		}
-		if (target == CameraTrackingTarget::Ball)
-		{
-			pos = GameBalls[0]->GetPosition();
-		}
-		else
-		{
-			pos = gameKickers[target - 1]->GetPosition();
-		}
-
-		GameCamera->TranslateTo(pos);
-	}
-
-	GameCamera->Update(dt);
-	
-	updateObjects(dt);
-
 	currentTime += dt;
+
+	updateCameras(dt);
+
+	updateObjects(dt);
 	
 	updateLights(currentTime);
 
@@ -139,8 +111,34 @@ void Game::Update(float dt)
 
 }
 
+void Game::RenderAll()
+{
+	if (GameState == GameStateType::GAME_MAINMENU)
+		RenderInMainMenu();
+	else if (GameState == GameStateType::GAME_PLAYING)
+		RenderWithDoubleCamera();
 
-void Game::Render(Shader *renderShader)
+	GameTextManager->Render(*TextShader);
+
+	
+}
+
+void Game::RenderWithDoubleCamera()
+{
+	ViewportW = 0.5 * screenWidth;
+	ViewportH = screenHeight;
+	RenderWithShadow();
+	ViewportX = 0.5 * screenWidth;
+	ViewportY = 0;
+	RenderWithShadow();
+	ViewportX = 0;
+	ViewportY = 0;
+	ViewportW = screenWidth;
+	ViewportH = screenHeight;
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 200.0f, 500.0f, 3.5f, glm::vec3(0.5, 0.8f, 0.2f));
+}
+
+void Game::RenderScene(Shader *renderShader)
 {
 	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
 	{
@@ -164,10 +162,6 @@ void Game::Render(Shader *renderShader)
 
 	GameSkybox->Draw(*GameCamera);
 
-	GameTextManager->Render(*TextShader);
-	
-	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 60.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
-
 }
 
 void Game::RenderWithShadow()
@@ -188,12 +182,13 @@ void Game::RenderWithShadow()
 	glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
 	glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
 		glClear(GL_DEPTH_BUFFER_BIT);
-		Render(DepthShader);
+		RenderScene(DepthShader);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	// 2. Render scene as normal 
 	glViewport(ViewportX, ViewportY, ViewportW, ViewportH);
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);		// comment this to support two viewports
+	GameCamera->SetPerspective(GameCamera->Fov, (float)ViewportW / (float)ViewportH, CAMERA_ZNEAR, CAMERA_ZFAR);
 	GameShader->use();
 	// Set light uniforms
 	GameShader->setVec3("shadowLightPos", lightPos);
@@ -203,10 +198,22 @@ void Game::RenderWithShadow()
 	GameShader->setInt("shadowMap", shadowMapID);
 	glActiveTexture(GL_TEXTURE0 + shadowMapID);
 	glBindTexture(GL_TEXTURE_2D, depthMap);
-	Render(GameShader);
+	RenderScene(GameShader);
 
 }
 
+void Game::RenderInMainMenu()
+{
+	extern float currentFrame;
+
+	ViewportX = ViewportY = 0;
+	ViewportH = screenHeight;
+	ViewportW = screenWidth;
+	RenderWithShadow();
+
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()) + " : " + std::to_string(GamePlayers[1]->GetScore()), 60.0f, 60.0f, 0.5f, glm::vec3(0.5, 0.8f, 0.2f));
+	//0.3, 0.7f, 0.9f
+}
 
 void Game::ProcessInput(float dt)
 {
@@ -306,6 +313,22 @@ void Game::ProcessInput(float dt)
 		GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
 	}
 
+	if (this->KeysPressed[GLFW_KEY_ESCAPE])
+	{
+		if (GameState == GameStateType::GAME_PLAYING || GameState == GameStateType::GAME_HELP || GameState == GameStateType::GAME_COOLDOWN)
+		{
+			GameState = GameStateType::GAME_MAINMENU;
+			GameTextManager->UpdateAspect(screenWidth, screenHeight);
+		}
+	}
+	if (this->KeysPressed[GLFW_KEY_ENTER])
+	{
+		if (GameState == GameStateType::GAME_MAINMENU)
+		{
+			GameState = GameStateType::GAME_PLAYING;
+			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
+		}
+	}
 
 	for (int i = 0; i < 1024; i++)
 	{
@@ -316,8 +339,8 @@ void Game::ProcessInput(float dt)
 }
 
 
-// ------------------------------
 // -- Initialization Functions --
+// ------------------------------
 
 void Game::createObjects()
 {
@@ -463,8 +486,42 @@ void Game::initShadow()
 }
 
 
-// ----------------------
 // -- Update Functions --
+// ----------------------
+
+void Game::updateCameras(float dt)
+{
+	if (GameState == GameStateType::GAME_MAINMENU)
+	{
+		//GameCamera->RotateRightByDegree(dt * 10);
+		if (GameCamera->Status == CameraStatus::CameraIsFree)
+			GameCamera->RotateCounterClockByDegree(dt * 30, glm::vec3(0, 1, 0));
+	}
+
+	// Camera tracks target
+	if (GameCamera->Status == CameraStatus::IsTracking)
+	{
+		CameraTrackingTarget target = GameCamera->GetTarget();
+
+		glm::vec3 pos;
+		if (target == CameraTrackingTarget::NoTracking)
+		{
+			GameCamera->Status = CameraStatus::CameraIsFree;
+		}
+		if (target == CameraTrackingTarget::Ball)
+		{
+			pos = GameBalls[0]->GetPosition();
+		}
+		else
+		{
+			pos = gameKickers[target - 1]->GetPosition();
+		}
+
+		GameCamera->TranslateTo(pos);
+	}
+
+	GameCamera->Update(dt);
+}
 
 void Game::updateObjects(float dt)
 {
@@ -544,4 +601,5 @@ void Game::updateStatus()
 		}
 		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
 	}
+
 }

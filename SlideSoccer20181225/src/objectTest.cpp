@@ -135,14 +135,7 @@ int main()
 		myGame.ProcessInput(deltaTime);
 		myGame.Update(deltaTime);
 		//myGame.Render(myGame.GameShader);
-		myGame.ViewportW = 0.5 * screenWidth;
-		myGame.ViewportH = 0.5 * screenHeight;
-		myGame.RenderWithShadow();
-		myGame.ViewportX = 0.5 * screenWidth;
-		myGame.ViewportY = 0.5 * screenHeight;
-		myGame.RenderWithShadow();
-		myGame.ViewportX = 0;
-		myGame.ViewportY = 0;
+		myGame.RenderAll();
 
 
 		//model.Draw(*(myGame.GameCamera), *(myGame.GameShader));
@@ -170,6 +163,12 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	//glViewport(0, 0, width, height);
 	screenWidth = width;
 	screenHeight = height;
+
+	if (myGame.GameState == GAME_PLAYING)
+		myGame.GameTextManager->UpdateAspect(0.5 * width, height);
+	else
+		myGame.GameTextManager->UpdateAspect(width, height);
+
 	myGame.GameCamera->SetPerspective(myGame.GameCamera->Fov, (float)screenWidth / (float)screenHeight, CAMERA_ZNEAR, CAMERA_ZFAR);
 }
 
@@ -205,31 +204,17 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
 	// When a user presses the escape key, we set the WindowShouldClose property to true, closing the application
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS && myGame.GameState == GameStateType::GAME_MAINMENU)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	if (key >= 0 && key < 1024)
 	{
 		if (action == GLFW_PRESS)
 		{
-			
-			//if (myGame.KeysCurrent[key] == GL_FALSE)
-			//	myGame.KeysPressed[key] = GL_TRUE;
-			//else
-			//	myGame.KeysPressed[key] = GL_FALSE;
-
-			//myGame.KeysReleased[key] = GL_TRUE;
 			myGame.KeysPressed[key] = GL_TRUE;
 			myGame.KeysCurrent[key] = GL_TRUE;
 		}
 		else if (action == GLFW_RELEASE)
 		{
-			//std::cout << "release : " << key << std::endl;
-			//if (myGame.KeysCurrent[key] == GL_TRUE)
-			//	myGame.KeysReleased[key] = GL_TRUE;
-			//else
-			//	myGame.KeysReleased[key] = GL_FALSE;
-
-			//myGame.KeysPressed[key] = GL_FALSE;
 			myGame.KeysReleased[key] = GL_TRUE;
 			myGame.KeysCurrent[key] = GL_FALSE;
 		}

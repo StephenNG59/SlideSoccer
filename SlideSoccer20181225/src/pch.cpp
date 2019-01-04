@@ -25,3 +25,13 @@ void printVec3(glm::vec3 v)
 {
 	std::cout << "vec3: " << v.x << " # " << v.y << " # " << v.z << std::endl;
 }
+
+void testPrint(std::string s)
+{
+	std::cout << s << std::endl;
+}
+
+void testPrint(float f)
+{
+	std::cout << " #" << f << "# " << std::endl;
+}

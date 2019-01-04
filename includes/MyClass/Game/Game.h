@@ -25,7 +25,7 @@
 #include <MyClass/Player/Player.h>
 
 
-enum GameState {
+enum GameStateType {
     GAME_MAINMENU = 0,	/// Main menu
 	GAME_HELP = 1,		/// Help menu
     GAME_PLAYING = 2,	/// Playing
@@ -38,18 +38,18 @@ class Game
     
     public:
 
+        // Constructor/Deconstructor
+        Game(unsigned int Width, unsigned int Height);
+        ~Game();
+
 		// Game players
 		Player * GamePlayers[2];
 
         // Game state
-        GameState State;
+        GameStateType GameState;
         bool KeysCurrent[1024], KeysPressed[1024], KeysReleased[1024];
 		unsigned int ViewportX = 0, ViewportY = 0;
         unsigned int ViewportW, ViewportH;
-
-        // Constructor/Deconstructor
-        Game(unsigned int Width, unsigned int Height);
-        ~Game();
 
         // Initialization
         void Init();
@@ -57,10 +57,13 @@ class Game
         // Gameloop
 		void ProcessInput(float dt);
 		void Update(float dt);
-        void Render(Shader *renderShader);
+		void RenderAll();
+		void RenderWithDoubleCamera();
+		void RenderScene(Shader *renderShader);
 		void RenderWithShadow();
+		void RenderInMainMenu();
 
-        // Camera
+		// Camera
         Camera *GameCamera;
 
         // Shader
@@ -79,6 +82,8 @@ class Game
 
     private:
 
+		// Camera
+		void updateCameras(float dt);
 		// Objects
 		void createObjects();
 		void updateObjects(float dt);
