@@ -23,6 +23,9 @@ float lightRadius = 5.0f;
 // Sensitivity
 extern float keySensitivity;
 
+// Sound
+ISoundEngine *SoundEngine = createIrrKlangDevice();
+
 
 Game::Game(unsigned int screenWidth, unsigned int screenHeight) 
     : GameState(GAME_MAINMENU), KeysPressed(), ViewportW(screenWidth), ViewportH(screenHeight)
@@ -85,6 +88,9 @@ void Game::Init()
 
 	// Text manager
 	GameTextManager = new TextManager(*TextShader);
+
+	// Sound
+	SoundEngine->play2D("resources/audio/BGClip.mp3", true);
 
 }
 
