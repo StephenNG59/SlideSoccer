@@ -181,6 +181,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Use</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\includes\MyClass\Object\ParticleGenerator.cpp" />
+    <ClCompile Include="..\includes\MyClass\Player\Player.cpp" />
     <ClCompile Include="..\includes\MyClass\Skybox\Skybox.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -60,7 +60,7 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dcylinder * sph2, b
 CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres, bool autoDeal);
 
 CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool autoDeal, bool isStuckY);
-void CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal, bool isStuckY);
+CollisionInfo CollideSph2Cube(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &cubes, bool autoDeal, bool isStuckY);
 
 void CollideSph2Ground(Object3Dsphere * sphere, Object3Dcube * ground);
 void CollideSph2Ground(std::vector<Object3Dsphere*> &spheres, Object3Dcube * ground);

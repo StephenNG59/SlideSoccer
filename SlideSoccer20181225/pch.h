@@ -23,6 +23,7 @@ constexpr unsigned int SHADOW_HEIGHT = 2048;
 constexpr unsigned int SHADOW_MAP_ID = 7;
 
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
+
 const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 20.0f, 45.0f);
 const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_X = glm::vec3(1, 0, 0);
@@ -40,6 +41,17 @@ float vecMod(glm::vec3 v);
 float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
+
+enum BallStatus {
+	BallIsFree = 0,
+	Score1 = 1,
+	Score2 = 2,
+	WaitForReset = 3,
+};
+
+struct BallInfo {
+	BallStatus Status;
+};
 
 
 #include "targetver.h"

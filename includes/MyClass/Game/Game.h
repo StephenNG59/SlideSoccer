@@ -22,21 +22,14 @@
 #include <MyClass/Object/ParticleGenerator.h>
 #include <MyClass/Skybox/Skybox.h>
 #include <MyClass/Text/TextManager.h>
+#include <MyClass/Player/Player.h>
 
 
 enum GameState {
-    GAME_ACTIVE = 0,
-    GAME_MENU = 1,
-    GAME_PLAYING = 2,
-    GAME_WIN = 3
-};
-
-
-struct Player {
-	unsigned int id;
-	unsigned int score;
-
-
+    GAME_MAINMENU = 0,	/// Main menu
+	GAME_HELP = 1,		/// Help menu
+    GAME_PLAYING = 2,	/// Playing
+    GAME_COOLDOWN = 3	/// Score and wait for reopen
 };
 
 
@@ -45,9 +38,12 @@ class Game
     
     public:
 
+		// Game players
+		Player * GamePlayers[2];
+
         // Game state
         GameState State;
-        bool Keys[1024];
+        bool KeysCurrent[1024], KeysPressed[1024], KeysReleased[1024];
 		unsigned int ViewportX = 0, ViewportY = 0;
         unsigned int ViewportW, ViewportH;
 
@@ -72,6 +68,8 @@ class Game
 		Shader *DepthShader;
 		Shader *TextShader;
 
+        // Balls
+        std::vector<Object3Dsphere*> GameBalls;
 		// Skybox
 		Skybox *GameSkybox;
 
@@ -90,9 +88,7 @@ class Game
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players
-		std::vector<Object3Dcylinder*> gamePlayers;
-        // Balls
-        std::vector<Object3Dsphere*> gameBalls;
+		std::vector<Object3Dcylinder*> gameKickers;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 
@@ -105,7 +101,8 @@ class Game
 		// Shadow map
 		unsigned int depthMap, depthMapFBO;
 		void initShadow();
-
+		// Status
+		void updateStatus();
 };
 
 #endif
