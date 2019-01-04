@@ -62,6 +62,17 @@ public:
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
 	}
+
+	void DrawWithoutCamera(Shader shader, glm::mat4 modelMatrix)
+	{
+		shader.use();
+		shader.setMat4("model", modelMatrix);
+
+		shader.setFloat("material.shininess", 32.0f);
+
+		for (unsigned int i = 0; i < meshes.size(); i++)
+			meshes[i].Draw(shader);
+	}
     
 private:
     /*  Functions   */

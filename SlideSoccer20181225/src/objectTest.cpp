@@ -44,9 +44,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float currentFrame = 0.0f;
 float collideDelta = 0.0f;
-const float collideCD = 0.02f;
-bool collideCDing = false;
-
+float gameCoolDown = GAME_COOLDOWN_TIME;
 
 // Game
 Game myGame(screenWidth, screenHeight);
@@ -66,8 +64,8 @@ int main()
 	// create a window
 	// ---------------
 	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-	//GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", NULL, NULL);
-	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
+	GLFWwindow* window = glfwCreateWindow(screenWidth - 300, screenHeight - 200, "Slide Soccer", NULL, NULL);
+	//GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;

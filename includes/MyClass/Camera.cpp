@@ -2,7 +2,6 @@
 #include "Camera.h"
 
 
-
 Camera::Camera(glm::vec3 eyeCor /*= glm::vec3(0.0f, 0.0f, 10.0f)*/, glm::vec3 centerCor /*= glm::vec3(0.0f, 0.0f, 0.0f)*/, glm::vec3 upVec /*= glm::vec3(0.0f, 1.0f, 0.0f)*/) : EyeCor(eyeCor), CenterCor(centerCor), UpVecNorm(upVec)
 {
 	updateCameraVectors();
@@ -16,8 +15,17 @@ Camera::Camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY,
 	updateCameraVectors();
 }
 
+void Camera::SetPosition(glm::vec3 eyeCor, glm::vec3 centerCor, glm::vec3 upVec)
+{
+	EyeCor = eyeCor;
+	CenterCor = centerCor;
+	UpVecNorm = glm::normalize(upVec);
+	updateCameraVectors();
+}
+
 void Camera::SmoothlyMoveTo(glm::vec3 destPos, glm::vec3 destCenter, glm::vec3 destUpVec, float totalTime)
 {
+	PreviousStatus = Status;
 	Status = CameraStatus::IsSmoothlyMoving;
 	movingTotalTime = totalTime;
 
@@ -34,14 +42,14 @@ void Camera::Update(float dt)
 		glm::vec3 dPos = destPos - EyeCor;
 		glm::vec3 dCenter = destCenter - CenterCor;
 		glm::vec3 dUpVecNorm = destUpVecNorm - UpVecNorm;
-		testPrint(vecMod(dUpVecNorm));
+		//testPrint(vecMod(dUpVecNorm));
 		if (vecMod(dPos) < 0.05 && vecMod(dCenter) < 0.05/* && vecMod(dUpVecNorm) < 0.02*/)
 		{
 			EyeCor = destPos;
 			CenterCor = destCenter;
 			UpVecNorm = destUpVecNorm;
 			updateCameraVectors();
-			Status = CameraStatus::CameraIsFree;		// TODO: if previous status is tracking?
+			Status = PreviousStatus;
 			return;
 		}
 
@@ -248,9 +256,13 @@ void Camera::TranslateTo(glm::vec3 centerCor)
 
 void Camera::SetTrackingTarget(CameraTrackingTarget target)
 {
-	if (Status == CameraStatus::IsSmoothlyMoving) return;
 
 	this->target = target;
+	Status = CameraStatus::IsTracking;
+
+	if (Status == CameraStatus::IsSmoothlyMoving) return;
+
+
 
 	if (target == CameraTrackingTarget::NoTracking)
 	{

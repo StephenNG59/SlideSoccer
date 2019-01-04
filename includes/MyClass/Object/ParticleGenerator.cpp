@@ -46,8 +46,8 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 	float omegaY = cy.GetOmega().y, v_c = vecMod(cy.GetVelocity()), v_w = abs(omegaY * cy.GetRadius());
 	threashold = 0.02;
 
-	counter += dt;
-	if (counter < threashold) return;
+	/*counter += dt;
+	if (counter < threashold) return;*/
 
 	newParticles = int(v_c + v_w) / 20.0f;
 
@@ -168,7 +168,8 @@ void ParticleGenerator::respawnParticle(Particle &particle, Object3Dcylinder &cy
 
 	float omegaY = cy.GetOmega().y;
 	particle.Velocity = cy.GetVelocity() + glm::vec3(-omegaY * sin(randomRadian), 0, omegaY * cos(randomRadian));
-	particle.Velocity *= (0.3 + rand() % 70 / 100);
+	//particle.Velocity *= (0.3 + rand() % 70 / 100);
+	particle.Velocity *= 0.8;
 }
 
 // Spawn particles using collide info

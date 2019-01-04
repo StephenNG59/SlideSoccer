@@ -7,6 +7,9 @@
 #include <glm\glm.hpp>
 #include <glm\gtc\matrix_transform.hpp>
 #include <glm\gtc\type_ptr.hpp>
+#include <irrklang\irrKlang.h>
+using namespace irrklang;
+
 
 #include <stdlib.h>
 #include <vector>
@@ -79,6 +82,10 @@ class Game
 		// Text
 		TextManager *GameTextManager;
 
+
+		void ShiftControlLeft(int param1);
+		void ShiftControlRight(int param1);
+		void ResetPosition();
 
     private:
 
