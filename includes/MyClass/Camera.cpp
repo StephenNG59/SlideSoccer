@@ -34,7 +34,7 @@ void Camera::Update(float dt)
 		glm::vec3 dPos = destPos - EyeCor;
 		glm::vec3 dCenter = destCenter - CenterCor;
 		glm::vec3 dUpVecNorm = destUpVecNorm - UpVecNorm;
-		testPrint(vecMod(dUpVecNorm));
+		//testPrint(vecMod(dUpVecNorm));
 		if (vecMod(dPos) < 0.05 && vecMod(dCenter) < 0.05/* && vecMod(dUpVecNorm) < 0.02*/)
 		{
 			EyeCor = destPos;

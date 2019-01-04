@@ -276,6 +276,8 @@ class Object3D
 
 		void Draw(Camera camera, Shader shader);
 
+		void DrawWithoutCamera(Shader shader);
+
 
 // -- Vertices data calculating --
 

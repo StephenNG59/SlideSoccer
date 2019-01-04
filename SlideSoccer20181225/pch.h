@@ -40,6 +40,8 @@ constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
 
 constexpr float ACCELERATION_BASIC = 30.0f;
 
+constexpr float GAME_COOLDOWN_TIME = 2.0f;
+
 float vecMod(glm::vec3 v);
 float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);

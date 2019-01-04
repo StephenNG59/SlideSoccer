@@ -44,9 +44,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float currentFrame = 0.0f;
 float collideDelta = 0.0f;
-const float collideCD = 0.02f;
-bool collideCDing = false;
-
+float gameCoolDown = GAME_COOLDOWN_TIME;
 
 // Game
 Game myGame(screenWidth, screenHeight);

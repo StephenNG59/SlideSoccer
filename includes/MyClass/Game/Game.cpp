@@ -117,6 +117,8 @@ void Game::RenderAll()
 		RenderInMainMenu();
 	else if (GameState == GameStateType::GAME_PLAYING)
 		RenderWithDoubleCamera();
+	else if (GameState == GameStateType::GAME_COOLDOWN)
+		RenderWithDoubleCamera();
 
 	//GameTextManager->Render(*TextShader);
 	
@@ -141,17 +143,20 @@ void Game::RenderWithDoubleCamera()
 
 void Game::RenderScene(Shader *renderShader)
 {
+
 	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
 	{
 		(*it)->Draw(*GameCamera, *renderShader);
 	}
     for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
     {
-        (*it)->Draw(*GameCamera, *renderShader);
+		//(*it)->Draw(*GameCamera, *renderShader);
+		(*it)->DrawWithoutCamera(*renderShader);
     }
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *renderShader);
+		//(*it)->Draw(*GameCamera, *renderShader);
+		(*it)->DrawWithoutCamera(*renderShader);
 	}
 	//ground.Draw(*GameCamera, *renderShader);
 
@@ -159,7 +164,8 @@ void Game::RenderScene(Shader *renderShader)
 	particleGenerator_collide->Draw();
 
 	GameShader->setFloat("material.shininess", 32);
-	model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
+	//model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
+	model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
 
 	GameSkybox->Draw(*GameCamera);
 
@@ -217,33 +223,68 @@ void Game::RenderInMainMenu()
 
 }
 
+extern float gameCoolDown;
 void Game::ProcessInput(float dt)
 {
 
-	if (this->KeysCurrent[GLFW_KEY_UP])
+	if (this->KeysPressed[GLFW_KEY_ESCAPE])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+		if (GameState == GameStateType::GAME_PLAYING || GameState == GameStateType::GAME_HELP || GameState == GameStateType::GAME_COOLDOWN)
+		{
+			GameState = GameStateType::GAME_MAINMENU;
+			GameTextManager->UpdateAspect(screenWidth, screenHeight);
+		}
 	}
-	if (this->KeysCurrent[GLFW_KEY_DOWN])
+	if (this->KeysPressed[GLFW_KEY_ENTER])
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+		if (GameState == GameStateType::GAME_MAINMENU)
+		{
+			GameState = GameStateType::GAME_PLAYING;
+			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
+		}
 	}
-	if (this->KeysCurrent[GLFW_KEY_LEFT])
+
+	if (GameState == GameStateType::GAME_COOLDOWN)
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+		gameCoolDown -= dt;
+		if (gameCoolDown <= 0)
+		{
+			// TODO: reset objects positions here.
+			GameState = GameStateType::GAME_PLAYING;
+			GameBalls[0]->SetBallStatus(BallStatus::BallIsFree);
+			gameCoolDown = GAME_COOLDOWN_TIME;
+		}
 	}
-	if (this->KeysCurrent[GLFW_KEY_RIGHT])
+
+	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
-		this->gameKickers[0]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+		if (this->KeysCurrent[GLFW_KEY_UP])
+		{
+			this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_DOWN])
+		{
+			this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_LEFT])
+		{
+			this->gameKickers[0]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_RIGHT])
+		{
+			this->gameKickers[0]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+		}
+
+		if (this->KeysCurrent[GLFW_KEY_J])
+		{
+			this->gameKickers[0]->AddOmega(glm::vec3(0, 0.2f, 0));
+		}
+		if (this->KeysCurrent[GLFW_KEY_K])
+		{
+			this->gameKickers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
+		}
 	}
-	if (this->KeysCurrent[GLFW_KEY_J])
-	{
-		this->gameKickers[0]->AddOmega(glm::vec3(0, 0.2f, 0));
-	}
-	if (this->KeysCurrent[GLFW_KEY_K])
-	{
-		this->gameKickers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
-	}
+
 
 	if (this->KeysCurrent[GLFW_KEY_W])
 	{
@@ -313,23 +354,6 @@ void Game::ProcessInput(float dt)
 	if (this->KeysPressed[GLFW_KEY_B])
 	{
 		GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
-	}
-
-	if (this->KeysPressed[GLFW_KEY_ESCAPE])
-	{
-		if (GameState == GameStateType::GAME_PLAYING || GameState == GameStateType::GAME_HELP || GameState == GameStateType::GAME_COOLDOWN)
-		{
-			GameState = GameStateType::GAME_MAINMENU;
-			GameTextManager->UpdateAspect(screenWidth, screenHeight);
-		}
-	}
-	if (this->KeysPressed[GLFW_KEY_ENTER])
-	{
-		if (GameState == GameStateType::GAME_MAINMENU)
-		{
-			GameState = GameStateType::GAME_PLAYING;
-			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
-		}
 	}
 
 	for (int i = 0; i < 1024; i++)
@@ -602,6 +626,7 @@ void Game::updateStatus()
 			GamePlayers[1]->AddScore(1);
 		}
 		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
+		GameState = GameStateType::GAME_COOLDOWN;
 	}
 
 }

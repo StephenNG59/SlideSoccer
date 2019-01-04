@@ -374,6 +374,52 @@ void Object3D::Draw(Camera camera, Shader shader)
 
 }
 
+void Object3D::DrawWithoutCamera(Shader shader)
+{
+	if (IsExploding)
+	{
+		shader.setBool("isExploding", true);
+		gravity = explosionGravity;
+		shader.setFloat("explosionOffset", explosionOffset);
+	}
+
+	if (UseModel)
+	{
+		objectModel->DrawWithoutCamera(shader, glm::scale(modelMatrix, modelScale));
+		shader.setBool("isExploding", false);
+		return;
+	}
+
+	if (!isVAOcalculated)
+	{
+		calculateVAO();
+		isVAOcalculated = true;
+	}
+
+	bindTexture(shader);
+
+	shader.use();
+
+	modelMatrix = GetModelMatrix();
+	shader.setMat4("model", modelMatrix);
+
+	shader.setVec3("material.ambient", ambient);
+	shader.setVec3("material.diffuse", diffuse);
+	shader.setVec3("material.specular", specular);
+	shader.setVec3("material.emission", emission);
+	shader.setFloat("material.shininess", shininess);
+
+	shader.setInt("ambientTexNum", textures[ObjectTextureType::Ambient].size());
+	shader.setInt("diffuseTexNum", textures[ObjectTextureType::Diffuse].size());
+	shader.setInt("specularTexNum", textures[ObjectTextureType::Specular].size());
+	shader.setInt("emissionTexNum", textures[ObjectTextureType::Emission].size());
+
+	glBindVertexArray(VAO);
+	glDrawElements(GL_TRIANGLES, verticeNum, GL_UNSIGNED_INT, 0);
+	// glDrawArrays(GL_TRIANGLES, 0, verticeNum);
+
+	shader.setBool("isExploding", false);
+}
 
 // #NOTE air friction in the air. when on the desk, static friction will add another power on object.
 glm::vec3 Object3D::calcAirResistAcc()
