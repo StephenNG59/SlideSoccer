@@ -22,6 +22,7 @@
 #include <MyClass/Object/ParticleGenerator.h>
 #include <MyClass/Skybox/Skybox.h>
 #include <MyClass/Text/TextManager.h>
+#include <MyClass/Player/Player.h>
 
 
 enum GameState {
@@ -32,18 +33,13 @@ enum GameState {
 };
 
 
-struct Player {
-	unsigned int id;
-	unsigned int score;
-
-
-};
-
-
 class Game
 {
     
     public:
+
+		// Game players
+		Player * GamePlayers[2];
 
         // Game state
         GameState State;
@@ -72,6 +68,8 @@ class Game
 		Shader *DepthShader;
 		Shader *TextShader;
 
+        // Balls
+        std::vector<Object3Dsphere*> GameBalls;
 		// Skybox
 		Skybox *GameSkybox;
 
@@ -90,9 +88,7 @@ class Game
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		// Players
-		std::vector<Object3Dcylinder*> gamePlayers;
-        // Balls
-        std::vector<Object3Dsphere*> gameBalls;
+		std::vector<Object3Dcylinder*> gameKickers;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 

@@ -73,6 +73,15 @@ class Object3D
 		Object3D * GetThis();
 		ObjectShapeType GetType();
 
+		bool IsBall = false;
+		bool IsGoal1 = false, IsGoal2 = false;
+		BallInfo GetBallInfo();
+		void SetBallStatus(BallStatus status);
+
+	protected:
+
+		BallInfo ballInfo;
+
 
 // -- Data to GPU --
 

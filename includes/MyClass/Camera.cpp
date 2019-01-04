@@ -40,7 +40,7 @@ void Camera::Update(float dt)
 			CenterCor = destCenter;
 			UpVecNorm = destUpVecNorm;
 			updateCameraVectors();
-			Status = CameraStatus::IsFree;		// TODO: if previous status is tracking?
+			Status = CameraStatus::CameraIsFree;		// TODO: if previous status is tracking?
 			return;
 		}
 
@@ -252,7 +252,7 @@ void Camera::SetTrackingTarget(CameraTrackingTarget target)
 
 	if (target == CameraTrackingTarget::NoTracking)
 	{
-		Status = CameraStatus::IsFree;
+		Status = CameraStatus::CameraIsFree;
 	}
 	else
 	{

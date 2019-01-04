@@ -11,7 +11,7 @@
 
 
 enum CameraStatus {
-	IsFree = 0,
+	CameraIsFree = 0,
 	IsSmoothlyMoving = 1,
 	IsTracking = 2
 };
@@ -33,7 +33,7 @@ public:
 	Camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
 
 	// Status
-	CameraStatus Status = CameraStatus::IsFree;
+	CameraStatus Status = CameraStatus::CameraIsFree;
 
 	// Coordinates
 	glm::vec3 EyeCor;
