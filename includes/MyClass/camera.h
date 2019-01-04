@@ -32,6 +32,8 @@ public:
 	// Constructor with scaler values
 	Camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
 
+	void SetPosition(glm::vec3 eyeCor, glm::vec3 centerCor, glm::vec3 upVec);
+
 	// Status
 	CameraStatus Status = CameraStatus::CameraIsFree;
 	CameraStatus PreviousStatus = CameraStatus::CameraIsFree;

@@ -14,8 +14,11 @@ public:
 	void AddScore(int delta);
 	unsigned int GetScore();
 
+	unsigned int CurrentControl;
 
-private: 
+
+	void SetControl(int index);
+private:
 
 	unsigned int score = 0;
 

@@ -80,6 +80,10 @@ class Game
 		TextManager *GameTextManager;
 
 
+		void ShiftControlLeft(int param1);
+		void ShiftControlRight(int param1);
+		void ResetPosition();
+
     private:
 
 		// Camera

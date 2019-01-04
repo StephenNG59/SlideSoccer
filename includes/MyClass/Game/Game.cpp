@@ -1,16 +1,14 @@
 #include "pch.h"
 #include "Game.h"
 
-float groundWidth = 70.0f, groundHeight = 0.2f, groundDepth = 50.0f;
-float wallThick = 1.0f, wallHeight = 5.0f;
-Object3Dcube ground(glm::vec3(groundWidth, groundHeight, groundDepth));
-Object3Dcube wall_e(glm::vec3(wallThick, wallHeight, groundDepth));
-Object3Dcube wall_w(glm::vec3(wallThick, wallHeight, groundDepth));
-Object3Dcube wall_n(glm::vec3(groundWidth, wallHeight, wallThick));
-Object3Dcube wall_s(glm::vec3(groundWidth, wallHeight, wallThick));
-Object3Dcube cube(glm::vec3(1.0f, 1.0f, 1.0f));
-Object3Dsphere ball(0.5f, 32, 20);
-Object3Dsphere ball3(0.4f, 32, 20);
+Object3Dcube ground(glm::vec3(GROUND_WIDTH, GROUND_HEIGHT, GROUND_DEPTH));
+Object3Dcube wall_e(glm::vec3(WALL_THICK, WALL_HEIGHT, GROUND_DEPTH));
+Object3Dcube wall_w(glm::vec3(WALL_THICK, WALL_HEIGHT, GROUND_DEPTH));
+Object3Dcube wall_n(glm::vec3(GROUND_WIDTH, WALL_HEIGHT, WALL_THICK));
+Object3Dcube wall_s(glm::vec3(GROUND_WIDTH, WALL_HEIGHT, WALL_THICK));
+//Object3Dcube cube(glm::vec3(1.0f, 1.0f, 1.0f));
+//Object3Dsphere ball(0.5f, 32, 20);
+//Object3Dsphere ball3(0.4f, 32, 20);
 
 // Screen
 extern unsigned int screenWidth, screenHeight;
@@ -126,18 +124,28 @@ void Game::RenderAll()
 
 void Game::RenderWithDoubleCamera()
 {
+
+	// Left side
+	// ---------
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
+	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
+	glm::vec3 eye(pos.x, CAMERA_POS_2.y, pos.z);
+	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_X);
 	RenderWithShadow();
 	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+
+
+	// Right side
+	// ----------
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
+	pos = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
+	eye = glm::vec3(pos.x, CAMERA_POS_2.y, pos.z);
+	GameCamera->SetPosition(eye, pos, -CAMERA_UPVECNORM_X);
 	RenderWithShadow();
 	ViewportX = 0;
 	ViewportY = 0;
-	ViewportW = screenWidth;
-	ViewportH = screenHeight;
-	//glViewport(0, 0, screenWidth, screenHeight);
 	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[1]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
 }
 
@@ -232,8 +240,11 @@ void Game::ProcessInput(float dt)
 		if (GameState == GameStateType::GAME_PLAYING || GameState == GameStateType::GAME_HELP || GameState == GameStateType::GAME_COOLDOWN)
 		{
 			GameState = GameStateType::GAME_MAINMENU;
+			GamePlayers[0]->ResetScore();
+			GamePlayers[1]->ResetScore();
 			GameTextManager->UpdateAspect(screenWidth, screenHeight);
 			GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
+			GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
 		}
 	}
 	if (this->KeysPressed[GLFW_KEY_ENTER])
@@ -241,6 +252,8 @@ void Game::ProcessInput(float dt)
 		if (GameState == GameStateType::GAME_MAINMENU)
 		{
 			GameState = GameStateType::GAME_PLAYING;
+			ResetPosition();
+
 			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
 			// TODO: reset position here.
 			GameCamera->SetTrackingTarget(CameraTrackingTarget::Player1);
@@ -255,6 +268,8 @@ void Game::ProcessInput(float dt)
 		if (gameCoolDown <= 0)
 		{
 			// TODO: reset objects positions here.
+			ResetPosition();
+
 			GameState = GameStateType::GAME_PLAYING;
 			GameBalls[0]->SetBallStatus(BallStatus::BallIsFree);
 			gameCoolDown = GAME_COOLDOWN_TIME;
@@ -263,22 +278,61 @@ void Game::ProcessInput(float dt)
 
 	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
+
+		// Left player
+		if (this->KeysCurrent[GLFW_KEY_W])
+		{
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_S])
+		{
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_A])
+		{
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+		}
+		if (this->KeysCurrent[GLFW_KEY_D])
+		{
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+		}
+
+		if (this->KeysPressed[GLFW_KEY_Q])
+		{
+			ShiftControlLeft(0);
+		}
+		if (this->KeysPressed[GLFW_KEY_E])
+		{
+			ShiftControlRight(0);
+		}
+
+		// Right player
 		if (this->KeysCurrent[GLFW_KEY_UP])
 		{
-			this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_DOWN])
 		{
-			this->gameKickers[0]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_LEFT])
 		{
-			this->gameKickers[0]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_RIGHT])
 		{
-			this->gameKickers[0]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
 		}
+
+		if (this->KeysPressed[GLFW_KEY_RIGHT_SHIFT])
+		{
+			ShiftControlLeft(1);
+		}
+		if (this->KeysPressed[GLFW_KEY_PAGE_DOWN])
+		{
+			ShiftControlRight(1);
+		}
+
 
 		if (this->KeysCurrent[GLFW_KEY_J])
 		{
@@ -288,24 +342,6 @@ void Game::ProcessInput(float dt)
 		{
 			this->gameKickers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
 		}
-	}
-
-
-	if (this->KeysCurrent[GLFW_KEY_W])
-	{
-		GameCamera->RotateDownByDegree(-keySensitivity);
-	}
-	if (this->KeysCurrent[GLFW_KEY_S])
-	{
-		GameCamera->RotateDownByDegree(keySensitivity);
-	}
-	if (this->KeysCurrent[GLFW_KEY_A])
-	{
-		GameCamera->RotateRightByDegree(-keySensitivity);
-	}
-	if (this->KeysCurrent[GLFW_KEY_D])
-	{
-		GameCamera->RotateRightByDegree(keySensitivity);
 	}
 
 	if (this->KeysCurrent[GLFW_KEY_EQUAL])
@@ -319,6 +355,7 @@ void Game::ProcessInput(float dt)
 
 	if (this->KeysPressed[GLFW_KEY_F1])
 	{
+		GameCamera->Status = CameraStatus::CameraIsFree;
 		GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
 	}
 	if (this->KeysPressed[GLFW_KEY_F2])
@@ -381,14 +418,14 @@ void Game::createObjects()
 	ground.SetPosition(groundPos);
 	ground.SetFriction(0.8f);
 	// wall-e
-	wall_e.SetPosition(groundPos + glm::vec3(0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
+	wall_e.SetPosition(groundPos + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_e.IsGoal1 = true;
 	// wall-w
-	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * groundWidth, 0.5f * wallHeight + 0.5f * groundHeight, 0));
+	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	// wall-n
-	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, -0.5f * groundDepth));
+	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
 	// wall-s
-	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * wallHeight + 0.5f * groundHeight, 0.5f * groundDepth));
+	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
 
 	GameBalls.push_back(new Object3Dsphere(3.0f, 20, 16));
 	GameBalls[0]->IsBall = true;
@@ -532,6 +569,7 @@ void Game::updateCameras(float dt)
 	// Camera tracks target
 	if (GameCamera->Status == CameraStatus::IsTracking)
 	{
+
 		CameraTrackingTarget target = GameCamera->GetTarget();
 
 		glm::vec3 pos;
@@ -634,4 +672,80 @@ void Game::updateStatus()
 		GameState = GameStateType::GAME_COOLDOWN;
 	}
 
+}
+
+/// playerIndex = 0/1
+void Game::ShiftControlLeft(int playerIndex)
+{
+
+	int curCrl = GamePlayers[playerIndex]->CurrentControl;
+	int next1 = (curCrl + 1) % 3 + playerIndex * 3;
+	int	next2 = (curCrl + 2) % 3 + playerIndex * 3;
+	
+	float z0 = gameKickers[curCrl]->GetPosition().z;
+	float z1 = gameKickers[next1]->GetPosition().z;
+	float z2 = gameKickers[next2]->GetPosition().z;
+
+	if (z1 >= z0)
+	{
+		if (z2 <= z0)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+		else if (z2 >= z1)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+		else
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+	}
+	else /*if (z1 < z0)*/
+	{
+		if (z2 >= z0)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+		else if (z2 <= z1)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+		else
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+	}
+
+}
+
+void Game::ShiftControlRight(int playerIndex)
+{
+	int curCrl = GamePlayers[playerIndex]->CurrentControl;
+	int next1 = (curCrl + 1) % 3 + playerIndex * 3;
+	int	next2 = (curCrl + 2) % 3 + playerIndex * 3;
+
+	float z0 = gameKickers[curCrl]->GetPosition().z;
+	float z1 = gameKickers[next1]->GetPosition().z;
+	float z2 = gameKickers[next2]->GetPosition().z;
+
+	if (z1 >= z0)
+	{
+		if (z2 <= z0)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+		else if (z2 >= z1)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+		else
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+	}
+	else /*if (z1 < z0)*/
+	{
+		if (z2 >= z0)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+		else if (z2 <= z1)
+			GamePlayers[playerIndex]->SetControl(playerIndex == 0 ? next2 : next1);
+		else
+			GamePlayers[playerIndex]->SetControl(playerIndex == 1 ? next2 : next1);
+	}
+}
+
+void Game::ResetPosition()
+{
+	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
+	GameBalls[0]->SetVelocity(glm::vec3(0));
+	GameBalls[0]->SetOmega(glm::vec3(0, 5, 0));
+
+	for (int i = 0; i < 6; i++)
+	{
+		gameKickers[i]->SetPosition(KICKER_POSITION[i]);
+		gameKickers[i]->SetStatic();
+	}
 }
