@@ -21,7 +21,7 @@ void ParticleGenerator::Update(float dt)
 		if (p.Life > 0.0f)
 		{	// particle is alive, thus update
 			p.Position -= p.Velocity * dt;
-			p.Color.a -= dt * 2.5;
+			p.Color.a -= dt * 1.5;
 			if (p.Color.a <= 0) p.Life = 0;
 		}
 		if (p.Color.a < 0) p.Life = 0;
@@ -49,7 +49,7 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 	/*counter += dt;
 	if (counter < threashold) return;*/
 
-	newParticles = int(v_c + v_w) / 20.0f;
+	newParticles = (v_c * 2 + v_w) / 20.0f + 1;
 
 	// Add new particles 
 	for (int i = 0; i < newParticles; i++)
@@ -58,7 +58,7 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 		this->respawnParticle(this->particles[unusedParticle], cy);
 	}
 
-	counter -= std::max(dt, threashold);
+	//counter -= std::max(dt, threashold);
 }
 
 // Render all particles
@@ -88,11 +88,29 @@ void ParticleGenerator::init()
 {
 	// Set up mesh and attribute properties
 	GLuint VBO;
+	float size = 0.5;
+	/*GLfloat particle_quad[] = {
+		 0.0f * size, -0.25f * size, -0.886f * size,
+		-0.5f * size, -0.25f * size,  0.289f * size,
+		 0.5f * size, -0.25f * size,  0.289f * size,
+
+		 0.0f * size, -0.25f * size, -0.886f * size,
+		-0.5f * size, -0.25f * size,  0.289f * size,
+		 0.0f * size,  0.75f * size,  0.000f * size,
+
+		-0.5f * size, -0.25f * size,  0.289f * size,
+		 0.5f * size, -0.25f * size,  0.289f * size,
+		 0.0f * size,  0.75f * size,  0.000f * size,
+
+		 0.5f * size, -0.25f * size,  0.289f * size,
+		 0.0f * size, -0.25f * size, -0.886f * size,
+		 0.0f * size,  0.75f * size,  0.000f * size
+	}; */
 	GLfloat particle_quad[] = {
 		 0.0f, -0.25f, -0.886f,
 		-0.5f, -0.25f,  0.289f,
 		 0.5f, -0.25f,  0.289f,
-		 
+
 		 0.0f, -0.25f, -0.886f,
 		-0.5f, -0.25f,  0.289f,
 		 0.0f,  0.75f,  0.000f,
@@ -160,16 +178,18 @@ void ParticleGenerator::respawnParticle(Particle &particle, Object3Dcylinder &cy
 	//float randomRadian = currentFrame;
 	float randomColor = 0.5 + ((rand() % 100) / 100.0f);
 
-	particle.Position = cy.GetPosition() + glm::vec3(radius * cos(randomRadian), 0, radius * sin(randomRadian));
+	float omegaY = cy.GetOmega().y;
+	glm::vec3 velocity = cy.GetVelocity();
+	//float disFromCen = std::max(0.0f, 1 - 0.3f * vecMod(velocity) / (abs(omegaY) + 0.1f));
+	particle.Position = cy.GetPosition() + glm::vec3(radius * cos(randomRadian), 0, radius * sin(randomRadian)) * (rand() % 10 / 10.0f) /* * disFromCen*/;
 
 	particle.Color = glm::vec4(randomColor * Color, 1.0f);
 
 	particle.Life = 1.0f;
 
-	float omegaY = cy.GetOmega().y;
-	particle.Velocity = cy.GetVelocity() + glm::vec3(-omegaY * sin(randomRadian), 0, omegaY * cos(randomRadian));
-	//particle.Velocity *= (0.3 + rand() % 70 / 100);
-	particle.Velocity *= 0.8;
+	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), 0, omegaY * cos(randomRadian));
+	particle.Velocity *= (0.3 + rand() % 70 / 100);
+	//particle.Velocity *= 0.8;
 }
 
 // Spawn particles using collide info
