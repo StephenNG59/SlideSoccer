@@ -23,7 +23,7 @@ class ParticleGenerator
 	public:
 
 		// Constructor
-		ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount, glm::vec3 color = glm::vec3(0.2, 0.2, 0.7));
+		ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount, glm::vec3 color = glm::vec3(0.2, 0.3, 0.4));
 
 		// Update all particles
 		void Update(float dt);

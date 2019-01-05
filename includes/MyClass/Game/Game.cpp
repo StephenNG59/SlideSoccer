@@ -6,6 +6,7 @@ Object3Dcube wall_e(glm::vec3(WALL_THICK, WALL_HEIGHT, GROUND_DEPTH));
 Object3Dcube wall_w(glm::vec3(WALL_THICK, WALL_HEIGHT, GROUND_DEPTH));
 Object3Dcube wall_n(glm::vec3(GROUND_WIDTH, WALL_HEIGHT, WALL_THICK));
 Object3Dcube wall_s(glm::vec3(GROUND_WIDTH, WALL_HEIGHT, WALL_THICK));
+Object3Dcube wall_center(glm::vec3(20, WALL_HEIGHT + 10, 2));
 //Object3Dcube cube(glm::vec3(1.0f, 1.0f, 1.0f));
 //Object3Dsphere ball(0.5f, 32, 20);
 //Object3Dsphere ball3(0.4f, 32, 20);
@@ -136,7 +137,7 @@ void Game::RenderWithDoubleCamera()
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
 	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
-	glm::vec3 eye(pos.x, CAMERA_POS_2.y, pos.z);
+	glm::vec3 eye(pos.x - CAMERA_LEAN_OFFSET, CAMERA_POS_2.y, pos.z);
 	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_X);
 	RenderWithShadow();
 	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
@@ -147,7 +148,7 @@ void Game::RenderWithDoubleCamera()
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
 	pos = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
-	eye = glm::vec3(pos.x, CAMERA_POS_2.y, pos.z);
+	eye = glm::vec3(pos.x + CAMERA_LEAN_OFFSET, CAMERA_POS_2.y, pos.z);
 	GameCamera->SetPosition(eye, pos, -CAMERA_UPVECNORM_X);
 	RenderWithShadow();
 	ViewportX = 0;
@@ -418,22 +419,26 @@ void Game::ProcessInput(float dt)
 
 void Game::createObjects()
 {
-	// ground
 	glm::vec3 groundPos = glm::vec3(0, -5.0f, 0.0f);
-	ground.SetMass(0);
-	ground.SetPosition(groundPos);
-	ground.SetFriction(0.8f);
+	// ground
+	ground.SetPosition(groundPos);		// this is useful when drawing pitch
+	//ground.SetMass(0);
+	//ground.SetFriction(0.8f);
 	// wall-e
 	wall_e.SetPosition(groundPos + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_e.IsGoal1 = true;
 	// wall-w
 	wall_w.SetPosition(groundPos + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_w.IsGoal2 = true;
 	// wall-n
 	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
 	// wall-s
 	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
+	// wall-center
+	wall_center.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_center.SetOmega(glm::vec3(0, 0.2, 0));
 
-	GameBalls.push_back(new Object3Dsphere(3.0f, 20, 16));
+	GameBalls.push_back(new Object3Dsphere(1.3f, 20, 16));
 	GameBalls[0]->IsBall = true;
 	GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
@@ -462,16 +467,18 @@ void Game::createObjects()
 	//gameKickers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
 	GameBalls[0]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.03f));
 
-
 	gameWalls.push_back(&wall_e);
 	gameWalls.push_back(&wall_w);
 	gameWalls.push_back(&wall_n);
 	gameWalls.push_back(&wall_s);
+	//gameWalls.push_back(&wall_center);
 	for (Object3Dcube * gameWall : gameWalls)
 	{
 		gameWall->SetMass(0);
 		//gameWall->SetERestitution(1.2f);		// dangerous
 	}
+
+
 }
 
 void Game::initLights()
@@ -637,6 +644,10 @@ void Game::updateObjects(float dt)
 		(*it)->UpdatePhysics(dt);
 	}
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
+	{
+		(*it)->UpdatePhysics(dt);
+	}
+	for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin() + 4; it < gameWalls.end(); it++)
 	{
 		(*it)->UpdatePhysics(dt);
 	}
