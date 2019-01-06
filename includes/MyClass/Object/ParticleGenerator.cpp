@@ -38,7 +38,7 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 		if (p.Life > 0.0f)
 		{	// particle is alive, thus update
 			p.Position -= p.Velocity * dt;
-			p.Color.a -= dt * 2.5;
+			p.Color.a -= dt * 1.5;
 		}
 		if (p.Color.a < 0) p.Life = 0;
 	}
@@ -49,7 +49,8 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 	/*counter += dt;
 	if (counter < threashold) return;*/
 
-	newParticles = (v_c * 2 + v_w) / 20.0f + 1;
+	newParticles = (v_c * 2 + v_w) / 10.0f + 1;
+	//newParticles *= 2;
 
 	// Add new particles 
 	for (int i = 0; i < newParticles; i++)
@@ -88,7 +89,7 @@ void ParticleGenerator::init()
 {
 	// Set up mesh and attribute properties
 	GLuint VBO;
-	float size = 0.5;
+	float size = 0.3;
 	/*GLfloat particle_quad[] = {
 		 0.0f * size, -0.25f * size, -0.886f * size,
 		-0.5f * size, -0.25f * size,  0.289f * size,
@@ -187,7 +188,7 @@ void ParticleGenerator::respawnParticle(Particle &particle, Object3Dcylinder &cy
 
 	particle.Life = 1.0f;
 
-	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), 0, omegaY * cos(randomRadian));
+	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), /*rand() * 27 / (float)RAND_MAX - 3*/0, omegaY * cos(randomRadian));
 	particle.Velocity *= (0.3 + rand() % 70 / 100);
 	//particle.Velocity *= 0.8;
 }

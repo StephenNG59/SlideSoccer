@@ -29,6 +29,7 @@ using namespace irrklang;
 
 
 enum GameStateType {
+	GAME_LOADING = -1,
     GAME_MAINMENU = 0,	/// Main menu
 	GAME_HELP = 1,		/// Help menu
     GAME_PLAYING = 2,	/// Playing

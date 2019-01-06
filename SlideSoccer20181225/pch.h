@@ -34,16 +34,21 @@ const glm::vec3 CAMERA_UPVECNORM_X = glm::vec3(1, 0, 0);
 const glm::vec3 CAMERA_UPVECNORM_Y = glm::vec3(0, 1, 0);
 const glm::vec3 CAMERA_UPVECNORM_Z = glm::vec3(0, 0, 1);
 const glm::vec3 CAMERA_POS_2 = glm::vec3(0.0f, 40.0f, 0.0f);
+constexpr float CAMERA_POS_2_Y = 40.0f;
+constexpr float CAMERA_POS_3_Y = 20.0f;
 const glm::vec3 CAMERA_CENTER_2 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_2 = glm::vec3(0, 0, -1);
 
-constexpr float CAMERA_LEAN_OFFSET = 20.0f;
+constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
+constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
 
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
 
 constexpr float ACCELERATION_BASIC = 30.0f;
+constexpr float FRICTION_CONSTANT = 4;
+constexpr float FRICTION_LINEAR = 0.32f;
 
 constexpr float GAME_COOLDOWN_TIME = 2.0f;
 

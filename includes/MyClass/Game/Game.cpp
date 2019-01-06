@@ -70,7 +70,7 @@ void Game::Init()
 
 
 	// particle generator
-	particleGenerator_tail = new ParticleGenerator(particleShader, GameCamera, 50);
+	particleGenerator_tail = new ParticleGenerator(particleShader, GameCamera, 500);
 	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200);
 
 	// model
@@ -107,8 +107,8 @@ void Game::Update(float dt)
 	
 	updateLights(currentTime);
 
-	particleGenerator_tail->Update(dt, *gameKickers[0], 2);
-	particleGenerator_tail->Update(dt, *gameKickers[1], 2);
+	particleGenerator_tail->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
+	particleGenerator_tail->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
 
 	particleGenerator_collide->Update(dt);
 
@@ -137,8 +137,8 @@ void Game::RenderWithDoubleCamera()
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
 	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
-	glm::vec3 eye(pos.x - CAMERA_LEAN_OFFSET, CAMERA_POS_2.y, pos.z);
-	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_X);
+	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET2), CAMERA_POS_3_Y, pos.z * 1.25);
+	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_Y);
 	RenderWithShadow();
 	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
 
@@ -148,7 +148,7 @@ void Game::RenderWithDoubleCamera()
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
 	pos = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
-	eye = glm::vec3(pos.x + CAMERA_LEAN_OFFSET, CAMERA_POS_2.y, pos.z);
+	eye = glm::vec3(pos.x + CAMERA_LEAN_OFFSET1, CAMERA_POS_2_Y, pos.z);
 	GameCamera->SetPosition(eye, pos, -CAMERA_UPVECNORM_X);
 	RenderWithShadow();
 	ViewportX = 0;
@@ -259,6 +259,8 @@ void Game::ProcessInput(float dt)
 		if (GameState == GameStateType::GAME_MAINMENU)
 		{
 			GameState = GameStateType::GAME_PLAYING;
+			GamePlayers[0]->ResetScore();
+			GamePlayers[1]->ResetScore();
 			ResetPosition();
 
 			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
@@ -457,8 +459,8 @@ void Game::createObjects()
 		gameKickers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
 		gameKickers[i]->SetGravity(glm::vec3(0, 0, 0));
 		gameKickers[i]->SetERestitution(1.0f);
-		gameKickers[i]->SetLinearFriction(0.25f);
-		gameKickers[i]->SetConstantFriction(5);
+		gameKickers[i]->SetLinearFriction(FRICTION_LINEAR);
+		gameKickers[i]->SetConstantFriction(FRICTION_CONSTANT);
 	}
 	gameKickers[0]->SetVelocity(glm::vec3(1.5f, 0, 2.5f));
 	gameKickers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
@@ -759,6 +761,7 @@ void Game::ResetPosition()
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetVelocity(glm::vec3(0));
 	GameBalls[0]->SetOmega(glm::vec3(0, 5, 0));
+	GameBalls[0]->SetBallStatus(BallIsFree);
 
 	for (int i = 0; i < 6; i++)
 	{
