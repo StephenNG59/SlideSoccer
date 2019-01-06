@@ -18,14 +18,15 @@
 constexpr float GROUND_WIDTH = 70.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 50.0f;
 constexpr float WALL_THICK = 1.0f, WALL_HEIGHT = 5.0f;
 
-constexpr float CAMERA_ZNEAR = 0.1f;
-constexpr float CAMERA_ZFAR = 1000.0f;
-
 constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
 constexpr unsigned int SHADOW_MAP_ID = 7;
 
+// Camera
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
+
+constexpr float CAMERA_ZNEAR = 0.1f;
+constexpr float CAMERA_ZFAR = 1000.0f;
 
 const glm::vec3 CAMERA_POS_1 = glm::vec3(0.0f, 20.0f, 45.0f);
 const glm::vec3 CAMERA_CENTER_1 = glm::vec3(0, -5.0f, 0);
@@ -42,10 +43,14 @@ const glm::vec3 CAMERA_UPVECNORM_2 = glm::vec3(0, 0, -1);
 constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
 constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
+// Particle
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
-
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
+const glm::vec3 PARTICLE_COLOR_BLUE = glm::vec3(0.2, 0.2, 0.7);
+const glm::vec3 PARTICLE_COLOR_RED = glm::vec3(0.7, 0.2, 0.2);
+const glm::vec3 PARTICLE_COLOR_GREEN = glm::vec3(0.2, 0.6, 0.2);
 
+// Physics
 constexpr float ACCELERATION_BASIC = 30.0f;
 constexpr float FRICTION_CONSTANT = 4;
 constexpr float FRICTION_LINEAR = 0.32f;

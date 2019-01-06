@@ -51,7 +51,7 @@ void Game::Init()
     // build and compile our shader program
 	// ------------------------------------
     GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl", "shaders/game/gameGS.glsl");
-	particleShader = new Shader("shaders/particle/vs.glsl", "shaders/particle/fs.glsl");
+	particleShader = new Shader("shaders/particle/particleVS.glsl", "shaders/particle/particleFS.glsl");
 	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
 	TextShader = new Shader("shaders/text/textVS.glsl", "shaders/text/textFS.glsl");
 
@@ -70,8 +70,9 @@ void Game::Init()
 
 
 	// particle generator
-	particleGenerator_tail = new ParticleGenerator(particleShader, GameCamera, 500);
-	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200);
+	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_RED);
+	particleGenerator_tail_1 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
+	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_GREEN);
 
 	// model
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
@@ -107,8 +108,8 @@ void Game::Update(float dt)
 	
 	updateLights(currentTime);
 
-	particleGenerator_tail->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
-	particleGenerator_tail->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
+	particleGenerator_tail_0->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
+	particleGenerator_tail_1->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
 
 	particleGenerator_collide->Update(dt);
 
@@ -140,7 +141,7 @@ void Game::RenderWithDoubleCamera()
 	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET2), CAMERA_POS_3_Y, pos.z * 1.25);
 	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_Y);
 	RenderWithShadow();
-	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.5, 0.8f, 0.2f));
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[0]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.5f, PARTICLE_COLOR_RED);
 
 
 	// Right side
@@ -153,7 +154,7 @@ void Game::RenderWithDoubleCamera()
 	RenderWithShadow();
 	ViewportX = 0;
 	ViewportY = 0;
-	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[1]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.0f, glm::vec3(0.3, 0.7f, 0.9f));
+	GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[1]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.5f, PARTICLE_COLOR_BLUE);
 }
 
 void Game::RenderScene(Shader *renderShader)
@@ -175,7 +176,8 @@ void Game::RenderScene(Shader *renderShader)
 	}
 	//ground.Draw(*GameCamera, *renderShader);
 
-	particleGenerator_tail->Draw();
+	particleGenerator_tail_0->Draw();
+	particleGenerator_tail_1->Draw();
 	particleGenerator_collide->Draw();
 
 	GameShader->setFloat("material.shininess", 32);

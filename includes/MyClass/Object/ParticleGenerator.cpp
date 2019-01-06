@@ -201,7 +201,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 	glm::vec3 v1 = cInfo.relativeSpeed, v2 = cInfo.yzstarSpeed;
 	float v1_abs = vecMod(v1), v2_abs = vecMod(v2);
 	glm::vec3 v_dir = (v2_abs > 0.0001f) ? glm::normalize(v2) : ((v1_abs > 0.0001f) ? glm::normalize(v1) : glm::vec3(0));
-	int num = std::min(int(0.5 * v1_abs), 30);
+	int num = std::min(int(1 * v1_abs), 60);
 	
 	for (int i = 0; i < num; i++)
 	{
@@ -209,7 +209,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		Particle &p = particles[i];
 		p.Life = 1.0f;
 
-		p.Position = cInfo.collidePos;
+		p.Position = cInfo.collidePos + glm::vec3(rand() % 61 / 30.0f - 1.0f, 0, rand() % 61 / 30.0f - 1.0f);
 		
 		//p.Velocity = (i % 2) ? v2 : -v2;
 		p.Velocity = -(1 + v1_abs / 20.0f) * v2;
