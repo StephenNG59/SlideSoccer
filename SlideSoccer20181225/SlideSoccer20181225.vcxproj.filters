@@ -73,8 +73,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="shaders\particle\fs.glsl" />
-    <None Include="shaders\particle\vs.glsl" />
     <None Include="shaders\skybox\skyboxVS.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />
     <None Include="shaders\depth\depthVS.glsl" />
@@ -82,6 +80,10 @@
     <None Include="shaders\game\gameGS.glsl" />
     <None Include="shaders\text\textVS.glsl" />
     <None Include="shaders\text\textFS.glsl" />
+    <None Include="shaders\particle\particleFS.glsl" />
+    <None Include="shaders\particle\particleVS.glsl" />
+    <None Include="shaders\game\gameFS.glsl" />
+    <None Include="shaders\game\gameVS.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\skybox\back.jpg">

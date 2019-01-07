@@ -78,7 +78,7 @@ void Game::Init()
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
-	model = new Model("resources/objects/scene/slidesoccer scene.obj");
+	model = new Model("resources/objects/scene/slidesoccer_scene.obj");
 
 
 	// Skybox

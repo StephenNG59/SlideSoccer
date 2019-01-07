@@ -198,9 +198,11 @@
   <ItemGroup>
     <None Include="shaders\depth\depthFS.glsl" />
     <None Include="shaders\depth\depthVS.glsl" />
+    <None Include="shaders\game\gameFS.glsl" />
     <None Include="shaders\game\gameGS.glsl" />
-    <None Include="shaders\particle\fs.glsl" />
-    <None Include="shaders\particle\vs.glsl" />
+    <None Include="shaders\game\gameVS.glsl" />
+    <None Include="shaders\particle\particleFS.glsl" />
+    <None Include="shaders\particle\particleVS.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />
     <None Include="shaders\skybox\skyboxVS.glsl" />
     <None Include="shaders\text\textFS.glsl" />

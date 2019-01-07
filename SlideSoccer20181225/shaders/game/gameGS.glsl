@@ -19,8 +19,11 @@ out GS_FS {
 vec3 GetNormal();
 void deal_vertex(int index);
 void explode_1();
+void GeneratePoint(vec3 dd[3]);
+//void deal_vertex_2(int i, int j);
 
 vec3 normal;
+vec3 point_center[3];
 
 uniform float currentTime;
 uniform bool isExploding = false;
@@ -36,6 +39,23 @@ void main() {
 	}
 	EndPrimitive();
 }
+
+//void main()
+//{
+//	normal = GetNormal();
+//
+//	GeneratePoint(point_center);
+//
+//	for (int i = 0; i < 4; i++)
+//	{
+//		for (int j = 0; j < 3; j++)
+//		{
+//			deal_vertex_2(i, j);
+//			EmitVertex();
+//		}
+//		EndPrimitive();
+//	}
+//}
 
 
 void deal_vertex(int index)
@@ -58,4 +78,11 @@ vec3 GetNormal()
 	vec3 a = vec3(gl_in[0].gl_Position) - vec3(gl_in[1].gl_Position);
     vec3 b = vec3(gl_in[2].gl_Position) - vec3(gl_in[1].gl_Position);
     return normalize(cross(a, b));
+}
+
+void GeneratePoint(vec3 dd[3])
+{
+	dd[0] = 0.5 * vec3(gl_in[1].gl_Position + gl_in[2].gl_Position);
+	dd[1] = 0.5 * vec3(gl_in[2].gl_Position + gl_in[0].gl_Position);
+	dd[2] = 0.5 * vec3(gl_in[0].gl_Position + gl_in[1].gl_Position);
 }
