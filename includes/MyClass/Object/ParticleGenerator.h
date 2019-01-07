@@ -42,9 +42,10 @@ class ParticleGenerator
 		void Draw();
 
 		glm::vec3 Color;
+		
+		bool IsActive = true;
 
-
-	private:
+private:
 
 		// counter
 		float counter = 0, threashold = 0.05f;
@@ -78,45 +79,53 @@ public:
 class ParticleGeneratorInstance
 {
 public:
-	ParticleGeneratorInstance(Shader *shader);
+	ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum);
 	~ParticleGeneratorInstance();
 
-	void Update(float dt, glm::vec3 position, glm::vec3 velocity, glm::vec3 cameraPos);
+	void Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos);
 	void Draw(Camera *camera);
+	void SetGravity(glm::vec3 g);
 
+	bool IsActive = false;
 
 private:
 	// Basic
+	int lineNum, columnNum;
 	unsigned int particleCounts = 0;
 	unsigned int lastUsedParticle = 0;
 	Particle particleContainer[PARTICLE_MAX_AMOUNT];
-
+	glm::vec3 gravity = PARTICLE_GRAVITY;
 	// Shader
 	Shader *shader;
 	// VAO
 	unsigned int VAO;
 	// Vertex
 	unsigned int VBO_billboard;
-	const float g_vertex_buffer_data[18] = {
-		-0.5f,  0.5f, 0,
-		 0.5f, -0.5f, 0,
-		 0.5f,  0.5f, 0,
+	const float g_vertex_buffer_data[30] = {
+		// position			// uv
+		-0.5f,  0.5f, 0,	0, 1,
+		 0.5f, -0.5f, 0,	1, 0,
+		 0.5f,  0.5f, 0,	1, 1,
 
-		 0.5f, -0.5f, 0,
-		-0.5f,  0.5f, 0,
-		-0.5f, -0.5f, 0,
+		 0.5f, -0.5f, 0,	1, 0,
+		-0.5f,  0.5f, 0,	0, 1,
+		-0.5f, -0.5f, 0,	0, 0,
 	};
+
 	// Positions & life
 	unsigned int VBO_pos_life;
 	float g_particle_pos_life_data[PARTICLE_MAX_AMOUNT * 4];
 	// Color
 	unsigned int VBO_color;
 	float g_particle_color_data[PARTICLE_MAX_AMOUNT * 4];
-
+	// Texture
+	unsigned int texture;
 
 	void init();
 	unsigned int firstUnusedParticle();
 	void sortParticles();
 
-	void respawnParticle(Particle &p, glm::vec3 position, glm::vec3 velocity);
+	void respawnParticle(Particle &p, glm::vec3 position, glm::vec3 velocity, float velocityAbs, float spread);
 };
+
+unsigned int loadTexture(char const * path/*, bool flip_y = true*/);

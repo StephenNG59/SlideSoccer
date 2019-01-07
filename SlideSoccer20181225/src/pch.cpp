@@ -35,3 +35,5 @@ void testPrint(float f)
 {
 	std::cout << " #" << f << "# " << std::endl;
 }
+
+

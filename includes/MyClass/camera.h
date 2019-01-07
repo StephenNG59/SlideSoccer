@@ -87,6 +87,9 @@ public:
 	// Get front direction
 	glm::vec3 GetFrontDirection();
 
+	glm::vec3 GetRightDirection();
+	glm::vec3 GetUpDirection();
+
 	// Get view matrix
 	glm::mat4 GetViewMatrix();
 

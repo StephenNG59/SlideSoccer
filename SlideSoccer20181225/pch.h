@@ -44,14 +44,15 @@ constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
 constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
 // Particle
-constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
-constexpr float PARTICLE_PER_SECOND = 200.0f;
-const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8f, 0);
+constexpr unsigned int PARTICLE_MAX_AMOUNT = 20000;
+constexpr float PARTICLE_PER_SECOND = 5000.0f;
+const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8, 0);
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
 const glm::vec3 PARTICLE_COLOR_BLUE = glm::vec3(0.2, 0.2, 0.7);
 const glm::vec3 PARTICLE_COLOR_RED = glm::vec3(0.7, 0.2, 0.2);
 const glm::vec3 PARTICLE_COLOR_GREEN = glm::vec3(0.2, 0.6, 0.2);
+constexpr float PARTICLE_LIFE = 3.0f;
 
 // Physics
 constexpr float ACCELERATION_BASIC = 30.0f;
@@ -75,6 +76,7 @@ void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
 void testPrint(std::string s);
 void testPrint(float f);
+
 
 enum BallStatus {
 	BallIsFree = 0,

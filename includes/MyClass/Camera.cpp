@@ -100,6 +100,16 @@ glm::vec3 Camera::GetFrontDirection()
 	return lookVecNorm;
 }
 
+glm::vec3 Camera::GetRightDirection()
+{
+	return rightVecNorm;
+}
+
+glm::vec3 Camera::GetUpDirection()
+{
+	return UpVecNorm;
+}
+
 glm::mat4 Camera::GetViewMatrix()
 {
 	return viewMatrix;

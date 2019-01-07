@@ -36,6 +36,11 @@ Game::Game(unsigned int screenWidth, unsigned int screenHeight)
 
 Game::~Game()
 {
+	delete(GameBalls[0]);
+	for (int i = 0; i < gameKickers.size(); i++)
+		delete(gameKickers[i]);
+	delete(model);
+	// TODO: delete all stuff
 
 }
 
@@ -65,23 +70,16 @@ void Game::Init()
 	// -- Objects --
 	createObjects();
 
-
 	// -- Lights --
 	initLights();
 
-
-	// particle generator
-	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_RED);
-	particleGenerator_tail_1 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
-	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_GREEN);
-	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader);
+	initParticle();
 
 	// model
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
 	model = new Model("resources/objects/scene/slidesoccer_scene.obj");
-
 
 	// Skybox
 	initSkybox();
@@ -110,11 +108,7 @@ void Game::Update(float dt)
 	
 	updateLights(currentTime);
 
-	particleGenerator_tail_0->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
-	particleGenerator_tail_1->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
-	particleGenerator_collide->Update(dt);
-
-	particleGeneratorInstance_tail_0->Update(dt, GameBalls[0]->GetPosition(), GameBalls[0]->GetVelocity(), GameCamera->GetPosition());
+	updateParticles(dt);
 
 	updateStatus();
 
@@ -183,13 +177,20 @@ void Game::RenderScene(Shader *renderShader)
 	particleGenerator_tail_1->Draw();
 	particleGenerator_collide->Draw();
 
-	particleGeneratorInstance_tail_0->Draw(GameCamera);
 
 	GameShader->setFloat("material.shininess", 32);
 	//model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
-	model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
+	model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(9.5f)));
 
 	GameSkybox->Draw(*GameCamera);
+
+	// #NOTE this should be at last because it has transparent texture
+	//if (particleGeneratorInstance_tail_0->IsActive)
+		particleGeneratorInstance_tail_0->Draw(GameCamera);
+	//if (particleGeneratorInstance_tail_1->IsActive)
+		particleGeneratorInstance_tail_1->Draw(GameCamera);
+	//if (particleGeneratorInstance_explosion_0->IsActive)
+		particleGeneratorInstance_explosion_0->Draw(GameCamera);
 
 }
 
@@ -575,6 +576,17 @@ void Game::initShadow()
 
 }
 
+void Game::initParticle()
+{
+	// particle generator
+	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_RED);
+	particleGenerator_tail_1 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
+	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_GREEN);
+	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas.png", 8, 8);
+	particleGeneratorInstance_tail_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-BreakingGlass.png", 4, 8);
+	particleGeneratorInstance_explosion_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4);
+	particleGeneratorInstance_explosion_0->SetGravity(glm::vec3(0, 0, 0));
+}
 
 // -- Update Functions --
 // ----------------------
@@ -689,6 +701,7 @@ void Game::updateStatus()
 		if (bInfo.Status == BallStatus::Score1)
 		{
 			GamePlayers[0]->AddScore(1);
+			SoundEngine->play3D("resources/audio/explosion1.wav", irrklang::vec3df(0, 0, 0), false);
 		}
 		if (bInfo.Status == BallStatus::Score2)
 		{
@@ -775,4 +788,41 @@ void Game::ResetPosition()
 		gameKickers[i]->SetPosition(KICKER_POSITION[i]);
 		gameKickers[i]->SetStatic();
 	}
+}
+
+void Game::updateParticles(float dt)
+{
+
+	particleGenerator_tail_0->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
+	particleGenerator_tail_1->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
+	particleGenerator_collide->Update(dt);
+
+	particleGeneratorInstance_explosion_0->IsActive = GameState == GAME_COOLDOWN;
+	particleGeneratorInstance_tail_0->IsActive = GameState == GAME_MAINMENU;
+	particleGeneratorInstance_tail_1->IsActive = GameState == GAME_MAINMENU;
+
+	//if (particleGeneratorInstance_tail_1->IsActive)
+		particleGeneratorInstance_tail_1->Update(
+			dt,
+			glm::vec3(0, -5, 0),
+			glm::vec3(10 * sin(currentTime), 5, -10 * cos(currentTime)),
+			20,
+			0.2,
+			GameCamera->GetPosition());
+	//if (particleGeneratorInstance_tail_0->IsActive)
+		particleGeneratorInstance_tail_0->Update(
+			dt, 
+			glm::vec3(GROUND_WIDTH * 0.5f, -5, -GROUND_DEPTH * 0.5f), 
+			glm::vec3(-2, 15, 2), 
+			30, 
+			0.1,
+			GameCamera->GetPosition());
+	//if (particleGeneratorInstance_explosion_0->IsActive)
+		particleGeneratorInstance_explosion_0->Update(
+			dt,
+			glm::vec3(0, 20, 0),
+			glm::vec3(0, 0, 0),
+			5,
+			0,
+			GameCamera->GetPosition());
 }

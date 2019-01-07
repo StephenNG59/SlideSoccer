@@ -3,6 +3,9 @@
 #include "Collision.h"
 
 
+#pragma region ParticleGenerator Origin Version
+
+
 ParticleGenerator::ParticleGenerator(Shader *shader, Camera *camera, unsigned int amount, glm::vec3 color /*= glm::vec3(0.2, 0.2, 0.7)*/)
 	: shader(shader), camera(camera), amount(amount), Color(color)
 {
@@ -204,7 +207,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 	float v1_abs = vecMod(v1), v2_abs = vecMod(v2);
 	glm::vec3 v_dir = (v2_abs > 0.0001f) ? glm::normalize(v2) : ((v1_abs > 0.0001f) ? glm::normalize(v1) : glm::vec3(0));
 	int num = std::min(int(1 * v1_abs), 60);
-	
+
 	for (int i = 0; i < num; i++)
 	{
 
@@ -212,7 +215,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		p.Life = 1.0f;
 
 		p.Position = cInfo.collidePos + glm::vec3(rand() % 61 / 30.0f - 1.0f, 0, rand() % 61 / 30.0f - 1.0f);
-		
+
 		//p.Velocity = (i % 2) ? v2 : -v2;
 		p.Velocity = -(1 + v1_abs / 20.0f) * v2;
 		p.Velocity *= ((rand() % 69 / 100.0f) + 0.02);		// 0.02 ~ 0.7
@@ -223,30 +226,41 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 }
 
 
+#pragma endregion
+
+
+
 
 // --------------------------------------------------------------------------------------------
 
 
-ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader)
+ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum) : lineNum(lineNum), columnNum(columnNum)
 {
 	this->shader = shader;
+	
+	// Load texture
+	texture = loadTexture(texturePath);
+	
 	this->init();
 }
 
 
-void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 velocity, glm::vec3 cameraPos)
+void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos)
 {
-	// Respawn particles
-	int newParticles = (int)(dt * PARTICLE_PER_SECOND);
-	if (newParticles > (int)(0.016 * PARTICLE_PER_SECOND))
-		newParticles = (int)(0.016 * PARTICLE_PER_SECOND);
 
-	for (int i = 0; i < newParticles; i++)
+	if (IsActive)
 	{
-		int particleIndex = firstUnusedParticle();
-		respawnParticle(particleContainer[particleIndex], position, velocity);
-	}
+		// Respawn particles
+		int newParticles = (int)(dt * PARTICLE_PER_SECOND);
+		if (newParticles > (int)(0.016 * PARTICLE_PER_SECOND))
+			newParticles = (int)(0.016 * PARTICLE_PER_SECOND);
 
+		for (int i = 0; i < newParticles; i++)
+		{
+			int particleIndex = firstUnusedParticle();
+			respawnParticle(particleContainer[particleIndex], position, velocityDir, velocityAbs, spread);
+		}
+	}
 
 	// Update status of particles, and update data arrays
 	particleCounts = 0;
@@ -260,7 +274,7 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 			p.Life -= dt;
 			if (p.Life > 0.0f)
 			{
-				p.Velocity += PARTICLE_GRAVITY * dt;
+				p.Velocity += gravity * dt;
 				p.Position += p.Velocity * dt;
 				p.CameraDistance = glm::length2(p.Position - cameraPos);
 
@@ -285,7 +299,7 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 	}
 
 	// Sort particles
-	sortParticles();
+	//sortParticles();
 
 	// Update pos and life buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
@@ -301,6 +315,8 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 
 void ParticleGeneratorInstance::Draw(Camera *camera)
 {
+	glDepthMask(GL_FALSE);
+
 	// Use additive blending to give it a 'glow' effect
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
@@ -308,33 +324,54 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	this->shader->use();
 	this->shader->setMat4("view", camera->GetViewMatrix());
 	this->shader->setMat4("projection", camera->GetProjectionMatrix());
+	this->shader->setFloat("maxLife", PARTICLE_LIFE);
+	this->shader->setVec3("cameraRight", camera->GetRightDirection());
+	this->shader->setVec3("cameraUp", camera->GetUpDirection());
+	this->shader->setInt("lineNum", lineNum);
+	this->shader->setInt("columnNum", columnNum);
+
+	// Texture binding
+	shader->setInt("myTexture", 0);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 
 	// 1st attribute buffer: vertices
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_billboard);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glVertexAttribDivisor(0, 0);		// Always reuse
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_billboard);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribDivisor(1, 0);		// Always reuse
 
 	// 2nd attribute buffer: pos & life
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
-	glVertexAttribDivisor(1, 1);		// One per quad
-
-	// 3rd attribute buffer: color
 	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
 	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribDivisor(2, 1);		// One per quad
+
+	// 3rd attribute buffer: color
+	glEnableVertexAttribArray(3);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(3, 1);		// One per quad
 
 	// Draw
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, particleCounts);
 
 	// Change back to default
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	glDepthMask(GL_TRUE);
 }
 
+
+void ParticleGeneratorInstance::SetGravity(glm::vec3 g)
+{
+	gravity = g;
+}
 
 void ParticleGeneratorInstance::init()
 {
@@ -392,10 +429,84 @@ void ParticleGeneratorInstance::sortParticles()
 	std::sort(&particleContainer[0], &particleContainer[PARTICLE_MAX_AMOUNT]);
 }
 
-void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position, glm::vec3 velocity)
+void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread)
 {
-	p.Life = 4.0f;
+	// 
+	if (velocityAbs == 0) return;
+	// Explosion-like: all directions
+	if (velocityDir == glm::vec3(0))
+	{
+		float x = rand() % 11 / 10.0f, y = rand() % 11 / 10.0f, z = rand() % 11 / 10.0f;
+		glm::vec3 dir = glm::normalize(glm::vec3(x, y, z));
+		int negative = rand() % 8;
+		if (negative / 4) dir.x = -dir.x;
+		negative %= 4;
+		if (negative / 2) dir.y = -dir.y;
+		if (negative % 2) dir.z = -dir.z;
+
+		p.Velocity = dir * velocityAbs;
+	}
+	// Focus on specific direction
+	else if (spread == 0)
+	{
+		p.Velocity = velocityDir * velocityAbs;
+	}
+	// Spread
+	else
+	{
+		// Casually choose a vector, cross with velocity and find a vector that's perpendicular to them (emmm...)
+		glm::vec3 v_prime = velocityDir + glm::vec3(1.7, 1.9, 0);
+		glm::vec3 per_1 = glm::normalize(glm::cross(velocityDir, v_prime));
+		glm::vec3 per_2 = glm::normalize(glm::cross(velocityDir, per_1));
+		float theta = rand() % 628;
+		float spread_12 = rand() % 101 / 100.0f * spread;
+		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs;
+
+	}
+
+
+	p.Life = PARTICLE_LIFE;
 	p.Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
-	p.Position = position + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f);
-	p.Velocity = velocity + glm::vec3(rand() % 101 / 5.0f - 10.0f, rand() % 101 / 5.0f, rand() % 101 / 5.0f - 10.0f);
+	p.Position = position/* + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f)*/;
+
+	//p.Velocity = velocity + glm::vec3(rand() % 10 / 5.0f - 1.0f, rand() % 10 / 5.0f + 10, rand() % 10 / 5.0f - 1.0f);
+}
+
+unsigned int loadTexture(char const * path/*, bool flip_y = true*/)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	//stbi_set_flip_vertically_on_load(true);
+
+	int width, height, nrComponents;
+	unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
 }
