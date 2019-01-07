@@ -100,6 +100,7 @@ class Game
 		void updateLights(float currentTime);
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
+		Shader* particleInstanceShader;
 		// Players
 		std::vector<Object3Dcylinder*> gameKickers;
         // Walls and Ground
@@ -108,6 +109,7 @@ class Game
 		ParticleGenerator* particleGenerator_tail_0;
 		ParticleGenerator* particleGenerator_tail_1;
 		ParticleGenerator* particleGenerator_collide;
+		ParticleGeneratorInstance* particleGeneratorInstance_tail_0;
 		// Model
 		Model *model;
 		// Skybox

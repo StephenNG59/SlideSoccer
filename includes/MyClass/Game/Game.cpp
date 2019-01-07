@@ -52,6 +52,7 @@ void Game::Init()
 	// ------------------------------------
     GameShader = new Shader("shaders/game/gameVS.glsl", "shaders/game/gameFS.glsl", "shaders/game/gameGS.glsl");
 	particleShader = new Shader("shaders/particle/particleVS.glsl", "shaders/particle/particleFS.glsl");
+	particleInstanceShader = new Shader("shaders/particle/particleInstanceVS.glsl", "shaders/particle/particleInstanceFS.glsl");
 	DepthShader = new Shader("shaders/depth/depthVS.glsl", "shaders/depth/depthFS.glsl");
 	TextShader = new Shader("shaders/text/textVS.glsl", "shaders/text/textFS.glsl");
 
@@ -73,6 +74,7 @@ void Game::Init()
 	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_RED);
 	particleGenerator_tail_1 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
 	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_GREEN);
+	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader);
 
 	// model
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
@@ -110,8 +112,9 @@ void Game::Update(float dt)
 
 	particleGenerator_tail_0->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
 	particleGenerator_tail_1->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
-
 	particleGenerator_collide->Update(dt);
+
+	particleGeneratorInstance_tail_0->Update(dt, GameBalls[0]->GetPosition(), GameBalls[0]->GetVelocity(), GameCamera->GetPosition());
 
 	updateStatus();
 
@@ -179,6 +182,8 @@ void Game::RenderScene(Shader *renderShader)
 	particleGenerator_tail_0->Draw();
 	particleGenerator_tail_1->Draw();
 	particleGenerator_collide->Draw();
+
+	particleGeneratorInstance_tail_0->Draw(GameCamera);
 
 	GameShader->setFloat("material.shininess", 32);
 	//model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));

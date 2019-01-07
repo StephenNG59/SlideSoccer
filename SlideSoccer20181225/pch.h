@@ -44,6 +44,9 @@ constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
 constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
 // Particle
+constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
+constexpr float PARTICLE_PER_SECOND = 200.0f;
+const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8f, 0);
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
 const glm::vec3 PARTICLE_COLOR_BLUE = glm::vec3(0.2, 0.2, 0.7);

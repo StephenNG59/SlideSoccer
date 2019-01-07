@@ -202,6 +202,8 @@
     <None Include="shaders\game\gameGS.glsl" />
     <None Include="shaders\game\gameVS.glsl" />
     <None Include="shaders\particle\particleFS.glsl" />
+    <None Include="shaders\particle\particleInstanceFS.glsl" />
+    <None Include="shaders\particle\particleInstanceVS.glsl" />
     <None Include="shaders\particle\particleVS.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />
     <None Include="shaders\skybox\skyboxVS.glsl" />

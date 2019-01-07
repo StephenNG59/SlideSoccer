@@ -135,6 +135,8 @@ void ParticleGenerator::init()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 	/*glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLAT, GL_FALSE, 5 * sizeof(float), (void *)(3 * sizeof(float)));*/
+	//glVertexAttribDivisor(0, 0);
+
 	glBindVertexArray(0);
 
 	// Create this->amount default particle instances
@@ -218,4 +220,182 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		p.Color = glm::vec4(0.8f * Color, 1.0f);
 
 	}
+}
+
+
+
+// --------------------------------------------------------------------------------------------
+
+
+ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader)
+{
+	this->shader = shader;
+	this->init();
+}
+
+
+void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 velocity, glm::vec3 cameraPos)
+{
+	// Respawn particles
+	int newParticles = (int)(dt * PARTICLE_PER_SECOND);
+	if (newParticles > (int)(0.016 * PARTICLE_PER_SECOND))
+		newParticles = (int)(0.016 * PARTICLE_PER_SECOND);
+
+	for (int i = 0; i < newParticles; i++)
+	{
+		int particleIndex = firstUnusedParticle();
+		respawnParticle(particleContainer[particleIndex], position, velocity);
+	}
+
+
+	// Update status of particles, and update data arrays
+	particleCounts = 0;
+	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
+	{
+		Particle& p = particleContainer[i];
+
+		if (p.Life > 0.0f)
+		{
+
+			p.Life -= dt;
+			if (p.Life > 0.0f)
+			{
+				p.Velocity += PARTICLE_GRAVITY * dt;
+				p.Position += p.Velocity * dt;
+				p.CameraDistance = glm::length2(p.Position - cameraPos);
+
+				g_particle_pos_life_data[4 * particleCounts + 0] = p.Position.x;
+				g_particle_pos_life_data[4 * particleCounts + 1] = p.Position.y;
+				g_particle_pos_life_data[4 * particleCounts + 2] = p.Position.z;
+				
+				g_particle_pos_life_data[4 * particleCounts + 3] = p.Life;
+
+				g_particle_color_data[4 * particleCounts + 0] = p.Color.r;
+				g_particle_color_data[4 * particleCounts + 1] = p.Color.g;
+				g_particle_color_data[4 * particleCounts + 2] = p.Color.b;
+				g_particle_color_data[4 * particleCounts + 3] = p.Color.a;
+			}
+			else
+			{
+				p.CameraDistance = -1.0f;
+			}
+
+			particleCounts++;
+		}
+	}
+
+	// Sort particles
+	sortParticles();
+
+	// Update pos and life buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);// Buffer orphaning, a common way to improve streaming performance.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_pos_life_data);
+
+	// Update color buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_color_data);
+
+}
+
+void ParticleGeneratorInstance::Draw(Camera *camera)
+{
+	// Use additive blending to give it a 'glow' effect
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
+	glBindVertexArray(VAO);
+	this->shader->use();
+	this->shader->setMat4("view", camera->GetViewMatrix());
+	this->shader->setMat4("projection", camera->GetProjectionMatrix());
+
+
+	// 1st attribute buffer: vertices
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_billboard);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(0, 0);		// Always reuse
+
+	// 2nd attribute buffer: pos & life
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(1, 1);		// One per quad
+
+	// 3rd attribute buffer: color
+	glEnableVertexAttribArray(2);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(2, 1);		// One per quad
+
+	// Draw
+	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, particleCounts);
+
+	// Change back to default
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+
+void ParticleGeneratorInstance::init()
+{
+	// VAO
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	// The VBO containing the 6(4) vertices of the particles
+	glGenBuffers(1, &VBO_billboard);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_billboard);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
+	// The VBO containing the positions and life of the particles
+	glGenBuffers(1, &VBO_pos_life);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
+	// Initialize with empty (NULL) buffer. It will be updated each frame with GL_STREAM_DRAW.
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+
+	// The VBO containing the colors of the particles
+	glGenBuffers(1, &VBO_color);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	// Initialize with empty (NULL) buffer. It will be updated each frame with GL_STREAM_DRAW.
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+
+	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
+	{
+		particleContainer[i].Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
+	}
+
+}
+
+unsigned int ParticleGeneratorInstance::firstUnusedParticle()
+{
+	// First search from last used particle, this will usually return almost instantly
+	for (int i = lastUsedParticle; i < PARTICLE_MAX_AMOUNT; ++i) {
+		if (this->particleContainer[i].Life <= 0.0f) {
+			lastUsedParticle = i;
+			return i;
+		}
+	}
+	// Otherwise, do a linear search
+	for (int i = 0; i < lastUsedParticle; ++i) {
+		if (this->particleContainer[i].Life <= 0.0f) {
+			lastUsedParticle = i;
+			return i;
+		}
+	}
+	// All particles are taken, override the first one (note that if it repeatedly hits this case, more particles should be reserved)
+	lastUsedParticle = 0;
+	return 0;
+}
+
+void ParticleGeneratorInstance::sortParticles()
+{
+	std::sort(&particleContainer[0], &particleContainer[PARTICLE_MAX_AMOUNT]);
+}
+
+void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position, glm::vec3 velocity)
+{
+	p.Life = 4.0f;
+	p.Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
+	p.Position = position + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f);
+	p.Velocity = velocity + glm::vec3(rand() % 101 / 5.0f - 10.0f, rand() % 101 / 5.0f, rand() % 101 / 5.0f - 10.0f);
 }
