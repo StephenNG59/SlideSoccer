@@ -1,8 +1,11 @@
 # SlideSoccer
 
 ## A 2-player Game
+![Cover of Demo](https://github.com/StephenNG59/SlideSoccer/blob/dev/screenshots/2019-01-06_202217.png "Cover of Demo")
 ### Goal
 * Put the ball inside the other player's goal
+
+![Screenshot of Playing](https://github.com/StephenNG59/SlideSoccer/blob/dev/screenshots/2019-01-06_202236.png "Screenshot of Playing")
 ### Operations
 * Player1:
   * w/s/a/d to accelerate
