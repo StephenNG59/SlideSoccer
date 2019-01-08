@@ -105,6 +105,8 @@ float ShadowCalculation(vec4 fragPosLightSpace);
 
 float shadow;
 
+uniform bool ghostMode = false;
+
 void main()
 {
 	// Calculate shadow
@@ -132,16 +134,18 @@ void main()
 	vec3 result;
 	for(int i = 0; i < NR_LIGHT_NUM; i++)
 	{
-		if (pointLights[i].isExist)
+		if (pointLights[i].isExist && !ghostMode)
 			result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir);
-		if (dirLights[i].isExist)
+		if (dirLights[i].isExist && !ghostMode)
 			result += CalcDirLight(dirLights[i], norm, viewDir);
 		if (spotLights[i].isExist)
 			result += CalcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir);
 	}
 
 	result *= (1 - shadow);
-	result += emission;
+
+	if (!ghostMode)
+		result += emission;
 	
 //	result = result * (1.0 - shadow);
 //	result = vec3(fs_in.FragPosLightSpace);

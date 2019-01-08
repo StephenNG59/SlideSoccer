@@ -106,8 +106,9 @@ class Game
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 
-		ParticleGenerator* particleGenerator_tail_0;
 		ParticleGenerator* particleGenerator_tail_1;
+		ParticleGenerator* particleGenerator_tail_2;
+		ParticleGenerator* particleGenerator_tail_0;
 		ParticleGenerator* particleGenerator_collide;
 		ParticleGeneratorInstance* particleGeneratorInstance_tail_0;
 		ParticleGeneratorInstance* particleGeneratorInstance_tail_1;

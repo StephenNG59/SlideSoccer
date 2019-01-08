@@ -37,6 +37,7 @@ class ParticleGenerator
 		// Update all particles
 		void Update(float dt);
 		void Update(float dt, Object3Dcylinder &cy, unsigned int newParticles);
+		void Update(float dt, Object3Dsphere &cy, unsigned int newParticles);
 
 		// Render all particles
 		void Draw();
@@ -67,6 +68,7 @@ private:
 
 		// Respawns particle
 		void respawnParticle(Particle &particle, Object3Dcylinder &cy);
+		void respawnParticle(Particle &particle, Object3Dsphere &cy);
 
 public:
 	void SpawnParticle(CollisionInfo cInfo, unsigned int particleNum);
@@ -101,15 +103,16 @@ private:
 	unsigned int VAO;
 	// Vertex
 	unsigned int VBO_billboard;
+	float factor = 0.45;
 	const float g_vertex_buffer_data[30] = {
-		// position			// uv
-		-0.5f,  0.5f, 0,	0, 1,
-		 0.5f, -0.5f, 0,	1, 0,
-		 0.5f,  0.5f, 0,	1, 1,
-
-		 0.5f, -0.5f, 0,	1, 0,
-		-0.5f,  0.5f, 0,	0, 1,
-		-0.5f, -0.5f, 0,	0, 0,
+		// position							// uv
+		-0.5f * factor,  0.5f * factor, 0,	0, 1,
+		 0.5f * factor, -0.5f * factor, 0,	1, 0,
+		 0.5f * factor,  0.5f * factor, 0,	1, 1,
+		 
+		 0.5f * factor, -0.5f * factor, 0,	1, 0,
+		-0.5f * factor,  0.5f * factor, 0,	0, 1,
+		-0.5f * factor, -0.5f * factor, 0,	0, 0,
 	};
 
 	// Positions & life

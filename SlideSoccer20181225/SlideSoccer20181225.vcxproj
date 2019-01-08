@@ -207,6 +207,7 @@
     <None Include="shaders\particle\particleVS.glsl" />
     <None Include="shaders\skybox\skyboxFS.glsl" />
     <None Include="shaders\skybox\skyboxVS.glsl" />
+    <None Include="shaders\text\test.glsl" />
     <None Include="shaders\text\textFS.glsl" />
     <None Include="shaders\text\textVS.glsl" />
   </ItemGroup>

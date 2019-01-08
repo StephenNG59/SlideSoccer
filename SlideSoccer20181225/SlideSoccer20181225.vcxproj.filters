@@ -86,6 +86,7 @@
     <None Include="shaders\game\gameVS.glsl" />
     <None Include="shaders\particle\particleInstanceFS.glsl" />
     <None Include="shaders\particle\particleInstanceVS.glsl" />
+    <None Include="shaders\text\test.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="resources\textures\skybox\back.jpg">

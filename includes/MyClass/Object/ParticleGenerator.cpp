@@ -65,6 +65,40 @@ void ParticleGenerator::Update(float dt, Object3Dcylinder &cy, unsigned int newP
 	//counter -= std::max(dt, threashold);
 }
 
+void ParticleGenerator::Update(float dt, Object3Dsphere &cy, unsigned int newParticles)
+{
+	// Update all particles
+	for (int i = 0; i < this->amount; i++)
+	{
+		Particle &p = this->particles[i];
+		p.Life -= dt; // reduce life
+		if (p.Life > 0.0f)
+		{	// particle is alive, thus update
+			p.Position -= p.Velocity * dt;
+			p.Color.a -= dt * 1.5;
+		}
+		if (p.Color.a < 0) p.Life = 0;
+	}
+
+	float omegaY = cy.GetOmega().y, v_c = vecMod(cy.GetVelocity()), v_w = abs(omegaY * cy.GetRadius());
+	threashold = 0.02;
+
+	/*counter += dt;
+	if (counter < threashold) return;*/
+
+	newParticles = (v_c * 2 + v_w) / 10.0f + 1;
+	//newParticles *= 2;
+
+	// Add new particles 
+	for (int i = 0; i < newParticles; i++)
+	{
+		int unusedParticle = this->firstUnusedParticle();
+		this->respawnParticle(this->particles[unusedParticle], cy);
+	}
+
+	//counter -= std::max(dt, threashold);
+}
+
 // Render all particles
 void ParticleGenerator::Draw()
 {
@@ -176,6 +210,29 @@ unsigned int ParticleGenerator::firstUnusedParticle()
 }
 
 void ParticleGenerator::respawnParticle(Particle &particle, Object3Dcylinder &cy)
+{
+	extern float currentFrame;
+
+	float radius = cy.GetRadius();
+	float randomRadian = (rand() % 63);		// 2pie = 6.28
+	//float randomRadian = currentFrame;
+	float randomColor = 0.5 + ((rand() % 100) / 100.0f);
+
+	float omegaY = cy.GetOmega().y;
+	glm::vec3 velocity = cy.GetVelocity();
+	//float disFromCen = std::max(0.0f, 1 - 0.3f * vecMod(velocity) / (abs(omegaY) + 0.1f));
+	particle.Position = cy.GetPosition() + glm::vec3(radius * cos(randomRadian), 0, radius * sin(randomRadian)) * (rand() % 10 / 10.0f) /* * disFromCen*/;
+
+	particle.Color = glm::vec4(randomColor * Color, 1.0f);
+
+	particle.Life = 1.0f;
+
+	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), /*rand() * 27 / (float)RAND_MAX - 3*/0, omegaY * cos(randomRadian));
+	particle.Velocity *= (0.3 + rand() % 70 / 100);
+	//particle.Velocity *= 0.8;
+}
+
+void ParticleGenerator::respawnParticle(Particle &particle, Object3Dsphere &cy)
 {
 	extern float currentFrame;
 
@@ -460,7 +517,7 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		glm::vec3 per_2 = glm::normalize(glm::cross(velocityDir, per_1));
 		float theta = rand() % 628;
 		float spread_12 = rand() % 101 / 100.0f * spread;
-		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs;
+		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs * (0.95f + rand() % 11 / 100.0f);
 
 	}
 
