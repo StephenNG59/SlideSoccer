@@ -81,14 +81,17 @@ public:
 class ParticleGeneratorInstance
 {
 public:
-	ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum);
+	ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum, float sizeFactor = 0.45f);
 	~ParticleGeneratorInstance();
 
 	void Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos);
+	void UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, float velocityAbs, glm::vec3 cameraPos);
 	void Draw(Camera *camera);
 	void SetGravity(glm::vec3 g);
 
 	bool IsActive = false;
+	float SizeFactor = 0.45f;
+	float Life = PARTICLE_LIFE;
 
 private:
 	// Basic
@@ -97,22 +100,23 @@ private:
 	unsigned int lastUsedParticle = 0;
 	Particle particleContainer[PARTICLE_MAX_AMOUNT];
 	glm::vec3 gravity = PARTICLE_GRAVITY;
+	float groundY = -5.0f, eRestitution = 0.5f;
 	// Shader
 	Shader *shader;
 	// VAO
 	unsigned int VAO;
 	// Vertex
 	unsigned int VBO_billboard;
-	float factor = 0.45;
+	
 	const float g_vertex_buffer_data[30] = {
 		// position							// uv
-		-0.5f * factor,  0.5f * factor, 0,	0, 1,
-		 0.5f * factor, -0.5f * factor, 0,	1, 0,
-		 0.5f * factor,  0.5f * factor, 0,	1, 1,
+		-0.5f * SizeFactor,  0.5f * SizeFactor, 0,	0, 1,
+		 0.5f * SizeFactor, -0.5f * SizeFactor, 0,	1, 0,
+		 0.5f * SizeFactor,  0.5f * SizeFactor, 0,	1, 1,
 		 
-		 0.5f * factor, -0.5f * factor, 0,	1, 0,
-		-0.5f * factor,  0.5f * factor, 0,	0, 1,
-		-0.5f * factor, -0.5f * factor, 0,	0, 0,
+		 0.5f * SizeFactor, -0.5f * SizeFactor, 0,	1, 0,
+		-0.5f * SizeFactor,  0.5f * SizeFactor, 0,	0, 1,
+		-0.5f * SizeFactor, -0.5f * SizeFactor, 0,	0, 0,
 	};
 
 	// Positions & life

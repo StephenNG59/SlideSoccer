@@ -1,7 +1,7 @@
 #version 330 core
 
 #define NR_TEX_NUM 3
-#define NR_LIGHT_NUM 3
+#define NR_LIGHT_NUM 6
 
 out vec4 FragColor;
 
@@ -95,7 +95,8 @@ uniform int emissionTexNum = 0;
 uniform vec3 shadowLightPos;
 uniform mat4 lightSpaceMatrix;
 uniform sampler2D shadowMap;
-
+uniform samplerCube skybox;
+uniform vec3 cameraPos;
 
 // function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -106,51 +107,69 @@ float ShadowCalculation(vec4 fragPosLightSpace);
 float shadow;
 
 uniform bool ghostMode = false;
+uniform bool isRefract = false, isReflect = false;
 
 void main()
 {
-	// Calculate shadow
-	shadow = ShadowCalculation(fs_in.FragPosLightSpace);
-
-	// ambient
-	vec3 ambient = light.ambient * material.ambient;
-
-	// diffuse
-	vec3 norm = normalize(fs_in.Normal);
-	vec3 lightDir = normalize(light.position - fs_in.FragPos);
-	float diff = max(dot(norm, lightDir), 0.0);
-	vec3 diffuse = light.diffuse * material.diffuse;
-
-	// specular
-	vec3 viewDir = normalize(viewPos - fs_in.FragPos);
-
-	// emission
-	vec3 emission = vec3(0.0f);
-	for (int i = 0; i < emissionTexNum; i++)
+	if (!isRefract && !isReflect)
 	{
-		emission += vec3(texture(material.emissionTex[i], fs_in.TexCoords));
-	}
+		// Calculate shadow
+		shadow = ShadowCalculation(fs_in.FragPosLightSpace);
 
-	vec3 result;
-	for(int i = 0; i < NR_LIGHT_NUM; i++)
-	{
-		if (pointLights[i].isExist && !ghostMode)
-			result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir);
-		if (dirLights[i].isExist && !ghostMode)
-			result += CalcDirLight(dirLights[i], norm, viewDir);
-		if (spotLights[i].isExist)
-			result += CalcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir);
-	}
+		// ambient
+		vec3 ambient = light.ambient * material.ambient;
 
-	result *= (1 - shadow);
+		// diffuse
+		vec3 norm = normalize(fs_in.Normal);
+		vec3 lightDir = normalize(light.position - fs_in.FragPos);
+		float diff = max(dot(norm, lightDir), 0.0);
+		vec3 diffuse = light.diffuse * material.diffuse;
 
-	if (!ghostMode)
-		result += emission;
+		// specular
+		vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+
+		// emission
+		vec3 emission = vec3(0.0f);
+		for (int i = 0; i < emissionTexNum; i++)
+		{
+			emission += vec3(texture(material.emissionTex[i], fs_in.TexCoords));
+		}
+
+		vec3 result;
+		for(int i = 0; i < NR_LIGHT_NUM; i++)
+		{
+			if (pointLights[i].isExist && !ghostMode)
+				result += CalcPointLight(pointLights[i], norm, fs_in.FragPos, viewDir);
+			if (dirLights[i].isExist && !ghostMode)
+				result += CalcDirLight(dirLights[i], norm, viewDir);
+			if (spotLights[i].isExist)
+				result += CalcSpotLight(spotLights[i], norm, fs_in.FragPos, viewDir);
+		}
+
+		result *= (1 - shadow);
+
+		if (!ghostMode)
+			result += emission;
 	
-//	result = result * (1.0 - shadow);
-//	result = vec3(fs_in.FragPosLightSpace);
+		//	result = result * (1.0 - shadow);
+		//	result = vec3(fs_in.FragPosLightSpace);
 
-	FragColor = vec4(result, 1.0);
+		FragColor = vec4(result, 1.0);
+	}
+	else
+	{
+		float ratio = 1.00 / 1.52;
+		vec3 I = normalize(fs_in.FragPos - cameraPos);
+		vec3 R;
+		if (isRefract)
+			R = refract(I, normalize(fs_in.Normal), ratio);
+		else if (isReflect)
+			R = reflect(I, normalize(fs_in.Normal));
+
+		FragColor = vec4(texture(skybox, R).rgb, 1.0);
+
+	}
+	
 }
 
 

@@ -21,7 +21,7 @@ void Skybox::Draw(Camera camera)
 	// skybox cube
 	glBindVertexArray(VAO);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, CubemapTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 36);
 	glBindVertexArray(0);
 	glDepthFunc(GL_LESS); // set depth function back to default
@@ -85,7 +85,7 @@ void Skybox::init(std::vector<std::string> facesPath, std::vector<std::string> s
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
 	// Load textures
-	cubemapTexture = loadCubemap(facesPath);
+	CubemapTexture = loadCubemap(facesPath);
 
 	// Shader configuration
 	skyboxShader = new Shader(shadersPath[0].c_str(), shadersPath[1].c_str());

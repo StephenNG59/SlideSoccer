@@ -324,6 +324,7 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	}
 	// if (dis < rSph && is moving apart relatively) { relation = Breaking; } 
 	cInfo.relation = RelationType::Ambiguous;
+	cInfo.collidePos = closestWC;
 
 
 	glm::vec3 v1 = sphere->GetVelocity(), v2 = cube->GetVelocity();
@@ -457,6 +458,8 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 
 
 	glm::vec3 v12touch_yzstar = v12touch - glm::dot(v12touch, xStar) * xStar, v21touch_yzstar = -v12touch_yzstar;
+	cInfo.relativeSpeed = v12touch;
+	cInfo.yzstarSpeed = v12touch_yzstar;
 
 	// momentum change caused by yzstar part of the impulse
 

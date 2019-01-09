@@ -18,6 +18,7 @@ Object3Dcube wall_center(glm::vec3(20, WALL_HEIGHT + 10, 2));
 int whoGoal = 0;
 
 bool ghostMode = false;
+bool iceMode = false;
 
 // Screen
 extern unsigned int screenWidth, screenHeight;
@@ -25,6 +26,7 @@ extern unsigned int screenWidth, screenHeight;
 // Time
 float currentTime = 0;
 float timeFromLastCollide = 0;
+extern float gameCoolDown;
 
 // Light
 float lightRadius = 0.5 * GROUND_WIDTH;
@@ -91,7 +93,10 @@ void Game::Init()
 
 	// Skybox
 	initSkybox();
-
+	GameShader->use();
+	glActiveTexture(GL_TEXTURE0 + 15);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
+	GameShader->setInt("skybox", 15);
 
 	// Shadow
 	this->initShadow();
@@ -144,7 +149,17 @@ void Game::RenderWithDoubleCamera()
 	ViewportH = screenHeight;
 	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
 	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET2), CAMERA_POS_3_Y, pos.z * 1.25);
+	
+	if (GameState == GAME_COOLDOWN)
+		eye += (1 - gameCoolDown / GAME_COOLDOWN_TIME) * glm::vec3(-40, 40, 0);
+	
 	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_Y);
+	
+	for (int i = 0; i < 6; i++)
+	{
+		GameShader->setBool("spotLights[" + std::to_string(i) + "].isExist", i < 3);
+	}
+
 	RenderWithShadow();
 	if (GameState == GAME_COOLDOWN)
 	{
@@ -165,7 +180,18 @@ void Game::RenderWithDoubleCamera()
 	ViewportY = 0;
 	pos = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
 	eye = glm::vec3(pos.x + CAMERA_LEAN_OFFSET1, CAMERA_POS_2_Y, pos.z);
+	
+	if (GameState == GAME_COOLDOWN)
+		eye += (1 - gameCoolDown / GAME_COOLDOWN_TIME) * glm::vec3(40, 40, 0);
+
 	GameCamera->SetPosition(eye, pos, -CAMERA_UPVECNORM_X);
+
+	GameShader->use();
+	for (int i = 0; i < 6; i++)
+	{
+		GameShader->setBool("spotLights[" + std::to_string(i) + "].isExist", i >= 3);
+	}
+
 	RenderWithShadow();
 	ViewportX = 0;
 	ViewportY = 0;
@@ -181,6 +207,8 @@ void Game::RenderWithDoubleCamera()
 		GameTextManager->RenderText(*TextShader, std::to_string(GamePlayers[1]->GetScore()), 0.25 * screenWidth, 0.9 * screenHeight, 1.5f, PARTICLE_COLOR_BLUE);
 	}
 }
+bool isReflect = false;
+bool isRefract = false;
 
 void Game::RenderScene(Shader *renderShader)
 {
@@ -189,27 +217,46 @@ void Game::RenderScene(Shader *renderShader)
 	{
 		(*it)->Draw(*GameCamera, *renderShader);
 	}
-    for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
+
+	glDisable(GL_CULL_FACE);
+		GameShader->use();
+		GameShader->setBool("isReflect", isReflect);
+		GameShader->setBool("isRefract", isRefract);
+		GameShader->setVec3("cameraPos", GameCamera->GetPosition());
+		for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
     {
 		//(*it)->Draw(*GameCamera, *renderShader);
 		(*it)->DrawWithoutCamera(*renderShader);
     }
+		GameShader->setBool("isReflect", false);
+		GameShader->setBool("isRefract", false);
+	glEnable(GL_CULL_FACE);
+
+	//renderShader->setBool("ghostMode", false);
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
 		//(*it)->Draw(*GameCamera, *renderShader);
 		(*it)->DrawWithoutCamera(*renderShader);
 	}
 	//ground.Draw(*GameCamera, *renderShader);
+	//if (ghostMode) renderShader->setBool("ghostMode", true);
 
 	particleGenerator_tail_1->Draw();
 	particleGenerator_tail_2->Draw();
-	particleGenerator_tail_0->Draw();
+	if (!ghostMode || GameState == GAME_MAINMENU)
+		particleGenerator_tail_0->Draw();
 	particleGenerator_collide->Draw();
 
 
-	GameShader->setFloat("material.shininess", 32);
+	//GameShader->setFloat("material.shininess", 32);
 	//model->Draw(*GameCamera, *GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(8.0f)));
-	model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(9.5f)));
+	GameShader->use();
+	GameShader->setBool("isReflect", isReflect);
+	GameShader->setBool("isRefract", isRefract);
+		model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(9.5f)));
+	GameShader->setBool("isReflect", false);
+	GameShader->setBool("isRefract", false);  
+
 
 	GameSkybox->Draw(*GameCamera);
 
@@ -220,6 +267,8 @@ void Game::RenderScene(Shader *renderShader)
 		particleGeneratorInstance_tail_1->Draw(GameCamera);
 	//if (particleGeneratorInstance_explosion_0->IsActive)
 		particleGeneratorInstance_explosion_0->Draw(GameCamera);
+		particleGeneratorInstance_explosion_1->Draw(GameCamera);
+		particleGeneratorInstance_ice->Draw(GameCamera);
 
 }
 
@@ -308,6 +357,23 @@ void Game::ProcessInput(float dt)
 		}
 	}
 
+	if (this->KeysPressed[GLFW_KEY_3])
+	{
+		ghostMode = !ghostMode;
+	}
+	if (this->KeysPressed[GLFW_KEY_4])
+	{
+		iceMode = !iceMode;
+	}
+	if (this->KeysPressed[GLFW_KEY_5])
+	{
+		isReflect = !isReflect;
+	}
+	if (this->KeysPressed[GLFW_KEY_6])
+	{
+		isRefract = !isRefract;
+	}
+
 	if (GameState == GameStateType::GAME_COOLDOWN)
 	{
 		gameCoolDown -= dt;
@@ -352,52 +418,56 @@ void Game::ProcessInput(float dt)
 			ShiftControlRight(0);
 		}
 
-		if (this->KeysPressed[GLFW_KEY_R])
+		if (this->KeysCurrent[GLFW_KEY_Z])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->SetPosition(GameBalls[0]->GetPosition() - glm::vec3(10, 0, 0));
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddOmega(glm::vec3(0, 0.4f, 0));
+		}
+		if (this->KeysCurrent[GLFW_KEY_C])
+		{
+			this->gameKickers[GamePlayers[0]->CurrentControl]->AddOmega(glm::vec3(0, -0.4f, 0));
 		}
 
+		/*if (this->KeysPressed[GLFW_KEY_R])
+		{
+			this->gameKickers[GamePlayers[1]->CurrentControl]->SetPosition(GameBalls[0]->GetPosition() - glm::vec3(10, 0, 0));
+		}*/
+
 		// Right player
-		if (this->KeysCurrent[GLFW_KEY_UP])
+		if (this->KeysCurrent[GLFW_KEY_I])
 		{
 			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
 		}
-		if (this->KeysCurrent[GLFW_KEY_DOWN])
+		if (this->KeysCurrent[GLFW_KEY_K])
 		{
 			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
 		}
-		if (this->KeysCurrent[GLFW_KEY_LEFT])
+		if (this->KeysCurrent[GLFW_KEY_J])
 		{
 			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
 		}
-		if (this->KeysCurrent[GLFW_KEY_RIGHT])
+		if (this->KeysCurrent[GLFW_KEY_L])
 		{
 			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
 		}
 
-		if (this->KeysPressed[GLFW_KEY_RIGHT_SHIFT])
+		if (this->KeysPressed[GLFW_KEY_U])
 		{
 			ShiftControlLeft(1);
 		}
-		if (this->KeysPressed[GLFW_KEY_PAGE_DOWN])
+		if (this->KeysPressed[GLFW_KEY_O])
 		{
 			ShiftControlRight(1);
 		}
 
+		if (this->KeysCurrent[GLFW_KEY_M])
+		{
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddOmega(glm::vec3(0, 0.4f, 0));
+		}
+		if (this->KeysCurrent[GLFW_KEY_PERIOD])		// '.'
+		{
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddOmega(glm::vec3(0, -0.4f, 0));
+		}
 
-		if (this->KeysCurrent[GLFW_KEY_J])
-		{
-			this->gameKickers[0]->AddOmega(glm::vec3(0, 0.2f, 0));
-		}
-		if (this->KeysCurrent[GLFW_KEY_K])
-		{
-			this->gameKickers[0]->AddOmega(glm::vec3(0, -0.2f, 0));
-		}
-
-		if (this->KeysPressed[GLFW_KEY_L])
-		{
-			ghostMode = !ghostMode;
-		}
 	}
 
 	if (this->KeysCurrent[GLFW_KEY_EQUAL])
@@ -468,29 +538,28 @@ void Game::ProcessInput(float dt)
 
 void Game::createObjects()
 {
-	glm::vec3 groundPos = glm::vec3(0, -5.0f, 0.0f);
 	// ground
-	ground.SetPosition(groundPos);		// this is useful when drawing pitch
+	ground.SetPosition(GROUND_POSITION);		// this is useful when drawing pitch
 	//ground.SetMass(0);
 	//ground.SetFriction(0.8f);
 
 	// wall-e
-	wall_e_s.SetPosition(groundPos + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
-	wall_e_n.SetPosition(groundPos + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
-	wall_e_pitch.SetPosition(groundPos + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_e_s.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_n.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_pitch.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_e_pitch.IsGoal1 = true;
 	//wall_e_s.IsGoal1 = true;
 	// wall-w
-	wall_w_s.SetPosition(groundPos + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
-	wall_w_n.SetPosition(groundPos + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
-	wall_w_pitch.SetPosition(groundPos + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_w_s.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_n.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_pitch.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_w_pitch.IsGoal2 = true;
 	// wall-n
-	wall_n.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
+	wall_n.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
 	// wall-s
-	wall_s.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
+	wall_s.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
 	// wall-center
-	wall_center.SetPosition(groundPos + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_center.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_center.SetOmega(glm::vec3(0, 0.2, 0));
 
 	GameBalls.push_back(new Object3Dsphere(1.3f, 20, 16));
@@ -499,6 +568,9 @@ void Game::createObjects()
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetERestitution(1.2f);
 	GameBalls[0]->SetGravity(glm::vec3(0, 0, 0));
+	GameBalls[0]->SetLinearFriction(FRICTION_LINEAR * 0.2f);
+	GameBalls[0]->SetConstantFriction(FRICTION_CONSTANT * 0.2f);
+
 
 	for (int i = 0; i < 6; i++)
 	{
@@ -557,14 +629,28 @@ void Game::initLights()
 	GameShader->setVec3("dirLights[0].ambient", 0.05, 0.05, 0.1);
 	GameShader->setVec3("dirLights[0].diffuse", 0.3, 0.3, 0.35);
 	GameShader->setVec3("dirLights[0].specular", 1.0, 1.0, 1.0);
-	// spot light 0
-	GameShader->setBool("spotLights[0].isExist", true);
-	GameShader->setFloat("spotLights[0].constant", 1.0f);
-	GameShader->setFloat("spotLights[0].linear", 0.045f);
-	GameShader->setFloat("spotLights[0].quadratic", 0.0075f);
-	GameShader->setVec3("spotLights[0].direction", glm::vec3(0, -1, 0));
-	GameShader->setFloat("spotLights[0].cutOff", glm::cos(glm::radians(22.5f)));
-	GameShader->setFloat("spotLights[0].outerCutOff", glm::cos(glm::radians(45.0f)));
+
+	for (int i = 0; i < gameKickers.size(); i++)
+	{
+		GameShader->setBool("spotLights[" + std::to_string(i) + "].isExist", true);
+		GameShader->setFloat("spotLights[" + std::to_string(i) + "].constant", 1.0f);
+		GameShader->setFloat("spotLights[" + std::to_string(i) + "].linear", 0.045f);
+		GameShader->setFloat("spotLights[" + std::to_string(i) + "].quadratic", 0.0075f);
+		GameShader->setVec3("spotLights[" + std::to_string(i) + "].direction", glm::vec3(0, -1, 0));
+		GameShader->setFloat("spotLights[" + std::to_string(i) + "].cutOff", SPOTLIGHT_CUTOFF);
+		GameShader->setFloat("spotLights[" + std::to_string(i) + "].outerCutOff", SPOTLIGHT_OUTERCUTOFF);
+		GameShader->setVec3("spotLights[" + std::to_string(i) + "].specular", glm::vec3(1));
+		if (i < gameKickers.size() / 2)
+		{
+			GameShader->setVec3("spotLights[" + std::to_string(i) + "].ambient", PARTICLE_COLOR_RED * 0.2f);
+			GameShader->setVec3("spotLights[" + std::to_string(i) + "].diffuse", PARTICLE_COLOR_RED * 0.8f);
+		}
+		else
+		{
+			GameShader->setVec3("spotLights[" + std::to_string(i) + "].ambient", PARTICLE_COLOR_BLUE * 0.2f);
+			GameShader->setVec3("spotLights[" + std::to_string(i) + "].diffuse", PARTICLE_COLOR_BLUE * 0.8f);
+		}
+	}
 
 
 }
@@ -609,6 +695,8 @@ void Game::initSkybox()
 		"shaders/skybox/skyboxVS.glsl", "shaders/skybox/skyboxFS.glsl"
 	};
 	GameSkybox = new Skybox(facesPath2, shadersPath);
+
+	cubemapTexture = GameSkybox->CubemapTexture;
 }
 
 // Generate a depth texture, stored in depthMap
@@ -643,12 +731,20 @@ void Game::initParticle()
 	// particle generator
 	particleGenerator_tail_1 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_RED);
 	particleGenerator_tail_2 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
-	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_YELLOW);
-	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_GREEN);
+	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_GREEN);
+	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_YELLOW);
 	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas.png", 8, 8);
 	particleGeneratorInstance_tail_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-BreakingGlass.png", 4, 8);
 	particleGeneratorInstance_explosion_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4);
-	particleGeneratorInstance_explosion_0->SetGravity(glm::vec3(0, 0, 0));
+	particleGeneratorInstance_explosion_0->SetGravity(glm::vec3(0, -0.5, 0));
+	particleGeneratorInstance_explosion_0->Life = 3.0f;
+	particleGeneratorInstance_explosion_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4);
+	particleGeneratorInstance_explosion_1->SetGravity(glm::vec3(0, -0.5, 0));
+	particleGeneratorInstance_explosion_1->Life = 3.0f;
+	// TODO: find the ice texture atlas
+	particleGeneratorInstance_ice = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, ICEMODE_SIZEFACTOR);
+	particleGeneratorInstance_ice->SetGravity(glm::vec3(0, 1, 0));
+
 }
 
 // -- Update Functions --
@@ -692,10 +788,14 @@ void Game::updateCameras(float dt)
 void Game::updateObjects(float dt)
 {
 	//CollideSph2Ground(gameBalls, &ground);
-	CollideSph2Cube(GameBalls, gameWalls, true, true);
+	CollisionInfo cInfo = CollideSph2Cube(GameBalls, gameWalls, true, true);
+	if (cInfo.relation == Ambiguous)
+	{
+		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
+	}
 
-	CollisionInfo cInfo = CollideSph2Sph(gameKickers, true);
-	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous)
+	cInfo = CollideSph2Sph(gameKickers, true);
+	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */(!ghostMode || GameState == GAME_MAINMENU) && cInfo.relation == RelationType::Ambiguous)
 	{
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 		//timeFromLastCollide = 0;
@@ -710,7 +810,12 @@ void Game::updateObjects(float dt)
 
 	//timeFromLastCollide += dt;
 
-	CollideSph2Sph(gameKickers, GameBalls, true);
+	cInfo = CollideSph2Sph(gameKickers, GameBalls, true);
+	if (cInfo.relation == Ambiguous)
+	{
+		//particleGenerator_tail_0->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
+		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
+	}
 
 
 	/*for (std::vector<Object3Dsphere*>::iterator it = gameBalls.begin(); it < gameBalls.end(); it++)
@@ -721,7 +826,8 @@ void Game::updateObjects(float dt)
 	if (GameState == GAME_MAINMENU)
 	{
 		int index = rand() % 6;
-		gameKickers[index]->AddVelocity(glm::vec3(rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED, 0, rand() % rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED));
+
+		gameKickers[index]->AddVelocity(glm::vec3(rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED, 0, rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED));
 	}
 
 	if (GameBalls[0] != NULL)
@@ -745,25 +851,33 @@ void Game::updateObjects(float dt)
 
 void Game::updateLights(float currentTime)
 {
-	// Light update
 	GameShader->use();
-	lightsPos[0] = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
-	GameShader->setVec3("viewPos", GameCamera->GetPosition());
-	GameShader->setVec3("pointLights[0].position", lightsPos[0]);
-	GameShader->setVec3("spotLights[0].position", gameKickers[GamePlayers[0]->CurrentControl]->GetPosition() + glm::vec3(0, 20, 0));
-	// light properties
-	glm::vec3 lightColor;
-	lightColor.r = sin(currentTime * 2.0f);
-	lightColor.g = sin(currentTime * 1.2f);
-	lightColor.b = sin(currentTime * 0.7f);
-	glm::vec3 ambientColor = lightColor * glm::vec3(0.1);	// low influence
-	glm::vec3 diffuseColor = lightColor * glm::vec3(0.8);	// middle influence
-	GameShader->setVec3("pointLights[0].ambient", ambientColor);
-	GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
-	GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
-	GameShader->setVec3("spotLights[0].ambient", ambientColor);
-	GameShader->setVec3("spotLights[0].diffuse", diffuseColor);
-	GameShader->setVec3("spotLights[0].specular", 1.0f, 1.0f, 1.0f);
+	
+	if (!ghostMode)
+	{
+		// Light update
+		lightsPos[0] = glm::vec3(sin(currentTime) * lightRadius, 3.0f, cos(currentTime) * lightRadius);
+		GameShader->setVec3("viewPos", GameCamera->GetPosition());
+		GameShader->setVec3("pointLights[0].position", lightsPos[0]);
+		// light properties
+		glm::vec3 lightColor;
+		lightColor.r = sin(currentTime * 2.0f);
+		lightColor.g = sin(currentTime * 1.2f);
+		lightColor.b = sin(currentTime * 0.7f);
+		glm::vec3 ambientColor = lightColor * glm::vec3(0.1);	// low influence
+		glm::vec3 diffuseColor = lightColor * glm::vec3(0.8);	// middle influence
+		GameShader->setVec3("pointLights[0].ambient", ambientColor);
+		GameShader->setVec3("pointLights[0].diffuse", diffuseColor);
+		GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+	}
+
+	for (int i = 0; i < gameKickers.size(); i++)
+	{
+		GameShader->setVec3("spotLights[" + std::to_string(i) + "].position", gameKickers[i]->GetPosition() + glm::vec3(0, 10, 0));
+
+	}
+	//GameShader->setVec3("spotLights[1].position", gameKickers[1]->GetPosition() + glm::vec3(0, 10, 0));
+
 }
 
 void Game::updateStatus()
@@ -886,37 +1000,63 @@ void Game::updateParticles(float dt)
 	particleGenerator_collide->Update(dt);
 
 	particleGeneratorInstance_explosion_0->IsActive = GameState == GAME_COOLDOWN;
+	particleGeneratorInstance_explosion_1->IsActive = GameState == GAME_COOLDOWN;
 	particleGeneratorInstance_tail_0->IsActive = GameState == GAME_MAINMENU;
 	particleGeneratorInstance_tail_1->IsActive = GameState == GAME_MAINMENU;
+	particleGeneratorInstance_ice->IsActive = iceMode;
 
 	//if (particleGeneratorInstance_tail_1->IsActive)
 	glm::vec3 v = (0.2f + rand() % 11 / 20.0f) * gameKickers[GamePlayers[0]->CurrentControl]->GetVelocity();
-		particleGeneratorInstance_tail_1->Update(
-			dt,
-			glm::vec3(0, -5, 0),
-			//gameKickers[GamePlayers[0]->CurrentControl]->GetPosition(),
-			glm::vec3(10 * sin(currentTime), 5, -10 * cos(currentTime)),
-			//v,
-			//vecMod(v),
-			25,
-			0.2,
-			GameCamera->GetPosition());
+	particleGeneratorInstance_tail_1->Update(
+		dt,
+		glm::vec3(0, -5, 0),
+		//gameKickers[GamePlayers[0]->CurrentControl]->GetPosition(),
+		glm::vec3(10 * sin(currentTime), 5, -10 * cos(currentTime)),
+		//v,
+		//vecMod(v),
+		25,
+		0.2,
+		GameCamera->GetPosition());
 	//if (particleGeneratorInstance_tail_0->IsActive)
-		particleGeneratorInstance_tail_0->Update(
-			dt, 
-			glm::vec3(GROUND_WIDTH * 0.5f, -5, -GROUND_DEPTH * 0.5f), 
-			glm::vec3(-GROUND_WIDTH, 60, GROUND_DEPTH), 
-			30, 
-			0.05,
-			GameCamera->GetPosition());
+	particleGeneratorInstance_tail_0->Update(
+		dt, 
+		glm::vec3(GROUND_WIDTH * 0.5f, -5, -GROUND_DEPTH * 0.5f), 
+		glm::vec3(-GROUND_WIDTH, 60, GROUND_DEPTH), 
+		30, 
+		0.05,
+		GameCamera->GetPosition());
 	//if (particleGeneratorInstance_explosion_0->IsActive)
+	// TODO: sometime it will freeze in the air. fix it.
 	if (whoGoal >= 1)	// this 'if' is important or will crash!
+	{
+		glm::vec3 pos[2][2] = {
+			GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * PITCH_WIDTH),
+			GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * PITCH_WIDTH),
+			GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * PITCH_WIDTH),
+			GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * PITCH_WIDTH),
+		};
+		//bool index = rand() % 2;
+
 		particleGeneratorInstance_explosion_0->Update(
 			dt,
 			//glm::vec3(0, 20, 0),
-			gameKickers[GamePlayers[whoGoal - 1]->CurrentControl]->GetPosition() + glm::vec3(0, 15, 0),
-			glm::vec3(0, 0, 0),
-			5,
-			0,
+			//gameKickers[GamePlayers[whoGoal - 1]->CurrentControl]->GetPosition() + glm::vec3(0, 15, 0),
+			pos[whoGoal - 1][0],
+			glm::vec3(0, 1, 0),
+			10.0f,
+			0.05f,
 			GameCamera->GetPosition());
+		particleGeneratorInstance_explosion_1->Update(
+			dt,
+			//glm::vec3(0, 20, 0),
+			//gameKickers[GamePlayers[whoGoal - 1]->CurrentControl]->GetPosition() + glm::vec3(0, 15, 0),
+			pos[whoGoal - 1][1],
+			glm::vec3(0, 1, 0),
+			10.0f,
+			0.05f,
+			GameCamera->GetPosition());
+
+	}
+
+	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * GROUND_WIDTH, 0.5f * GROUND_WIDTH, -0.5f * GROUND_DEPTH, 0.5f * GROUND_DEPTH, GROUND_POSITION.y, 1.0f, GameCamera->GetPosition());
 }

@@ -19,6 +19,7 @@ class Skybox
 		// Render function
 		void Draw(Camera camera);
 
+		unsigned int CubemapTexture;
 
 	private:
 
@@ -27,7 +28,6 @@ class Skybox
 
 		// Render state
 		unsigned int VAO;
-		unsigned int cubemapTexture;
 
 		// Initializes buffer and vertex attributes
 		void init(std::vector<std::string> facesPath, std::vector<std::string> shadersPath);

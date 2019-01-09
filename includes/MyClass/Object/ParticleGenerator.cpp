@@ -291,7 +291,7 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 // --------------------------------------------------------------------------------------------
 
 
-ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum) : lineNum(lineNum), columnNum(columnNum)
+ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum, float sizeFactor) : lineNum(lineNum), columnNum(columnNum), SizeFactor(sizeFactor)
 {
 	this->shader = shader;
 	
@@ -331,6 +331,10 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 			p.Life -= dt;
 			if (p.Life > 0.0f)
 			{
+				if (p.Position.y <= groundY + SizeFactor && p.Velocity.y < 0)
+				{
+					p.Velocity.y = -eRestitution * p.Velocity.y;
+				}
 				p.Velocity += gravity * dt;
 				p.Position += p.Velocity * dt;
 				p.CameraDistance = glm::length2(p.Position - cameraPos);
@@ -370,6 +374,88 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 
 }
 
+
+void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, float velocityAbs, glm::vec3 cameraPos)
+{
+	
+	if (IsActive)
+	{
+		// Respawn particles
+		int newParticles = (int)(dt * PARTICLE_PER_SECOND_SURFACE);
+		if (newParticles > (int)(0.016 * PARTICLE_PER_SECOND_SURFACE))
+			newParticles = (int)(0.016 * PARTICLE_PER_SECOND_SURFACE);
+
+		float x; 
+		float z;
+
+		for (int i = 0; i < newParticles; i++)
+		{
+			x = x_neg + (x_pos - x_neg) * (rand() % 1001 / 1000.0f);
+			z = z_neg + (z_pos - z_neg) * (rand() % 1001 / 1000.0f);
+			glm::vec3 randomPos(x, groundY, z);
+			int particleIndex = firstUnusedParticle();
+			velocityAbs *= (0.75 + rand() % 51 / 100.0f);
+			respawnParticle(particleContainer[particleIndex], randomPos, glm::vec3(0, 1, 0), velocityAbs, 0);
+		}
+	}
+
+	// Update status of particles, and update data arrays
+	particleCounts = 0;
+	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
+	{
+		Particle& p = particleContainer[i];
+
+		if (p.Life > 0.0f)
+		{
+
+			p.Life -= dt;
+			if (p.Life > 0.0f)
+			{
+				if (p.Position.y <= groundY + SizeFactor && p.Velocity.y < 0)
+				{
+					p.Velocity.y = -eRestitution * p.Velocity.y;
+				}
+				p.Velocity += gravity * dt;
+				p.Position += p.Velocity * dt;
+				p.CameraDistance = glm::length2(p.Position - cameraPos);
+
+				g_particle_pos_life_data[4 * particleCounts + 0] = p.Position.x;
+				g_particle_pos_life_data[4 * particleCounts + 1] = p.Position.y;
+				g_particle_pos_life_data[4 * particleCounts + 2] = p.Position.z;
+				
+				g_particle_pos_life_data[4 * particleCounts + 3] = p.Life;
+
+				g_particle_color_data[4 * particleCounts + 0] = p.Color.r;
+				g_particle_color_data[4 * particleCounts + 1] = p.Color.g;
+				g_particle_color_data[4 * particleCounts + 2] = p.Color.b;
+				g_particle_color_data[4 * particleCounts + 3] = p.Color.a;
+			}
+			else
+			{
+				p.CameraDistance = -1.0f;
+			}
+
+			particleCounts++;
+		}
+	}
+
+	// Sort particles
+	//sortParticles();
+
+	// Update pos and life buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);// Buffer orphaning, a common way to improve streaming performance.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_pos_life_data);
+
+	// Update color buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_color_data);
+
+}
+
+extern bool iceMode;
+
 void ParticleGeneratorInstance::Draw(Camera *camera)
 {
 	glDepthMask(GL_FALSE);
@@ -381,11 +467,12 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	this->shader->use();
 	this->shader->setMat4("view", camera->GetViewMatrix());
 	this->shader->setMat4("projection", camera->GetProjectionMatrix());
-	this->shader->setFloat("maxLife", PARTICLE_LIFE);
+	this->shader->setFloat("maxLife", Life);
 	this->shader->setVec3("cameraRight", camera->GetRightDirection());
 	this->shader->setVec3("cameraUp", camera->GetUpDirection());
 	this->shader->setInt("lineNum", lineNum);
 	this->shader->setInt("columnNum", columnNum);
+	this->shader->setBool("iceMode", iceMode);	// TODO: iceMode
 
 	// Texture binding
 	shader->setInt("myTexture", 0);
@@ -502,11 +589,14 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		if (negative % 2) dir.z = -dir.z;
 
 		p.Velocity = dir * velocityAbs;
+
+		p.Life = Life;
 	}
 	// Focus on specific direction
 	else if (spread == 0)
 	{
 		p.Velocity = velocityDir * velocityAbs;
+		p.Life = Life;
 	}
 	// Spread
 	else
@@ -518,16 +608,16 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		float theta = rand() % 628;
 		float spread_12 = rand() % 101 / 100.0f * spread;
 		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs * (0.95f + rand() % 11 / 100.0f);
-
+		p.Life = Life /** (1 - 0.4f * spread_12 / spread)*/;
 	}
 
 
-	p.Life = PARTICLE_LIFE;
 	p.Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
 	p.Position = position/* + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f)*/;
 
 	//p.Velocity = velocity + glm::vec3(rand() % 10 / 5.0f - 1.0f, rand() % 10 / 5.0f + 10, rand() % 10 / 5.0f - 1.0f);
 }
+
 
 unsigned int loadTexture(char const * path/*, bool flip_y = true*/)
 {

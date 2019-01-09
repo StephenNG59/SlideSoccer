@@ -18,6 +18,7 @@
 constexpr float GROUND_WIDTH = 75.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 50.0f;
 constexpr float WALL_THICK = 3.0f, WALL_HEIGHT = 5.0f;
 constexpr float PITCH_WIDTH = 20.0f, PITCH_HEIGHT = 10.0f, PITCH_DEPTH = 2.0f;
+const glm::vec3 GROUND_POSITION(0, -5, 0);
 
 constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
@@ -47,20 +48,27 @@ constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 // Particle
 constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
 constexpr float PARTICLE_PER_SECOND = 15000.0f;
+constexpr float PARTICLE_PER_SECOND_SURFACE = 5000.0f;
 const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8, 0);
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
 const glm::vec3 PARTICLE_COLOR_BLUE = glm::vec3(0.2, 0.2, 0.7);
 const glm::vec3 PARTICLE_COLOR_RED = glm::vec3(0.7, 0.2, 0.2);
-const glm::vec3 PARTICLE_COLOR_GREEN = glm::vec3(0.2, 0.6, 0.2);
+const glm::vec3 PARTICLE_COLOR_GREEN = glm::vec3(0.2, 0.7, 0.2);
 const glm::vec3 PARTICLE_COLOR_YELLOW = glm::vec3(0.6, 0.6, 0.2);
 constexpr float PARTICLE_LIFE = 4.0f;
+constexpr float ICEMODE_SIZEFACTOR = 0.15f;
 
 // Physics
-constexpr float ACCELERATION_BASIC = 30.0f;
-constexpr float FRICTION_CONSTANT = 4;
-constexpr float FRICTION_LINEAR = 0.32f;
+constexpr float ACCELERATION_BASIC = 40.0f;
+constexpr float FRICTION_CONSTANT = 7;
+constexpr float FRICTION_LINEAR = 0.40f;
 constexpr float GAMEMENU_RANDOM_SPEED = 15.0f;
+
+// Lights
+const float SPOTLIGHT_CUTOFF = glm::cos(glm::radians(15.0f));
+const float SPOTLIGHT_OUTERCUTOFF = glm::cos(glm::radians(45.0f));
+
 
 constexpr float GAME_COOLDOWN_TIME = 4.0f;
 

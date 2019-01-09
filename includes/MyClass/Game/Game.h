@@ -113,12 +113,15 @@ class Game
 		ParticleGeneratorInstance* particleGeneratorInstance_tail_0;
 		ParticleGeneratorInstance* particleGeneratorInstance_tail_1;
 		ParticleGeneratorInstance* particleGeneratorInstance_explosion_0;
+		ParticleGeneratorInstance* particleGeneratorInstance_explosion_1;
+		ParticleGeneratorInstance* particleGeneratorInstance_ice;
 		void updateParticles(float dt);
 		void initParticle();
 		// Model
 		Model *model;
 		// Skybox
 		void initSkybox();
+		unsigned int cubemapTexture;
 		// Shadow map
 		unsigned int depthMap, depthMapFBO;
 		void initShadow();
