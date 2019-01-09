@@ -113,6 +113,7 @@ void ParticleGenerator::Draw()
 		{
 			this->shader->setVec3("position", particle.Position);
 			this->shader->setVec4("color", particle.Color);
+			//this->shader->setFloat("size", particle.Size);
 			glBindVertexArray(this->VAO);
 			glDrawArrays(GL_TRIANGLES, 0, 12);
 			glBindVertexArray(0);
@@ -227,6 +228,8 @@ void ParticleGenerator::respawnParticle(Particle &particle, Object3Dcylinder &cy
 
 	particle.Life = 1.0f;
 
+	particle.Size = 0.7 + rand() % 4 / 10.0f;
+
 	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), /*rand() * 27 / (float)RAND_MAX - 3*/0, omegaY * cos(randomRadian));
 	particle.Velocity *= (0.3 + rand() % 70 / 100);
 	//particle.Velocity *= 0.8;
@@ -249,6 +252,8 @@ void ParticleGenerator::respawnParticle(Particle &particle, Object3Dsphere &cy)
 	particle.Color = glm::vec4(randomColor * Color, 1.0f);
 
 	particle.Life = 1.0f;
+
+	particle.Size = 0.7 + rand() % 4 / 10.0f;
 
 	particle.Velocity = velocity + glm::vec3(-omegaY * sin(randomRadian), /*rand() * 27 / (float)RAND_MAX - 3*/0, omegaY * cos(randomRadian));
 	particle.Velocity *= (0.3 + rand() % 70 / 100);
@@ -278,6 +283,9 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		p.Velocity *= ((rand() % 69 / 100.0f) + 0.02);		// 0.02 ~ 0.7
 
 		p.Color = glm::vec4(0.8f * Color, 1.0f);
+		p.Size = 0.7 + rand() % 4 / 10.0f;
+
+
 
 	}
 }
@@ -333,7 +341,7 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 			{
 				if (p.Position.y <= groundY + SizeFactor && p.Velocity.y < 0)
 				{
-					p.Velocity.y = -eRestitution * p.Velocity.y;
+					p.Velocity.y = -ERestitution * p.Velocity.y;
 				}
 				p.Velocity += gravity * dt;
 				p.Position += p.Velocity * dt;
@@ -375,7 +383,7 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 }
 
 
-void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, float velocityAbs, glm::vec3 cameraPos)
+void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, glm::vec3 velocityDir, float velocityAbs, glm::vec3 cameraPos)
 {
 	
 	if (IsActive)
@@ -392,10 +400,10 @@ void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_p
 		{
 			x = x_neg + (x_pos - x_neg) * (rand() % 1001 / 1000.0f);
 			z = z_neg + (z_pos - z_neg) * (rand() % 1001 / 1000.0f);
-			glm::vec3 randomPos(x, groundY, z);
+			glm::vec3 randomPos(x, y, z);
 			int particleIndex = firstUnusedParticle();
 			velocityAbs *= (0.75 + rand() % 51 / 100.0f);
-			respawnParticle(particleContainer[particleIndex], randomPos, glm::vec3(0, 1, 0), velocityAbs, 0);
+			respawnParticle(particleContainer[particleIndex], randomPos, velocityDir, velocityAbs, 0);
 		}
 	}
 
@@ -413,7 +421,7 @@ void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_p
 			{
 				if (p.Position.y <= groundY + SizeFactor && p.Velocity.y < 0)
 				{
-					p.Velocity.y = -eRestitution * p.Velocity.y;
+					p.Velocity.y = -ERestitution * p.Velocity.y;
 				}
 				p.Velocity += gravity * dt;
 				p.Position += p.Velocity * dt;
@@ -519,6 +527,15 @@ void ParticleGeneratorInstance::SetGravity(glm::vec3 g)
 
 void ParticleGeneratorInstance::init()
 {
+
+	for (int i = 0; i < 30; i++)
+	{
+		if (i % 5 <= 1)
+		{
+			g_vertex_buffer_data[i] *= SizeFactor / 0.45f;
+		}
+	}
+
 	// VAO
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);

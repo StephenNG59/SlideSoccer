@@ -97,6 +97,7 @@ uniform mat4 lightSpaceMatrix;
 uniform sampler2D shadowMap;
 uniform samplerCube skybox;
 uniform vec3 cameraPos;
+uniform bool iceMode = false;
 
 // function prototypes
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);
@@ -155,6 +156,14 @@ void main()
 		//	result = vec3(fs_in.FragPosLightSpace);
 
 		FragColor = vec4(result, 1.0);
+
+		if (iceMode)
+		{
+			result.rgb *= 0.7;
+			result.b += 0.3 * (result.r + result.g);
+			FragColor = vec4(result, 0.6);
+		}
+
 	}
 	else
 	{

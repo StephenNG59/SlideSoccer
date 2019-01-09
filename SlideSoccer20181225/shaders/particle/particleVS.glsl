@@ -10,6 +10,8 @@ uniform vec3 position;
 //uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform float size = 1;
+uniform bool iceMode = false;
 
 uniform vec4 color;
 
@@ -17,5 +19,11 @@ void main()
 {
 	TexCoords = aTexCoords;
 	ParticleColor = color;
-	gl_Position = projection * view * vec4(position + aPos, 1.0);
+	if (iceMode)
+	{
+		ParticleColor.rgb *= 0.7;
+		ParticleColor.b += 0.3 * (ParticleColor.r + ParticleColor.g);
+	}
+
+	gl_Position = projection * view * vec4(position + aPos * size, 1.0);
 }

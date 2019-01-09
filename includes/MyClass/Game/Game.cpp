@@ -148,7 +148,7 @@ void Game::RenderWithDoubleCamera()
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
 	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
-	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET2), CAMERA_POS_3_Y, pos.z * 1.25);
+	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET1), CAMERA_POS_2_Y, pos.z);
 	
 	if (GameState == GAME_COOLDOWN)
 		eye += (1 - gameCoolDown / GAME_COOLDOWN_TIME) * glm::vec3(-40, 40, 0);
@@ -212,6 +212,8 @@ bool isRefract = false;
 
 void Game::RenderScene(Shader *renderShader)
 {
+	GameShader->use();
+	GameShader->setBool("iceMode", iceMode);
 
 	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
 	{
@@ -219,7 +221,6 @@ void Game::RenderScene(Shader *renderShader)
 	}
 
 	glDisable(GL_CULL_FACE);
-		GameShader->use();
 		GameShader->setBool("isReflect", isReflect);
 		GameShader->setBool("isRefract", isRefract);
 		GameShader->setVec3("cameraPos", GameCamera->GetPosition());
@@ -335,6 +336,8 @@ void Game::ProcessInput(float dt)
 			GameState = GameStateType::GAME_MAINMENU;
 			GamePlayers[0]->ResetScore();
 			GamePlayers[1]->ResetScore();
+			GamePlayers[0]->CurrentControl = 0;
+			GamePlayers[1]->CurrentControl = 3;
 			GameTextManager->UpdateAspect(screenWidth, screenHeight);
 			GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
 			GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
@@ -390,23 +393,61 @@ void Game::ProcessInput(float dt)
 
 	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
+		float dV_max = ACCELERATION_BASIC * (1 + iceMode * 0.5);
+		float dV_min = ACCELERATION_BASIC * (1 - iceMode * 0.5);
 
 		// Left player
 		if (this->KeysCurrent[GLFW_KEY_W])
 		{
-			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+			if (iceMode)
+			{
+				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
+				if (kicker->GetVelocity().x < 0)
+					kicker->AddVelocity(glm::vec3(dV_min, 0, 0) * dt);
+				else
+					kicker->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
+			}
+			else
+				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_S])
 		{
-			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+			if (iceMode)
+			{
+				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
+				if (kicker->GetVelocity().x > 0)
+					kicker->AddVelocity(glm::vec3(-dV_min, 0, 0) * dt);
+				else
+					kicker->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
+			}
+			else
+				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_A])
 		{
-			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+			if (iceMode)
+			{
+				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
+				if (kicker->GetVelocity().z > 0)
+					kicker->AddVelocity(glm::vec3(0, 0, -dV_min) * dt);
+				else
+					kicker->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
+			}
+			else
+				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_D])
 		{
-			this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+			if (iceMode)
+			{
+				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
+				if (kicker->GetVelocity().z < 0)
+					kicker->AddVelocity(glm::vec3(0, 0, dV_min) * dt);
+				else
+					kicker->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
+			}
+			else
+				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
 		}
 
 		if (this->KeysPressed[GLFW_KEY_Q])
@@ -435,19 +476,19 @@ void Game::ProcessInput(float dt)
 		// Right player
 		if (this->KeysCurrent[GLFW_KEY_I])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(-ACCELERATION_BASIC, 0, 0) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_K])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(ACCELERATION_BASIC, 0, 0) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_J])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, ACCELERATION_BASIC) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_L])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -ACCELERATION_BASIC) * dt);
+			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
 		}
 
 		if (this->KeysPressed[GLFW_KEY_U])
@@ -742,8 +783,10 @@ void Game::initParticle()
 	particleGeneratorInstance_explosion_1->SetGravity(glm::vec3(0, -0.5, 0));
 	particleGeneratorInstance_explosion_1->Life = 3.0f;
 	// TODO: find the ice texture atlas
-	particleGeneratorInstance_ice = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, ICEMODE_SIZEFACTOR);
-	particleGeneratorInstance_ice->SetGravity(glm::vec3(0, 1, 0));
+	particleGeneratorInstance_ice = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/Snow2.png", 1, 1, ICEMODE_SIZEFACTOR);
+	particleGeneratorInstance_ice->SetGravity(glm::vec3(0, -0.25, 0));
+	particleGeneratorInstance_ice->Life = 20.0f;
+	particleGeneratorInstance_ice->ERestitution = 0.1f;
 
 }
 
@@ -802,7 +845,7 @@ void Game::updateObjects(float dt)
 	}
 
 	cInfo = CollideSph2Wall(gameKickers, gameWalls, true);
-	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous)
+	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous && (!ghostMode || GameState == GAME_MAINMENU))
 	{
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 		//timeFromLastCollide = 0;
@@ -898,6 +941,8 @@ void Game::updateStatus()
 		}
 		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
 		GameState = GameStateType::GAME_COOLDOWN;
+		GamePlayers[0]->CurrentControl = 0;
+		GamePlayers[1]->CurrentControl = 3;
 	}
 	GameShader->setBool("ghostMode", ghostMode);
 }
@@ -1058,5 +1103,5 @@ void Game::updateParticles(float dt)
 
 	}
 
-	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * GROUND_WIDTH, 0.5f * GROUND_WIDTH, -0.5f * GROUND_DEPTH, 0.5f * GROUND_DEPTH, GROUND_POSITION.y, 1.0f, GameCamera->GetPosition());
+	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * GROUND_WIDTH, 0.5f * GROUND_WIDTH, -0.5f * GROUND_DEPTH, 0.5f * GROUND_DEPTH, GROUND_POSITION.y + CAMERA_POS_3_Y, glm::vec3(0, -1, 0), 1.0f, GameCamera->GetPosition());
 }

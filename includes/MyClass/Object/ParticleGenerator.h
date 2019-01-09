@@ -14,6 +14,7 @@ struct Particle {
 	glm::vec3 Position, Velocity;
 	glm::vec4 Color;
 	float Life;
+	float Size;
 
 	float CameraDistance = -1.0f;
 
@@ -85,13 +86,14 @@ public:
 	~ParticleGeneratorInstance();
 
 	void Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos);
-	void UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, float velocityAbs, glm::vec3 cameraPos);
+	void UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, glm::vec3 velocityDir, float velocityAbs, glm::vec3 cameraPos);
 	void Draw(Camera *camera);
 	void SetGravity(glm::vec3 g);
 
 	bool IsActive = false;
 	float SizeFactor = 0.45f;
 	float Life = PARTICLE_LIFE;
+	float ERestitution = 0.5f;
 
 private:
 	// Basic
@@ -100,7 +102,7 @@ private:
 	unsigned int lastUsedParticle = 0;
 	Particle particleContainer[PARTICLE_MAX_AMOUNT];
 	glm::vec3 gravity = PARTICLE_GRAVITY;
-	float groundY = -5.0f, eRestitution = 0.5f;
+	float groundY = -5.0f; 
 	// Shader
 	Shader *shader;
 	// VAO
@@ -108,7 +110,7 @@ private:
 	// Vertex
 	unsigned int VBO_billboard;
 	
-	const float g_vertex_buffer_data[30] = {
+	float g_vertex_buffer_data[30] = {
 		// position							// uv
 		-0.5f * SizeFactor,  0.5f * SizeFactor, 0,	0, 1,
 		 0.5f * SizeFactor, -0.5f * SizeFactor, 0,	1, 0,
