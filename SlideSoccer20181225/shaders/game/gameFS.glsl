@@ -1,7 +1,7 @@
 #version 330 core
 
 #define NR_TEX_NUM 3
-#define NR_LIGHT_NUM 6
+#define NR_LIGHT_NUM 7
 
 out vec4 FragColor;
 

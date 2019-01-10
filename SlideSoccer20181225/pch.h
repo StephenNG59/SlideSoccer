@@ -15,7 +15,10 @@
 #include <string>
 
 // settings
-constexpr float GROUND_WIDTH = 75.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 50.0f;
+constexpr int SCORE_MAX = 3;
+
+constexpr float GROUND_WIDTH = 77.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 52.0f;
+constexpr float SNOW_WIDTH = GROUND_WIDTH * 1.3f, SNOW_HEIGHT = 40.0f, SNOW_DEPTH = GROUND_DEPTH * 1.3f;
 constexpr float WALL_THICK = 3.0f, WALL_HEIGHT = 5.0f;
 constexpr float PITCH_WIDTH = 20.0f, PITCH_HEIGHT = 10.0f, PITCH_DEPTH = 2.0f;
 const glm::vec3 GROUND_POSITION(0, -5, 0);
@@ -39,6 +42,7 @@ const glm::vec3 CAMERA_UPVECNORM_Z = glm::vec3(0, 0, 1);
 const glm::vec3 CAMERA_POS_2 = glm::vec3(0.0f, 40.0f, 0.0f);
 constexpr float CAMERA_POS_2_Y = 40.0f;
 constexpr float CAMERA_POS_3_Y = 20.0f;
+constexpr float CAMERA_POS_GHOST_Y = 60.0f;
 const glm::vec3 CAMERA_CENTER_2 = glm::vec3(0, -5.0f, 0);
 const glm::vec3 CAMERA_UPVECNORM_2 = glm::vec3(0, 0, -1);
 
@@ -46,9 +50,9 @@ constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
 constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
 // Particle
-constexpr unsigned int PARTICLE_MAX_AMOUNT = 150000;
+constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
 constexpr float PARTICLE_PER_SECOND = 15000.0f;
-constexpr float PARTICLE_PER_SECOND_SURFACE = 5000.0f;
+constexpr float PARTICLE_PER_SECOND_SURFACE = 2000.0f;
 const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8, 0);
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
 constexpr float PARTICLE_COLLIDE_COOLDOWN = 0.3f;
@@ -56,18 +60,22 @@ const glm::vec3 PARTICLE_COLOR_BLUE = glm::vec3(0.2, 0.2, 0.7);
 const glm::vec3 PARTICLE_COLOR_RED = glm::vec3(0.7, 0.2, 0.2);
 const glm::vec3 PARTICLE_COLOR_GREEN = glm::vec3(0.2, 0.7, 0.2);
 const glm::vec3 PARTICLE_COLOR_YELLOW = glm::vec3(0.6, 0.6, 0.2);
+const glm::vec3 PARTICLE_COLOR_REDBLUE(0.7, 0.2, 0.7);
 constexpr float PARTICLE_LIFE = 4.0f;
-constexpr float ICEMODE_SIZEFACTOR = 0.25f;
+constexpr float ICEMODE_SIZEFACTOR = 0.30f;
 
 // Physics
 constexpr float ACCELERATION_BASIC = 40.0f;
 constexpr float FRICTION_CONSTANT = 7;
 constexpr float FRICTION_LINEAR = 0.40f;
 constexpr float GAMEMENU_RANDOM_SPEED = 15.0f;
+const glm::vec3 GRAVITY_OUTSIDE(0, -9.8f, 0);
 
 // Lights
-const float SPOTLIGHT_CUTOFF = glm::cos(glm::radians(15.0f));
+const float SPOTLIGHT_CUTOFF = glm::cos(glm::radians(25.0f));
 const float SPOTLIGHT_OUTERCUTOFF = glm::cos(glm::radians(45.0f));
+const float SPOTLIGHT_CUTOFF_BIG = glm::cos(glm::radians(45.0f));
+const float SPOTLIGHT_OUTERCUTOFF_BIG = glm::cos(glm::radians(75.0f));
 
 
 constexpr float GAME_COOLDOWN_TIME = 4.0f;
@@ -87,6 +95,7 @@ void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
 void testPrint(std::string s);
 void testPrint(float f);
+bool outsideOfPitch(glm::vec3 pos);
 
 
 enum BallStatus {

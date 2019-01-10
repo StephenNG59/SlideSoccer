@@ -131,6 +131,7 @@ class Object3D
 		glm::vec3 GetPosition();
 		void SetPosition(glm::vec3 position);
 		void ChangePosition(glm::vec3 delta);
+		void ResetRotation();
 		void UpdatePhysics(float deltaTime);
 
 

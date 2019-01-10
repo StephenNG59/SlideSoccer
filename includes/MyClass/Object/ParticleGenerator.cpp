@@ -628,7 +628,6 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		p.Life = Life /** (1 - 0.4f * spread_12 / spread)*/;
 	}
 
-
 	p.Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
 	p.Position = position/* + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f)*/;
 

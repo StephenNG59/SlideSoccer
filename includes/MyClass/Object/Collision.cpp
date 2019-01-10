@@ -2,7 +2,7 @@
 #include "Collision.h"
 
 extern float deltaTime;
-
+extern bool iceMode;
 
 CollisionFreeStuckType checkFStype(float m1, float m2)
 {
@@ -289,12 +289,12 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	float cube2SphXLC = glm::dot(vecCube2SphWC, cubeXNorm);
 	float cube2SphYLC = glm::dot(vecCube2SphWC, cubeYNorm);
 	float cube2SphZLC = glm::dot(vecCube2SphWC, cubeZNorm);
-	if (abs(cube2SphXLC) < halfW && abs(cube2SphYLC) < halfH && abs(cube2SphZLC) < halfD)
-	{
-		// the center of the circle is inside the cube
-		cInfo.relation = RelationType::FallInLove;
-		return cInfo;
-	}
+	//if (abs(cube2SphXLC) < halfW && abs(cube2SphYLC) < halfH && abs(cube2SphZLC) < halfD)
+	//{
+	//	// the center of the circle is inside the cube
+	//	cInfo.relation = RelationType::FallInLove;
+	//	return cInfo;
+	//}
 
 
 	glm::vec3 vecCube2SphLC = glm::vec3(cube2SphXLC, cube2SphYLC, cube2SphZLC);				// local coordinate
@@ -579,6 +579,11 @@ CollisionInfo CollideSph2Cube(Object3Dsphere * sphere, Object3Dcube * cube, bool
 	cInfo.v2After = v2_after;
 
 	if (isStuckY) cInfo.v1After.y = cInfo.v2After.y = 0;
+
+	if (iceMode && !(cube->IsGoal1 || cube->IsGoal2) && !sphere->IsBall)
+	{
+		return cInfo;
+	}
 
 	if (autoDeal)
 	{
@@ -1145,12 +1150,12 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 	float cube2SphXLC = glm::dot(vecCube2SphWC, cubeXNorm);
 	float cube2SphYLC = glm::dot(vecCube2SphWC, cubeYNorm);
 	float cube2SphZLC = glm::dot(vecCube2SphWC, cubeZNorm);
-	if (abs(cube2SphXLC) < halfW && abs(cube2SphYLC) < halfH && abs(cube2SphZLC) < halfD)
-	{
-		// the center of the circle is inside the cube
-		cInfo.relation = RelationType::FallInLove;
-		return cInfo;
-	}
+	//if (abs(cube2SphXLC) < halfW && abs(cube2SphYLC) < halfH && abs(cube2SphZLC) < halfD)
+	//{
+	//	// the center of the circle is inside the cube
+	//	cInfo.relation = RelationType::FallInLove;
+	//	return cInfo;
+	//}
 
 
 	glm::vec3 vecCube2SphLC = glm::vec3(cube2SphXLC, cube2SphYLC, cube2SphZLC);				// local coordinate
@@ -1320,6 +1325,11 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 	cInfo.v1After = v1_after;
 	cInfo.v2After = glm::vec3(0);
 
+	if (iceMode && !(wall->IsGoal1 || wall->IsGoal2))
+	{
+		return cInfo;
+	}
+
 	if (autoDeal)
 	{
 		DealCollision(sphere, wall, cInfo);
@@ -1351,7 +1361,7 @@ CollisionInfo CollideSph2Wall(std::vector<Object3Dcylinder*> &spheres, std::vect
 	return cInfo;
 }
 
-CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, bool autoDeal)
+CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, bool autoDeal, bool isStuckY = true)
 {
 	CollisionInfo cInfo;
 	CollisionFreeStuckType fsType;
@@ -1544,7 +1554,7 @@ CollisionInfo CollideSph2Sph(Object3Dcylinder * sph1, Object3Dsphere * sph2, boo
 	delta_L1 = glm::cross(r1, I_yzstar_abs * v21_yzstar_norm);
 	delta_L2 = glm::cross(r2, I_yzstar_abs * v12_yzstar_norm + I12_xstar);
 	cInfo.angularImpulse1.y = delta_L1.y;
-	cInfo.angularImpulse2 = delta_L2;
+	cInfo.angularImpulse2.y = delta_L2.y;
 
 
 	glm::vec3 delta_v1(0), delta_v2(0);
@@ -1593,7 +1603,7 @@ CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vect
 	{
 		for (sph2_it = spheres2.begin(); sph2_it < spheres2.end(); sph2_it++)
 		{
-			cInfo = CollideSph2Sph(*sph1_it, *sph2_it, autoDeal);
+			cInfo = CollideSph2Sph(*sph1_it, *sph2_it, autoDeal, true);
 			if (cInfo.relation == RelationType::Ambiguous)
 			{
 				return cInfo;

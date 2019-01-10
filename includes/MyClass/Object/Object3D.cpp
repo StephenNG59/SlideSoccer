@@ -6,7 +6,7 @@
 #include "object3Dsphere.h"
 #include "Collision.h"
 
-
+extern bool iceMode;
 
 // -- Get info --
 
@@ -135,6 +135,12 @@ void Object3D::ChangePosition(glm::vec3 delta)
 	position += delta;
 	calcModelMatrix();
 }
+
+void Object3D::ResetRotation()
+{
+	rotationMatrix = glm::mat4();
+}
+
 void Object3D::UpdatePhysics(float deltaTime)
 {
 	/*//// linear velocity
@@ -156,10 +162,12 @@ void Object3D::UpdatePhysics(float deltaTime)
 	//}
 		//printVec3(acceleration);
 	glm::vec3 airResistAcc = calcAirResistAcc();
-	if (type == ObjectShapeType::Cylinder)
+
+	if (iceMode && (!IsGoal1 && !IsGoal2) && outsideOfPitch(position))
 	{
-		//printVec3("velocity#0", velocity);
+		acceleration += GRAVITY_OUTSIDE;
 	}
+
 	velocity += (acceleration + airResistAcc) * deltaTime;
 
 

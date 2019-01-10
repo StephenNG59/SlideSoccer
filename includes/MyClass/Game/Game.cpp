@@ -147,13 +147,13 @@ void Game::RenderWithDoubleCamera()
 	// ---------
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
-	glm::vec3 pos = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
-	glm::vec3 eye(pos.x - (CAMERA_LEAN_OFFSET1), CAMERA_POS_2_Y, pos.z);
+	glm::vec3 center = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
+	glm::vec3 eye(center.x - (CAMERA_LEAN_OFFSET1), ghostMode ? CAMERA_POS_GHOST_Y : CAMERA_POS_2_Y, center.z);
 	
 	if (GameState == GAME_COOLDOWN)
 		eye += (1 - gameCoolDown / GAME_COOLDOWN_TIME) * glm::vec3(-40, 40, 0);
 	
-	GameCamera->SetPosition(eye, pos, CAMERA_UPVECNORM_Y);
+	GameCamera->SetPosition(eye, center, CAMERA_UPVECNORM_Y);
 	
 	for (int i = 0; i < 6; i++)
 	{
@@ -164,9 +164,27 @@ void Game::RenderWithDoubleCamera()
 	if (GameState == GAME_COOLDOWN)
 	{
 		if (whoGoal == 1)
-			GameTextManager->RenderText(*TextShader, "GOAL!", 0.1 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+		{
+			if (GamePlayers[0]->GetScore() == SCORE_MAX)
+			{
+				GameTextManager->RenderText(*TextShader, "YOU WIN!!!", 0.05 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+			}
+			else
+			{
+				GameTextManager->RenderText(*TextShader, "GOAL!", 0.1 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+			}
+		}
 		else
-			GameTextManager->RenderText(*TextShader, "!!!!!", 0.2 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+		{
+			if (GamePlayers[1]->GetScore() == SCORE_MAX)
+			{
+				GameTextManager->RenderText(*TextShader, "YOU LOSE...", 0.05 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+			}
+			else
+			{
+				GameTextManager->RenderText(*TextShader, "!!!!!", 0.2 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_RED);
+			}
+		}
 	}
 	else
 	{
@@ -178,13 +196,13 @@ void Game::RenderWithDoubleCamera()
 	// ----------
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
-	pos = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
-	eye = glm::vec3(pos.x + CAMERA_LEAN_OFFSET1, CAMERA_POS_2_Y, pos.z);
+	center = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
+	eye = glm::vec3(center.x + CAMERA_LEAN_OFFSET1, ghostMode ? CAMERA_POS_GHOST_Y : CAMERA_POS_2_Y, center.z);
 	
 	if (GameState == GAME_COOLDOWN)
 		eye += (1 - gameCoolDown / GAME_COOLDOWN_TIME) * glm::vec3(40, 40, 0);
 
-	GameCamera->SetPosition(eye, pos, -CAMERA_UPVECNORM_X);
+	GameCamera->SetPosition(eye, center, -CAMERA_UPVECNORM_X);
 
 	GameShader->use();
 	for (int i = 0; i < 6; i++)
@@ -197,10 +215,29 @@ void Game::RenderWithDoubleCamera()
 	ViewportY = 0;
 	if (GameState == GAME_COOLDOWN)
 	{
+
 		if (whoGoal == 2)
-			GameTextManager->RenderText(*TextShader, "GOAL!", 0.1 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+		{
+			if (GamePlayers[1]->GetScore() == SCORE_MAX)
+			{
+				GameTextManager->RenderText(*TextShader, "YOU WIN!!!", 0.05 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+			}
+			else
+			{
+				GameTextManager->RenderText(*TextShader, "GOAL!", 0.1 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+			}
+		}
 		else
-			GameTextManager->RenderText(*TextShader, "!!!!!", 0.2 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+		{
+			if (GamePlayers[0]->GetScore() == SCORE_MAX)
+			{
+				GameTextManager->RenderText(*TextShader, "YOU LOSE...", 0.05 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+			}
+			else
+			{
+				GameTextManager->RenderText(*TextShader, "!!!!!", 0.2 * screenWidth, 0.8 * screenHeight, 2.0f, PARTICLE_COLOR_BLUE);
+			}
+		}
 	}
 	else
 	{
@@ -225,10 +262,11 @@ void Game::RenderScene(Shader *renderShader)
 		GameShader->setBool("isRefract", isRefract);
 		GameShader->setVec3("cameraPos", GameCamera->GetPosition());
 		for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
-    {
-		//(*it)->Draw(*GameCamera, *renderShader);
-		(*it)->DrawWithoutCamera(*renderShader);
-    }
+		{
+			//(*it)->Draw(*GameCamera, *renderShader);
+			if (iceMode && !((*it)->IsGoal1 || (*it)->IsGoal2)) continue;		// in iceMode, not draw the goal.
+			(*it)->DrawWithoutCamera(*renderShader);
+		}
 		GameShader->setBool("isReflect", false);
 		GameShader->setBool("isRefract", false);
 	glEnable(GL_CULL_FACE);
@@ -237,7 +275,16 @@ void Game::RenderScene(Shader *renderShader)
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
 		//(*it)->Draw(*GameCamera, *renderShader);
-		(*it)->DrawWithoutCamera(*renderShader);
+		if (ghostMode)
+		{
+			renderShader->use();
+			renderShader->setBool("ghostMode", false);
+			(*it)->DrawWithoutCamera(*renderShader);
+			renderShader->setBool("ghostMode", true);
+		}
+		else
+			(*it)->DrawWithoutCamera(*renderShader);
+
 	}
 	//ground.Draw(*GameCamera, *renderShader);
 	//if (ghostMode) renderShader->setBool("ghostMode", true);
@@ -382,10 +429,21 @@ void Game::ProcessInput(float dt)
 		gameCoolDown -= dt;
 		if (gameCoolDown <= 0)
 		{
-			// TODO: reset objects positions here.
 			ResetPosition();
+			GamePlayers[0]->CurrentControl = 0;
+			GamePlayers[1]->CurrentControl = 3;
 
-			GameState = GameStateType::GAME_PLAYING;
+			if (GamePlayers[0]->GetScore() >= SCORE_MAX || GamePlayers[1]->GetScore() >= SCORE_MAX)
+			{
+				GamePlayers[0]->ResetScore();
+				GamePlayers[1]->ResetScore();
+				GameState = GAME_MAINMENU;
+				GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
+				GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
+			}
+			else
+				GameState = GameStateType::GAME_PLAYING;
+
 			GameBalls[0]->SetBallStatus(BallStatus::BallIsFree);
 			gameCoolDown = GAME_COOLDOWN_TIME;
 		}
@@ -393,7 +451,7 @@ void Game::ProcessInput(float dt)
 
 	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
-		float dV_max = ACCELERATION_BASIC * (1 + iceMode * 0.5);
+		float dV_max = ACCELERATION_BASIC * (1 + iceMode * 0.25);
 		float dV_min = ACCELERATION_BASIC * (1 - iceMode * 0.5);
 
 		// Left player
@@ -553,12 +611,13 @@ void Game::ProcessInput(float dt)
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player2);
 	}
-	if (this->KeysReleased[GLFW_KEY_F5])
+	if (this->KeysReleased[GLFW_KEY_F5] && GameState == GAME_PLAYING)
 	{
 		for (Object3Dcylinder * P : gameKickers)
 		{
 			P->SetStatic();
 		}
+		ResetPosition();
 	}
 	if (this->KeysPressed[GLFW_KEY_B])
 	{
@@ -691,8 +750,18 @@ void Game::initLights()
 			GameShader->setVec3("spotLights[" + std::to_string(i) + "].ambient", PARTICLE_COLOR_BLUE * 0.2f);
 			GameShader->setVec3("spotLights[" + std::to_string(i) + "].diffuse", PARTICLE_COLOR_BLUE * 0.8f);
 		}
-	}
 
+	}
+	GameShader->setFloat("spotLights[6].constant", 1.0f);
+	GameShader->setFloat("spotLights[6].linear", 0.014f);
+	GameShader->setFloat("spotLights[6].quadratic", 0.0007f);
+	GameShader->setVec3("spotLights[6].direction", glm::vec3(0, -1, 0));
+	GameShader->setFloat("spotLights[6].cutOff", SPOTLIGHT_CUTOFF_BIG);
+	GameShader->setFloat("spotLights[6].outerCutOff", SPOTLIGHT_OUTERCUTOFF_BIG);
+	GameShader->setVec3("spotLights[6].position", glm::vec3(0, CAMERA_POS_GHOST_Y, 0));
+	GameShader->setVec3("spotLights[6].ambient", PARTICLE_COLOR_REDBLUE * 0.2f);
+	GameShader->setVec3("spotLights[6].diffuse", PARTICLE_COLOR_REDBLUE * 0.8f);
+	GameShader->setVec3("spotLights[6].specular", glm::vec3(1));
 
 }
 
@@ -914,11 +983,17 @@ void Game::updateLights(float currentTime)
 		GameShader->setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
 	}
 
-	for (int i = 0; i < gameKickers.size(); i++)
+	if (ghostMode)
 	{
-		GameShader->setVec3("spotLights[" + std::to_string(i) + "].position", gameKickers[i]->GetPosition() + glm::vec3(0, 10, 0));
+		for (int i = 0; i < gameKickers.size(); i++)
+		{
+			GameShader->setVec3("spotLights[" + std::to_string(i) + "].position", gameKickers[i]->GetPosition() + glm::vec3(0, 10, 0));
+		}
+
+		GameShader->setBool("spotLights[6].isExist", GameState == GAME_COOLDOWN);
 
 	}
+
 	//GameShader->setVec3("spotLights[1].position", gameKickers[1]->GetPosition() + glm::vec3(0, 10, 0));
 
 }
@@ -938,11 +1013,11 @@ void Game::updateStatus()
 		{
 			whoGoal = 2;
 			GamePlayers[1]->AddScore(1);
+			SoundEngine->play3D("resources/audio/explosion1.wav", irrklang::vec3df(0, 0, 0), false);
 		}
 		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
 		GameState = GameStateType::GAME_COOLDOWN;
-		GamePlayers[0]->CurrentControl = 0;
-		GamePlayers[1]->CurrentControl = 3;
+
 	}
 	GameShader->setBool("ghostMode", ghostMode);
 }
@@ -1015,12 +1090,14 @@ void Game::ResetPosition()
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetVelocity(glm::vec3(0));
 	GameBalls[0]->SetOmega(glm::vec3(0, 5, 0));
+	GameBalls[0]->ResetRotation();
 	GameBalls[0]->SetBallStatus(BallIsFree);
 
 	for (int i = 0; i < 6; i++)
 	{
 		gameKickers[i]->SetPosition(KICKER_POSITION[i]);
 		gameKickers[i]->SetStatic();
+		gameKickers[i]->ResetRotation();
 	}
 }
 
@@ -1103,5 +1180,5 @@ void Game::updateParticles(float dt)
 
 	}
 
-	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * GROUND_WIDTH, 0.5f * GROUND_WIDTH, -0.5f * GROUND_DEPTH, 0.5f * GROUND_DEPTH, GROUND_POSITION.y + CAMERA_POS_3_Y, glm::vec3(0, -1, 0), 1.0f, GameCamera->GetPosition());
+	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * SNOW_WIDTH, 0.5f * SNOW_WIDTH, -0.5f * SNOW_DEPTH, 0.5f * SNOW_DEPTH, GROUND_POSITION.y + SNOW_HEIGHT, glm::vec3(0, -1, 0), 1.0f, GameCamera->GetPosition());
 }
