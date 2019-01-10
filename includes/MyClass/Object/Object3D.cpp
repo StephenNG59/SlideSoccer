@@ -314,7 +314,6 @@ void Object3D::bindTexture(Shader shader)
 
 	for (int i = 0; i < texKindNum; i++)
 	{
-		//printf("textures[%d].size() = %d\n", i, textures[i].size());
 		for (int j = 0; j < textures[i].size(); j++)
 		{
 			if (textures[i][j].isActive)

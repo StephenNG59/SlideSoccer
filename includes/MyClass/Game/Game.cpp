@@ -257,6 +257,23 @@ void Game::RenderScene(Shader *renderShader)
 		(*it)->Draw(*GameCamera, *renderShader);
 	}
 
+	// Repeat for 2 times... don't know why...
+	// One before the walls, and one after... Otherwise it doesn't work
+	for (int i = 0; i < gameKickers.size(); i++)
+	{
+		if (ghostMode)
+		{
+			renderShader->use();
+			renderShader->setBool("ghostMode", false);
+			gameKickers[i]->DrawWithoutCamera(*renderShader);
+			renderShader->setBool("ghostMode", true);
+		}
+		else
+		{
+			gameKickers[i]->DrawWithoutCamera(*renderShader);
+		}
+	}
+
 	glDisable(GL_CULL_FACE);
 		GameShader->setBool("isReflect", isReflect);
 		GameShader->setBool("isRefract", isRefract);
@@ -271,10 +288,8 @@ void Game::RenderScene(Shader *renderShader)
 		GameShader->setBool("isRefract", false);
 	glEnable(GL_CULL_FACE);
 
-	//renderShader->setBool("ghostMode", false);
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
-		//(*it)->Draw(*GameCamera, *renderShader);
 		if (ghostMode)
 		{
 			renderShader->use();
@@ -283,9 +298,12 @@ void Game::RenderScene(Shader *renderShader)
 			renderShader->setBool("ghostMode", true);
 		}
 		else
+		{
 			(*it)->DrawWithoutCamera(*renderShader);
-
+		}
 	}
+
+	
 	//ground.Draw(*GameCamera, *renderShader);
 	//if (ghostMode) renderShader->setBool("ghostMode", true);
 
@@ -691,8 +709,13 @@ void Game::createObjects()
 	gameKickers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 	//gameKickers[0]->AddModel("resources/objects/ball/1212.obj");
 	//gameKickers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
-	//gameKickers[0]->AddModel("resources/objects/ball/pumpkin_01.obj");
-	GameBalls[0]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.03f));
+	//gameKickers[0]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	//gameKickers[1]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	//gameKickers[2]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	//gameKickers[3]->AddModel("resources/objects/ball/pumpkin_04.obj", glm::vec3(0.028f));
+	//gameKickers[4]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	//gameKickers[5]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	GameBalls[0]->AddModel("resources/objects/ball/football1.obj", glm::vec3(/*0.03f*/4.0f));
 
 	gameWalls.push_back(&wall_e_s);
 	gameWalls.push_back(&wall_e_n);
@@ -867,8 +890,8 @@ void Game::updateCameras(float dt)
 	if (GameState == GameStateType::GAME_MAINMENU)
 	{
 		//GameCamera->RotateRightByDegree(dt * 10);
-		if (GameCamera->Status == CameraStatus::CameraIsFree)
-			GameCamera->RotateCounterClockByDegree(dt * 30, glm::vec3(0, 1, 0));
+		/*if (GameCamera->Status == CameraStatus::CameraIsFree)
+			GameCamera->RotateCounterClockByDegree(dt * 30, glm::vec3(0, 1, 0));*/
 	}
 
 	// Camera tracks target

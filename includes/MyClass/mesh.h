@@ -68,7 +68,6 @@ public:
 		// set appropriate material
 		shader.setVec3("material.ambient", material.ambient);
 		shader.setVec3("material.diffuse", material.diffuse);
-		//std::cout << material.diffuse.x << material.diffuse.y << material.diffuse.z << std::endl;
 		shader.setVec3("material.specular", material.specular);
 
         // bind appropriate textures
@@ -86,7 +85,6 @@ public:
             if(name == "diffuseTex")
             {
                 shader.setInt("material.diffuseTex[" + std::to_string(diffuseNr++) + "]", i);
-				//std::cout << "material.diffuseTex[" + std::to_string(++diffuseNr - 2) + "]" << std::endl;
 				// number = std::to_string(diffuseNr++);
             }
 			else if(name == "specularTex")

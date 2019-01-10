@@ -279,7 +279,9 @@ void ParticleGenerator::SpawnParticle(CollisionInfo cInfo, unsigned int particle
 		p.Position = cInfo.collidePos + glm::vec3(rand() % 61 / 30.0f - 1.0f, 0, rand() % 61 / 30.0f - 1.0f);
 
 		//p.Velocity = (i % 2) ? v2 : -v2;
-		p.Velocity = -(1 + v1_abs / 20.0f) * v2;
+		float randomP = rand() % 11 / 10.0f;
+		p.Velocity = 
+		p.Velocity = -(1 + v1_abs / 20.0f) * (randomP * v2 + (1 - randomP) * v1);
 		p.Velocity *= ((rand() % 69 / 100.0f) + 0.02);		// 0.02 ~ 0.7
 
 		p.Color = glm::vec4(0.8f * Color, 1.0f);

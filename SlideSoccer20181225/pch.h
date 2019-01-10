@@ -25,7 +25,7 @@ const glm::vec3 GROUND_POSITION(0, -5, 0);
 
 constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
-constexpr unsigned int SHADOW_MAP_ID = 7;
+constexpr unsigned int SHADOW_MAP_ID = 17;
 
 // Camera
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
