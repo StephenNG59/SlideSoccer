@@ -103,6 +103,7 @@ class Game
 		Shader* particleInstanceShader;
 		// Players
 		std::vector<Object3Dcylinder*> gameKickers;
+		std::vector<Model *> gameKickerModels;
         // Walls and Ground
         std::vector<Object3Dcube*> gameWalls;
 		// Particle 

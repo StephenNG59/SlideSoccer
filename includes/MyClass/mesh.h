@@ -94,12 +94,12 @@ public:
             }
             else if(name == "normalTex")
             {
-                shader.setInt("material.normalTex[" + std::to_string(normalNr++ - 1) + "]", i);
+                shader.setInt("material.normalTex[" + std::to_string(normalNr++) + "]", i);
 				// number = std::to_string(normalNr++); // transfer unsigned int to stream
             }
             else if(name == "heightTex")
             {
-                shader.setInt("material.heightTex[" + std::to_string(heightNr++ - 1) + "]", i);
+                shader.setInt("material.heightTex[" + std::to_string(heightNr++) + "]", i);
 			    // number = std::to_string(heightNr++); // transfer unsigned int to stream
             }
 

@@ -265,12 +265,16 @@ void Game::RenderScene(Shader *renderShader)
 		{
 			renderShader->use();
 			renderShader->setBool("ghostMode", false);
-			gameKickers[i]->DrawWithoutCamera(*renderShader);
+			//gameKickers[i]->DrawWithoutCamera(*renderShader);
+			//gameKickerModels[i]->Draw(*GameCamera, *renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
+			gameKickerModels[i]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
 			renderShader->setBool("ghostMode", true);
 		}
 		else
 		{
-			gameKickers[i]->DrawWithoutCamera(*renderShader);
+			//gameKickers[i]->DrawWithoutCamera(*renderShader);
+			//gameKickerModels[i]->Draw(*GameCamera, *renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
+			gameKickerModels[i]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
 		}
 	}
 
@@ -682,7 +686,7 @@ void Game::createObjects()
 
 	GameBalls.push_back(new Object3Dsphere(1.3f, 20, 16));
 	GameBalls[0]->IsBall = true;
-	GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+	//GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetERestitution(1.2f);
 	GameBalls[0]->SetGravity(glm::vec3(0, 0, 0));
@@ -709,12 +713,12 @@ void Game::createObjects()
 	gameKickers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 	//gameKickers[0]->AddModel("resources/objects/ball/1212.obj");
 	//gameKickers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
-	//gameKickers[0]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
-	//gameKickers[1]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
-	//gameKickers[2]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
-	//gameKickers[3]->AddModel("resources/objects/ball/pumpkin_04.obj", glm::vec3(0.028f));
-	//gameKickers[4]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
-	//gameKickers[5]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	gameKickers[0]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	gameKickers[1]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	gameKickers[2]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	gameKickers[3]->AddModel("resources/objects/ball/pumpkin_04.obj", glm::vec3(0.028f));
+	//gameKickers[4]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.028f));
+	gameKickers[5]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
 	GameBalls[0]->AddModel("resources/objects/ball/football1.obj", glm::vec3(/*0.03f*/4.0f));
 
 	gameWalls.push_back(&wall_e_s);
@@ -733,6 +737,12 @@ void Game::createObjects()
 		//gameWall->SetERestitution(1.2f);		// dangerous
 	}
 
+	gameKickerModels.push_back(new Model("resources/objects/ball/pumpkin_02.obj"));
+	gameKickerModels.push_back(gameKickerModels[0]);
+	gameKickerModels.push_back(gameKickerModels[0]);
+	gameKickerModels.push_back(new Model("resources/objects/ball/pumpkin_04.obj"));
+	gameKickerModels.push_back(gameKickerModels[3]);
+	gameKickerModels.push_back(gameKickerModels[3]);
 
 }
 
