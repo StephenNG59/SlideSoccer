@@ -144,6 +144,7 @@ class Game
 		// Status
 		void updateStatus();
 		void updateConfigure();
+		void displayMenu();
 };
 
 #endif

@@ -395,80 +395,8 @@ void Game::RenderInMainMenu()
 	ViewportW = screenWidth;
 	RenderWithShadow();
 
+	displayMenu();
 	
-	if (MenuState == GAMEMENU_STARTGAME)
-	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- New Game -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_GAMEMODE)
-	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Select Modes -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_BALLSELECT)
-	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Select Balls -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_HELP)
-	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Help -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_GAMEMODE_NORMAL)
-	{
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Normal -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_GAMEMODE_GHOST)
-	{
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Ghost -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_GAMEMODE_ICE)
-	{
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Ice -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_GAMEMODE_GHOST_ICE)
-	{
-		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Ghost & Ice -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-	}
-	else if (MenuState == GAMEMENU_HELP_CONTENTS)
-	{
-		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Player1", 0.2 * screenWidth, 0.65 * screenHeight, 1.0f, PARTICLE_COLOR_RED);
-		GameTextManager->RenderText(*TextShader, "w/s/a/d: move, q/e: switch player", 0.23 * screenWidth, 0.55 * screenHeight, 0.75f, PARTICLE_COLOR_RED);
-		GameTextManager->RenderText(*TextShader, "Player2", 0.2 * screenWidth, 0.40 * screenHeight, 1.0f, PARTICLE_COLOR_BLUE);
-		GameTextManager->RenderText(*TextShader, "i/k/j/l: move, u/o: switch player", 0.23 * screenWidth, 0.30 * screenHeight, 0.75f, PARTICLE_COLOR_BLUE);
-
-	}
 	//GameTextManager->RenderText(*TextShader, "press -Enter- to begin", 0.5 * screenWidth, 0.4 * screenHeight, 0.7f, glm::vec3(0.3, 0.2f, 0.4f));
 
 }
@@ -1207,6 +1135,83 @@ void Game::updateConfigure()
 		ghostMode = iceMode = true;
 	}
 
+}
+
+void Game::displayMenu()
+{
+	if (MenuState == GAMEMENU_STARTGAME)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- New Game -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Select Modes -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_BALLSELECT)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Select Balls -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_HELP)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Help -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_NORMAL)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Normal -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ghost -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_ICE)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ice -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST_ICE)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ghost & Ice -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_HELP_CONTENTS)
+	{
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Player1", 0.2 * screenWidth, 0.65 * screenHeight, 1.0f, PARTICLE_COLOR_RED);
+		GameTextManager->RenderText(*TextShader, "w/s/a/d: move, q/e: switch player", 0.23 * screenWidth, 0.55 * screenHeight, 0.75f, PARTICLE_COLOR_RED);
+		GameTextManager->RenderText(*TextShader, "Player2", 0.2 * screenWidth, 0.40 * screenHeight, 1.0f, PARTICLE_COLOR_BLUE);
+		GameTextManager->RenderText(*TextShader, "i/k/j/l: move, u/o: switch player", 0.23 * screenWidth, 0.30 * screenHeight, 0.75f, PARTICLE_COLOR_BLUE);
+
+	}
 }
 
 /// playerIndex = 0/1
