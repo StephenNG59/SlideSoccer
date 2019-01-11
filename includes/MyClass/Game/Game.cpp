@@ -19,6 +19,8 @@ int whoGoal = 0;
 
 bool ghostMode = false;
 bool iceMode = false;
+bool sceneStatic = false;
+unsigned int ballModelCurrent = 0;
 
 // Screen
 extern unsigned int screenWidth, screenHeight;
@@ -252,10 +254,11 @@ void Game::RenderScene(Shader *renderShader)
 	GameShader->use();
 	GameShader->setBool("iceMode", iceMode);
 
-	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
-	{
-		(*it)->Draw(*GameCamera, *renderShader);
-	}
+	//for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
+	//{
+	//	(*it)->Draw(*GameCamera, *renderShader);
+	//}
+	gameBallModels[0]->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.0f)));
 
 	// Repeat for 2 times... don't know why...
 	// One before the walls, and one after... Otherwise it doesn't work
@@ -292,7 +295,10 @@ void Game::RenderScene(Shader *renderShader)
 		GameShader->setBool("isRefract", false);
 	glEnable(GL_CULL_FACE);
 
-	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
+
+	gameKickers[0]->DrawWithoutCamera(*renderShader);
+
+	/*for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
 		if (ghostMode)
 		{
@@ -305,7 +311,7 @@ void Game::RenderScene(Shader *renderShader)
 		{
 			(*it)->DrawWithoutCamera(*renderShader);
 		}
-	}
+	}*/
 
 	
 	//ground.Draw(*GameCamera, *renderShader);
@@ -389,8 +395,81 @@ void Game::RenderInMainMenu()
 	ViewportW = screenWidth;
 	RenderWithShadow();
 
-	GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.5 * screenWidth, 0.5 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
-	GameTextManager->RenderText(*TextShader, "press -Enter- to begin", 0.5 * screenWidth, 0.4 * screenHeight, 0.7f, glm::vec3(0.3, 0.2f, 0.4f));
+	
+	if (MenuState == GAMEMENU_STARTGAME)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- New Game -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Select Modes -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_BALLSELECT)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Select Balls -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_HELP)
+	{
+		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "New Game", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Select Balls", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Help -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_NORMAL)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Normal -", 0.4 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ghost -", 0.4 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_ICE)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ice -", 0.4 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost & Ice", 0.4 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST_ICE)
+	{
+		GameTextManager->RenderText(*TextShader, "Select Modes", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Normal", 0.4 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ghost", 0.4 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Ice", 0.4 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Ghost & Ice -", 0.4 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_HELP_CONTENTS)
+	{
+		GameTextManager->RenderText(*TextShader, "Help", 0.4 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Player1", 0.2 * screenWidth, 0.65 * screenHeight, 1.0f, PARTICLE_COLOR_RED);
+		GameTextManager->RenderText(*TextShader, "w/s/a/d: move, q/e: switch player", 0.23 * screenWidth, 0.55 * screenHeight, 0.75f, PARTICLE_COLOR_RED);
+		GameTextManager->RenderText(*TextShader, "Player2", 0.2 * screenWidth, 0.40 * screenHeight, 1.0f, PARTICLE_COLOR_BLUE);
+		GameTextManager->RenderText(*TextShader, "i/k/j/l: move, u/o: switch player", 0.23 * screenWidth, 0.30 * screenHeight, 0.75f, PARTICLE_COLOR_BLUE);
+
+	}
+	//GameTextManager->RenderText(*TextShader, "press -Enter- to begin", 0.5 * screenWidth, 0.4 * screenHeight, 0.7f, glm::vec3(0.3, 0.2f, 0.4f));
 
 }
 
@@ -414,7 +493,7 @@ void Game::ProcessInput(float dt)
 	}
 	if (this->KeysPressed[GLFW_KEY_ENTER])
 	{
-		if (GameState == GameStateType::GAME_MAINMENU)
+		if (GameState == GameStateType::GAME_MAINMENU && (MenuState == GAMEMENU_STARTGAME || MenuState / 10 == 1))
 		{
 			GameState = GameStateType::GAME_PLAYING;
 			GamePlayers[0]->ResetScore();
@@ -460,6 +539,7 @@ void Game::ProcessInput(float dt)
 				GamePlayers[0]->ResetScore();
 				GamePlayers[1]->ResetScore();
 				GameState = GAME_MAINMENU;
+				GameTextManager->UpdateAspect(screenWidth, screenHeight);
 				GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
 				GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
 			}
@@ -591,6 +671,35 @@ void Game::ProcessInput(float dt)
 
 	}
 
+	if (GameState == GAME_MAINMENU)
+	{
+		if (this->KeysPressed[GLFW_KEY_DOWN])
+		{
+			// TODO: play sound effect
+			MenuState += 1;
+			updateConfigure();
+		}
+		if (this->KeysPressed[GLFW_KEY_UP])
+		{
+			MenuState -= 1;
+			updateConfigure();
+		}
+		if (this->KeysPressed[GLFW_KEY_RIGHT] || this->KeysPressed[GLFW_KEY_ENTER])
+		{
+			if (MenuState <= 3)
+			{
+				MenuState *= 10;
+				if (MenuState == 10) MenuState += (ghostMode + iceMode * 2);
+				updateConfigure();
+			}
+		}
+		if (this->KeysPressed[GLFW_KEY_LEFT] || this->KeysPressed[GLFW_KEY_BACKSPACE])
+		{
+			if (MenuState >= 10)
+				MenuState /= 10;
+		}
+	}
+
 	if (this->KeysCurrent[GLFW_KEY_EQUAL])
 	{
 		GameCamera->GoForward(keySensitivity);
@@ -633,13 +742,20 @@ void Game::ProcessInput(float dt)
 	{
 		GameCamera->SetTrackingTarget(CameraTrackingTarget::Player2);
 	}
-	if (this->KeysReleased[GLFW_KEY_F5] && GameState == GAME_PLAYING)
+	if (this->KeysReleased[GLFW_KEY_F5])
 	{
-		for (Object3Dcylinder * P : gameKickers)
+		if (GameState == GAME_PLAYING)
 		{
-			P->SetStatic();
+			for (Object3Dcylinder * P : gameKickers)
+			{
+				P->SetStatic();
+			}
+			ResetPosition();
 		}
-		ResetPosition();
+		else if (GameState == GAME_MAINMENU)
+		{
+			sceneStatic = !sceneStatic;
+		}
 	}
 	if (this->KeysPressed[GLFW_KEY_B])
 	{
@@ -713,13 +829,13 @@ void Game::createObjects()
 	gameKickers[0]->SetOmega(glm::vec3(0, 20.0f, 0));
 	//gameKickers[0]->AddModel("resources/objects/ball/1212.obj");
 	//gameKickers[0]->AddModel("resources/objects/nanosuit/nanosuit.obj");
-	gameKickers[0]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
-	gameKickers[1]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
-	gameKickers[2]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
-	gameKickers[3]->AddModel("resources/objects/ball/pumpkin_04.obj", glm::vec3(0.028f));
-	//gameKickers[4]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.028f));
-	gameKickers[5]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
-	GameBalls[0]->AddModel("resources/objects/ball/football1.obj", glm::vec3(/*0.03f*/4.0f));
+	//gameKickers[0]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	//gameKickers[1]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	//gameKickers[2]->AddModel("resources/objects/ball/pumpkin_02.obj", glm::vec3(0.028f));
+	//gameKickers[3]->AddModel("resources/objects/ball/pumpkin_04.obj", glm::vec3(0.028f));
+	////gameKickers[4]->AddModel("resources/objects/ball/pumpkin_01.obj", glm::vec3(0.028f));
+	//gameKickers[5]->AddModel("resources/objects/ball/pumpkin_03.obj", glm::vec3(0.028f));
+	//GameBalls[0]->AddModel("resources/objects/ball/football1.obj", glm::vec3(/*0.03f*/4.0f));
 
 	gameWalls.push_back(&wall_e_s);
 	gameWalls.push_back(&wall_e_n);
@@ -743,6 +859,8 @@ void Game::createObjects()
 	gameKickerModels.push_back(new Model("resources/objects/ball/pumpkin_04.obj"));
 	gameKickerModels.push_back(gameKickerModels[3]);
 	gameKickerModels.push_back(gameKickerModels[3]);
+	
+	gameBallModels.push_back(new Model("resources/objects/ball/football1.obj"));
 
 }
 
@@ -900,8 +1018,8 @@ void Game::updateCameras(float dt)
 	if (GameState == GameStateType::GAME_MAINMENU)
 	{
 		//GameCamera->RotateRightByDegree(dt * 10);
-		/*if (GameCamera->Status == CameraStatus::CameraIsFree)
-			GameCamera->RotateCounterClockByDegree(dt * 30, glm::vec3(0, 1, 0));*/
+		if (GameCamera->Status == CameraStatus::CameraIsFree && !sceneStatic)
+			GameCamera->RotateCounterClockByDegree(dt * 30, glm::vec3(0, 1, 0));
 	}
 
 	// Camera tracks target
@@ -968,11 +1086,23 @@ void Game::updateObjects(float dt)
 		(*it)->UpdatePhysics(dt);
 	};*/
 
-	if (GameState == GAME_MAINMENU)
+	if (GameState == GAME_MAINMENU && !sceneStatic)
 	{
 		int index = rand() % 6;
 
 		gameKickers[index]->AddVelocity(glm::vec3(rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED, 0, rand() % int(GAMEMENU_RANDOM_SPEED * 10 + 1) / 5.0f - GAMEMENU_RANDOM_SPEED));
+
+		/*glm::vec3 vDir;
+		if (index % 2)
+		{
+			vDir = glm::normalize(GameBalls[0]->GetPosition() - gameKickers[index]->GetPosition());
+		}
+		else
+		{
+			vDir = glm::normalize(gameKickers[index+1]->GetPosition() - gameKickers[index]->GetPosition());
+		}
+
+		gameKickers[index]->AddVelocity(vDir * ACCELERATION_BASIC * dt * 3.0f);*/
 	}
 
 	if (GameBalls[0] != NULL)
@@ -1053,6 +1183,30 @@ void Game::updateStatus()
 
 	}
 	GameShader->setBool("ghostMode", ghostMode);
+
+}
+
+void Game::updateConfigure()
+{
+	if (MenuState == GAMEMENU_GAMEMODE_NORMAL)
+	{
+		ghostMode = iceMode = false;
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST)
+	{
+		ghostMode = true;
+		iceMode = false;
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_ICE)
+	{
+		ghostMode = false;
+		iceMode = true;
+	}
+	else if (MenuState == GAMEMENU_GAMEMODE_GHOST_ICE)
+	{
+		ghostMode = iceMode = true;
+	}
+
 }
 
 /// playerIndex = 0/1

@@ -36,6 +36,18 @@ enum GameStateType {
     GAME_COOLDOWN = 3	/// Score and wait for reopen
 };
 
+enum MenuStateType {
+	GAMEMENU_STARTGAME = 0,
+	GAMEMENU_GAMEMODE = 1,
+		GAMEMENU_GAMEMODE_NORMAL = 10,
+		GAMEMENU_GAMEMODE_GHOST = 11,
+		GAMEMENU_GAMEMODE_ICE = 12,
+		GAMEMENU_GAMEMODE_GHOST_ICE = 13,
+	GAMEMENU_BALLSELECT = 2,
+		GAMEMENU_BALLSELECT_NORMAL = 20,
+	GAMEMENU_HELP = 3,
+		GAMEMENU_HELP_CONTENTS = 30,
+};
 
 class Game
 {
@@ -51,6 +63,7 @@ class Game
 
         // Game state
         GameStateType GameState;
+		int MenuState = GAMEMENU_STARTGAME;
         bool KeysCurrent[1024], KeysPressed[1024], KeysReleased[1024];
 		unsigned int ViewportX = 0, ViewportY = 0;
         unsigned int ViewportW, ViewportH;
@@ -101,6 +114,8 @@ class Game
 		glm::vec3 lightsPos[5];
 		Shader *particleShader;
 		Shader* particleInstanceShader;
+		// Ball
+		std::vector<Model*> gameBallModels;
 		// Players
 		std::vector<Object3Dcylinder*> gameKickers;
 		std::vector<Model *> gameKickerModels;
@@ -128,6 +143,7 @@ class Game
 		void initShadow();
 		// Status
 		void updateStatus();
+		void updateConfigure();
 };
 
 #endif

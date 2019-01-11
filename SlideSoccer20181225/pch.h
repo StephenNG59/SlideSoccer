@@ -27,6 +27,9 @@ constexpr unsigned int SHADOW_WIDTH = 2048;
 constexpr unsigned int SHADOW_HEIGHT = 2048;
 constexpr unsigned int SHADOW_MAP_ID = 17;
 
+// Model
+constexpr int BALLMODEL_TOTAL = 1;
+
 // Camera
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
 
@@ -68,7 +71,7 @@ constexpr float ICEMODE_SIZEFACTOR = 0.30f;
 constexpr float ACCELERATION_BASIC = 40.0f;
 constexpr float FRICTION_CONSTANT = 7;
 constexpr float FRICTION_LINEAR = 0.40f;
-constexpr float GAMEMENU_RANDOM_SPEED = 15.0f;
+constexpr float GAMEMENU_RANDOM_SPEED = 10.0f;
 const glm::vec3 GRAVITY_OUTSIDE(0, -9.8f, 0);
 
 // Lights
