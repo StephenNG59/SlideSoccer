@@ -600,7 +600,7 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	//glDisable(GL_DEPTH_TEST);
 	////glEnable(GL_BLEND);
 	////glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
-	//glDepthMask(GL_FALSE);
+	glDepthMask(GL_FALSE);
 
 	// Use additive blending to give it a 'glow' effect
 	if (UseGlow)
@@ -663,7 +663,7 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	// Change back to default
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	//glDepthMask(GL_TRUE);
+	glDepthMask(GL_TRUE);
 
 	//glPopAttrib();
 }

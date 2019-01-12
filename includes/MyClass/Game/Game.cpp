@@ -312,12 +312,11 @@ void Game::RenderScene(Shader *renderShader)
 	}*/
 
 
-	// TODO: uncomment
-	//particleGenerator_tail_1->Draw();
-	//particleGenerator_tail_2->Draw();
-	//if (!ghostMode || GameState == GAME_MAINMENU)
-	//	particleGenerator_tail_0->Draw();
-	//particleGenerator_collide->Draw();
+	particleGenerator_tail_1->Draw();
+	particleGenerator_tail_2->Draw();
+	if (!ghostMode || GameState == GAME_MAINMENU)
+		particleGenerator_tail_0->Draw();
+	particleGenerator_collide->Draw();
 
 
 	//GameShader->setFloat("material.shininess", 32);
@@ -331,13 +330,12 @@ void Game::RenderScene(Shader *renderShader)
 	GameShader->setBool("isRefract", false);  
 	GameSkybox->Draw(*GameCamera);
 
-	// TODO: uncomment
 	// #NOTE this should be at last because it has transparent texture
-	//particleGeneratorInstance_tail_0->Draw(GameCamera);
-	//particleGeneratorInstance_tail_1->Draw(GameCamera);
-	//particleGeneratorInstance_explosion_0->Draw(GameCamera);
-	//particleGeneratorInstance_explosion_1->Draw(GameCamera);
-	//particleGeneratorInstance_ice->Draw(GameCamera);
+	particleGeneratorInstance_tail_0->Draw(GameCamera);
+	particleGeneratorInstance_tail_1->Draw(GameCamera);
+	particleGeneratorInstance_explosion_0->Draw(GameCamera);
+	particleGeneratorInstance_explosion_1->Draw(GameCamera);
+	particleGeneratorInstance_ice->Draw(GameCamera);
 	pgi_explosion->Draw(GameCamera);
 
 }
@@ -680,7 +678,7 @@ void Game::ProcessInput(float dt)
 			sceneStatic = !sceneStatic;
 		}
 	}
-	if (this->KeysPressed[GLFW_KEY_B])
+	if (this->KeysPressed[GLFW_KEY_B])								// explosion
 	{
 		GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
 	}
