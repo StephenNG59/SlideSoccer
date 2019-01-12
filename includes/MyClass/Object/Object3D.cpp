@@ -331,6 +331,7 @@ void Object3D::bindTexture(Shader shader)
 
 // -- Render function --
 
+extern float currentFrame;
 void Object3D::Draw(Camera camera, Shader shader)
 {
 	if (IsExploding)
@@ -344,6 +345,7 @@ void Object3D::Draw(Camera camera, Shader shader)
 	{
 		objectModel->Draw(camera, shader, glm::scale(modelMatrix, modelScale));
 		shader.setBool("isExploding", false);
+		shader.setFloat("currentTime", currentFrame);
 		return;
 	}
 

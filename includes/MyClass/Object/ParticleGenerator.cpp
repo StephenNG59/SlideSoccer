@@ -311,11 +311,46 @@ ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader, const char 
 	this->init();
 }
 
+ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader)
+{
+	this->shader = shader;
+	UseTexture = false;
+	this->init();
+}
+
+
+void ParticleGeneratorInstance::BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, int amount, float time, float size, float sizeVariation)
+{
+	Life = time;
+	StaticAmount = amount;
+	IsExplosion = true;
+	//UseTexture = false;
+	for (int i = 0; i < amount; i++)
+	{
+		int particleIndex = firstUnusedParticle();
+		Particle &p = particleContainer[particleIndex];
+		p.Position = originPos + FRAND_RANGE1() * spreadPos;
+		p.Velocity = glm::vec3(FRAND_RANGE1() * velocity.x, FRAND_RANGE1() * velocity.y, FRAND_RANGE1() * velocity.z);
+		p.Acceleration = acceleration;
+		p.Life = (1.0f + FRAND_RANGE1() * 0.7f) * time;
+		p.Color = glm::vec4(1.0f, 0.5f + FRAND_RANGE1() * 0.5f, 0.0f, 1.0f);
+		p.ColorDelta = glm::vec4(0.0f, -(p.Color.g / 2.0f) / p.Life, 0.0f, -1.0f / p.Life);
+		p.Size = size + FRAND_RANGE1() * sizeVariation;
+		p.SizeDelta = -p.Size / p.Life;
+	}
+}
+
+void ParticleGeneratorInstance::LoadTexture(const char *textureFile)
+{
+	UseTexture = true;
+	
+	texture = loadTexture(textureFile);
+}
 
 void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos)
 {
 
-	if (IsActive)
+	if (IsActive && !IsExplosion)
 	{
 		// Respawn particles
 		int newParticles = (int)(dt * PARTICLE_PER_SECOND);
@@ -329,6 +364,7 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 		}
 	}
 
+	if (IsExplosion && !IsExploding) return;
 	// Update status of particles, and update data arrays
 	particleCounts = 0;
 	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
@@ -349,16 +385,23 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 				p.Position += p.Velocity * dt;
 				p.CameraDistance = glm::length2(p.Position - cameraPos);
 
+				// Positions and Life
 				g_particle_pos_life_data[4 * particleCounts + 0] = p.Position.x;
 				g_particle_pos_life_data[4 * particleCounts + 1] = p.Position.y;
 				g_particle_pos_life_data[4 * particleCounts + 2] = p.Position.z;
-				
 				g_particle_pos_life_data[4 * particleCounts + 3] = p.Life;
 
+				// Colors
+				p.Color += p.ColorDelta * dt;
 				g_particle_color_data[4 * particleCounts + 0] = p.Color.r;
 				g_particle_color_data[4 * particleCounts + 1] = p.Color.g;
 				g_particle_color_data[4 * particleCounts + 2] = p.Color.b;
 				g_particle_color_data[4 * particleCounts + 3] = p.Color.a;
+
+				// Size
+				p.Size += p.SizeDelta * dt;
+				g_particle_size_data[particleCounts] = p.Size;
+
 			}
 			else
 			{
@@ -368,6 +411,9 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 			particleCounts++;
 		}
 	}
+
+	// If the exploding finishes
+	if (IsExploding && particleCounts <= 1) IsExploding = false;
 
 	// Sort particles
 	//sortParticles();
@@ -382,8 +428,89 @@ void ParticleGeneratorInstance::Update(float dt, glm::vec3 position, glm::vec3 v
 	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_color_data);
 
+	// Update size buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * sizeof(float), g_particle_size_data);
+
 }
 
+void ParticleGeneratorInstance::UpdateExplosion(float dt, glm::vec3 cameraPos)
+{
+
+	if (!IsExplosion || !IsExploding) return;
+
+	// Update status of particles, and update data arrays
+	particleCounts = 0;
+	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
+	{
+		Particle& p = particleContainer[i];
+
+		if (p.Life > 0.0f)
+		{
+
+			p.Life -= dt;
+			if (p.Life > 0.0f)
+			{
+				if (p.Position.y <= groundY + SizeFactor && p.Velocity.y < 0)
+				{
+					p.Velocity.y = -ERestitution * p.Velocity.y;
+				}
+				p.Velocity += p.Acceleration * dt;
+				p.Position += p.Velocity * dt;
+				p.CameraDistance = glm::length2(p.Position - cameraPos);
+
+				// Positions and Life
+				g_particle_pos_life_data[4 * particleCounts + 0] = p.Position.x;
+				g_particle_pos_life_data[4 * particleCounts + 1] = p.Position.y;
+				g_particle_pos_life_data[4 * particleCounts + 2] = p.Position.z;
+				g_particle_pos_life_data[4 * particleCounts + 3] = p.Life;
+
+				// Colors
+				p.Color += p.ColorDelta * dt;
+				//printVec4("p.Color", p.Color);
+				g_particle_color_data[4 * particleCounts + 0] = p.Color.r;
+				g_particle_color_data[4 * particleCounts + 1] = p.Color.g;
+				g_particle_color_data[4 * particleCounts + 2] = p.Color.b;
+				g_particle_color_data[4 * particleCounts + 3] = p.Color.a;
+
+				// Size
+				p.Size += p.SizeDelta * dt;
+				g_particle_size_data[particleCounts] = p.Size;
+
+			}
+			else
+			{
+				p.CameraDistance = -1.0f;
+			}
+
+			particleCounts++;
+		}
+	}
+	
+
+	// If the exploding finishes
+	if (IsExploding && particleCounts <= 1) IsExploding = false;
+
+	// Sort particles
+	//sortParticles();
+
+	// Update pos and life buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos_life);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);// Buffer orphaning, a common way to improve streaming performance.
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_pos_life_data);
+
+	// Update color buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_color_data);
+
+	// Update size buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * sizeof(float), g_particle_size_data);
+
+}
 
 void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, glm::vec3 velocityDir, float velocityAbs, glm::vec3 cameraPos)
 {
@@ -468,10 +595,17 @@ extern bool iceMode;
 
 void ParticleGeneratorInstance::Draw(Camera *camera)
 {
-	glDepthMask(GL_FALSE);
+
+	//glPushAttrib(GL_ALL_ATTRIB_BITS);
+	//glDisable(GL_DEPTH_TEST);
+	////glEnable(GL_BLEND);
+	////glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
+	//glDepthMask(GL_FALSE);
 
 	// Use additive blending to give it a 'glow' effect
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	if (UseGlow)
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		//glBlendFunc(GL_SRC_ALPHA, GL_DST_ALPHA);
 
 	glBindVertexArray(VAO);
 	this->shader->use();
@@ -483,14 +617,19 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	this->shader->setInt("lineNum", lineNum);
 	this->shader->setInt("columnNum", columnNum);
 	this->shader->setBool("iceMode", iceMode);	// TODO: iceMode
+	this->shader->setFloat("isExplosion", IsExplosion * 1.0f);
+	this->shader->setBool("useTexture", UseTexture);
 
 	// Texture binding
-	shader->setInt("myTexture", 0);
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, texture);
+	if (UseTexture)
+	{
+		shader->setInt("myTexture", 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture);
+	}
 
 
-	// 1st attribute buffer: vertices
+	// 1st attribute buffer: vertices (aPos and aTexCoords)
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_billboard);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
@@ -512,13 +651,21 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glVertexAttribDivisor(3, 1);		// One per quad
 
+	// 4th attribute buffer: size
+	glEnableVertexAttribArray(4);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glVertexAttribDivisor(4, 1);
+
 	// Draw
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 6, particleCounts);
 
 	// Change back to default
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glDepthMask(GL_TRUE);
+	//glDepthMask(GL_TRUE);
+
+	//glPopAttrib();
 }
 
 
@@ -526,6 +673,7 @@ void ParticleGeneratorInstance::SetGravity(glm::vec3 g)
 {
 	gravity = g;
 }
+
 
 void ParticleGeneratorInstance::init()
 {
@@ -558,6 +706,13 @@ void ParticleGeneratorInstance::init()
 	glBindBuffer(GL_ARRAY_BUFFER, VBO_color);
 	// Initialize with empty (NULL) buffer. It will be updated each frame with GL_STREAM_DRAW.
 	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
+
+	// The VBO containing the sizes of the particles
+	glGenBuffers(1, &VBO_size);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	// Initialize with empty (NULL) buffer. It will be updated each frame with GL_STREAM_DRAW.
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * sizeof(float), NULL, GL_STREAM_DRAW);
+
 
 	for (int i = 0; i < PARTICLE_MAX_AMOUNT; i++)
 	{
@@ -608,14 +763,11 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		if (negative % 2) dir.z = -dir.z;
 
 		p.Velocity = dir * velocityAbs;
-
-		p.Life = Life;
 	}
 	// Focus on specific direction
 	else if (spread == 0)
 	{
 		p.Velocity = velocityDir * velocityAbs;
-		p.Life = Life;
 	}
 	// Spread
 	else
@@ -624,13 +776,14 @@ void ParticleGeneratorInstance::respawnParticle(Particle &p, glm::vec3 position,
 		glm::vec3 v_prime = velocityDir + glm::vec3(1.7, 1.9, 0);
 		glm::vec3 per_1 = glm::normalize(glm::cross(velocityDir, v_prime));
 		glm::vec3 per_2 = glm::normalize(glm::cross(velocityDir, per_1));
-		float theta = rand() % 628;
-		float spread_12 = rand() % 101 / 100.0f * spread;
-		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs * (0.95f + rand() % 11 / 100.0f);
-		p.Life = Life /** (1 - 0.4f * spread_12 / spread)*/;
+		float theta = FRAND_RANGE01() * 2 * 3.14159;
+		float spread_12 = FRAND_RANGE01() * spread;
+		p.Velocity = (glm::normalize(velocityDir) + spread_12 * (sin(theta) * per_1 + cos(theta) * per_2)) * velocityAbs * (1.0f + FRAND_RANGE1() * 0.1f);
 	}
 
-	p.Color = glm::vec4(PARTICLE_COLOR_BLUE, 1.0f);
+	float r = 1.0f, g = 0.5f + FRAND_RANGE1() * 0.5f, b = 0.0f, a = 1.0f;
+	p.Color = glm::vec4(r, g, b, a);
+	p.Life = Life * (0.7 + 0.7 * FRAND_RANGE1());
 	p.Position = position/* + glm::vec3(rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f, rand() % 101 / 10.0f - 5.0f)*/;
 
 	//p.Velocity = velocity + glm::vec3(rand() % 10 / 5.0f - 1.0f, rand() % 10 / 5.0f + 10, rand() % 10 / 5.0f - 1.0f);

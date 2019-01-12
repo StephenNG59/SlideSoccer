@@ -26,6 +26,12 @@ void printVec3(glm::vec3 v)
 	std::cout << "vec3: " << v.x << " # " << v.y << " # " << v.z << std::endl;
 }
 
+void printVec4(std::string name, glm::vec4 v)
+{
+	std::cout << name << ": ";
+	std::cout << v.x << " # " << v.y << " # " << v.z << " # " << v.w << std::endl;
+}
+
 void testPrint(std::string s)
 {
 	std::cout << s << std::endl;

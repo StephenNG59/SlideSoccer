@@ -11,10 +11,10 @@
 
 
 struct Particle {
-	glm::vec3 Position, Velocity;
-	glm::vec4 Color;
+	glm::vec3 Position, Velocity, Acceleration;
+	glm::vec4 Color, ColorDelta = glm::vec4(0);
 	float Life;
-	float Size;
+	float Size = 1, SizeDelta = 0;
 
 	float CameraDistance = -1.0f;
 
@@ -83,9 +83,14 @@ class ParticleGeneratorInstance
 {
 public:
 	ParticleGeneratorInstance(Shader *shader, const char *texturePath, int lineNum, int columnNum, float sizeFactor = 0.45f);
+	ParticleGeneratorInstance(Shader *shader);
 	~ParticleGeneratorInstance();
 
+
+	void BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, int amount, float time, float size, float sizeVariation);
+	void LoadTexture(const char *textureFile);
 	void Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos);
+	void UpdateExplosion(float dt, glm::vec3 cameraPos);
 	void UpdateOnSurface(float dt, float x_neg, float x_pos, float z_neg, float z_pos, float y, glm::vec3 velocityDir, float velocityAbs, glm::vec3 cameraPos);
 	void Draw(Camera *camera);
 	void SetGravity(glm::vec3 g);
@@ -94,15 +99,22 @@ public:
 	float SizeFactor = 0.45f;
 	float Life = PARTICLE_LIFE;
 	float ERestitution = 0.5f;
+	bool UseGlow = false;
+	bool UseTexture = true;
+	
+	// Explosion
+	bool IsExplosion = false;
+	bool IsExploding = false;
+	int StaticAmount;
 
 private:
 	// Basic
-	int lineNum, columnNum;
+	int lineNum = 1, columnNum = 1;
 	unsigned int particleCounts = 0;
 	unsigned int lastUsedParticle = 0;
 	Particle particleContainer[PARTICLE_MAX_AMOUNT];
 	glm::vec3 gravity = PARTICLE_GRAVITY;
-	float groundY = -5.0f; 
+	float groundY = -1.0f; 
 	// Shader
 	Shader *shader;
 	// VAO
@@ -127,6 +139,9 @@ private:
 	// Color
 	unsigned int VBO_color;
 	float g_particle_color_data[PARTICLE_MAX_AMOUNT * 4];
+	// Size
+	unsigned int VBO_size;
+	float g_particle_size_data[PARTICLE_MAX_AMOUNT * 1];
 	// Texture
 	unsigned int texture;
 

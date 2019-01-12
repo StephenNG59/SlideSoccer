@@ -131,6 +131,7 @@ class Game
 		ParticleGeneratorInstance* particleGeneratorInstance_explosion_0;
 		ParticleGeneratorInstance* particleGeneratorInstance_explosion_1;
 		ParticleGeneratorInstance* particleGeneratorInstance_ice;
+		ParticleGeneratorInstance* pgi_explosion;
 		void updateParticles(float dt);
 		void initParticle();
 		// Model

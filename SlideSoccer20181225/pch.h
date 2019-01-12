@@ -14,6 +14,9 @@
 #include <glm\glm.hpp>
 #include <string>
 
+#define FRAND_RANGE1() ((float)(rand() - rand()) / RAND_MAX)		/// -1 ~ 1
+#define FRAND_RANGE01() ((float)(rand()) / RAND_MAX)				/// 0 ~ 1
+
 // settings
 constexpr int SCORE_MAX = 3;
 
@@ -55,6 +58,7 @@ constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 // Particle
 constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
 constexpr float PARTICLE_PER_SECOND = 15000.0f;
+//constexpr float PARTICLE_PER_SECOND = 5000.0f;
 constexpr float PARTICLE_PER_SECOND_SURFACE = 2000.0f;
 const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8, 0);
 constexpr unsigned int PARTICLE_COLLIDE_NUMBER = 10;
@@ -66,6 +70,15 @@ const glm::vec3 PARTICLE_COLOR_YELLOW = glm::vec3(0.6, 0.6, 0.2);
 const glm::vec3 PARTICLE_COLOR_REDBLUE(0.7, 0.2, 0.7);
 constexpr float PARTICLE_LIFE = 4.0f;
 constexpr float ICEMODE_SIZEFACTOR = 0.30f;
+constexpr float PARTICLE_SIZEFACTOR = 0.65f;
+//constexpr float PARTICLE_SIZEFACTOR = 0.35f;
+//constexpr float PARTICLE_SIZEFACTOR = 1.15f;
+
+// Explosions
+constexpr float EXPLOSION_SIZE = 0.3f;
+constexpr float EXPLOSION_SIZEVARIATION = 0.1f;
+constexpr int EXPLOSION_AMOUNT = 5000;
+
 
 // Physics
 constexpr float ACCELERATION_BASIC = 40.0f;
@@ -79,6 +92,10 @@ const float SPOTLIGHT_CUTOFF = glm::cos(glm::radians(25.0f));
 const float SPOTLIGHT_OUTERCUTOFF = glm::cos(glm::radians(45.0f));
 const float SPOTLIGHT_CUTOFF_BIG = glm::cos(glm::radians(45.0f));
 const float SPOTLIGHT_OUTERCUTOFF_BIG = glm::cos(glm::radians(75.0f));
+
+// Colors
+const glm::vec3 MAINMENU_TITLECOLOR(0.5, 0.4f, 0.6f);
+const glm::vec3 MAINMENU_OPTIONSCOLOR(0.5, 0.4f, 0.6f);
 
 
 constexpr float GAME_COOLDOWN_TIME = 4.0f;
@@ -96,6 +113,7 @@ float vecMod(glm::vec3 v);
 float vecMod(glm::vec2 v);
 void printVec3(std::string name, glm::vec3 v);
 void printVec3(glm::vec3 v);
+void printVec4(std::string name, glm::vec4 v);
 void testPrint(std::string s);
 void testPrint(float f);
 bool outsideOfPitch(glm::vec3 pos);

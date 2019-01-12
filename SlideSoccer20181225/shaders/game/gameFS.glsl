@@ -152,9 +152,6 @@ void main()
 		if (!ghostMode)
 			result += emission;
 	
-		//	result = result * (1.0 - shadow);
-		//	result = vec3(fs_in.FragPosLightSpace);
-
 		FragColor = vec4(result, 1.0);
 
 		if (iceMode)
