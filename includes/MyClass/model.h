@@ -37,6 +37,12 @@ public:
 	//glm::vec3 Position = glm::vec3(0);
 	//glm::vec3 Scale = glm::vec3(1);
 
+	/* Explosion */
+	bool IsExploding = false;
+	bool IsExploded = false;
+	float ExplodingTime = 0, ExplosionTime = 0;
+	float initVelocity, acceleration;
+
     /*  Functions   */
     // constructor, expects a filepath to a 3D model.
     Model(string const &path, bool gamma = false) : gammaCorrection(gamma)
@@ -59,8 +65,18 @@ public:
 
 		shader.setFloat("material.shininess", 32.0f);
 
+		if (IsExploding)
+		{
+			shader.setBool("isExploding", true);
+			shader.setFloat("v", initVelocity);
+			shader.setFloat("a", acceleration);
+			shader.setFloat("t", ExplodingTime);
+		}
+
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
+
+		shader.setBool("isExploding", false);
 	}
 
 	void DrawWithoutCamera(Shader shader, glm::mat4 modelMatrix)
@@ -72,6 +88,35 @@ public:
 
 		for (unsigned int i = 0; i < meshes.size(); i++)
 			meshes[i].Draw(shader);
+	}
+
+	void StartExplosion(float initVelocity, float acceleration, float time)
+	{
+		IsExploding = true;
+		this->initVelocity = initVelocity;
+		this->acceleration = acceleration;
+		ExplosionTime = time;
+	}
+
+	void Update(float dt)
+	{
+		if (IsExploding)
+		{
+			ExplodingTime += dt;
+			if (ExplodingTime >= ExplosionTime)
+			{
+				IsExploding = false;
+				IsExploded = true;
+				ExplodingTime = 0;
+			}
+		}
+	}
+
+	void ResetExplosion()
+	{
+		IsExploded = false;
+		IsExploding = false;
+		ExplodingTime = 0;
 	}
     
 private:

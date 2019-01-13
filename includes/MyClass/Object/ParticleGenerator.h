@@ -8,6 +8,7 @@
 #include <MyClass/Object/Object3D.h>
 #include <MyClass/Object/Object3Dcylinder.h>
 #include <MyClass/Object/Collision.h>
+#include <algorithm>
 
 
 struct Particle {
@@ -87,7 +88,7 @@ public:
 	~ParticleGeneratorInstance();
 
 
-	void BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, int amount, float time, float size, float sizeVariation);
+	void BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, unsigned int amount, float time, float size, float sizeVariation);
 	void LoadTexture(const char *textureFile);
 	void Update(float dt, glm::vec3 position, glm::vec3 velocityDir, float velocityAbs, float spread, glm::vec3 cameraPos);
 	void UpdateExplosion(float dt, glm::vec3 cameraPos);

@@ -26,12 +26,22 @@ constexpr float WALL_THICK = 3.0f, WALL_HEIGHT = 5.0f;
 constexpr float PITCH_WIDTH = 20.0f, PITCH_HEIGHT = 10.0f, PITCH_DEPTH = 2.0f;
 const glm::vec3 GROUND_POSITION(0, -5, 0);
 
-constexpr unsigned int SHADOW_WIDTH = 2048;
-constexpr unsigned int SHADOW_HEIGHT = 2048;
-constexpr unsigned int SHADOW_MAP_ID = 17;
+constexpr unsigned int SHADOW_WIDTH = 1024;
+constexpr unsigned int SHADOW_HEIGHT = 1024;
+constexpr unsigned int SHADOW_MAP_ID = 30;
+
+// Music
+constexpr float BGM_VOLUME = 0.7f;
+constexpr float SELECTION_VOLUME = 0.2f;
 
 // Model
 constexpr int BALLMODEL_TOTAL = 1;
+constexpr int KICKER_MODEL_NUMBER = 3;
+const glm::vec3 kickerModelZoomRate[KICKER_MODEL_NUMBER] = {
+	glm::vec3(0.028f),		// pumpkin
+	glm::vec3(0.95f),		// curling
+	glm::vec3(0.6f),		// coin
+};
 
 // Camera
 const float CAMERA_SMOOTHMOVING_TIME = 0.2;
@@ -56,8 +66,8 @@ constexpr float CAMERA_LEAN_OFFSET1 = 20.0f;
 constexpr float CAMERA_LEAN_OFFSET2 = 30.0f;
 
 // Particle
-constexpr unsigned int PARTICLE_MAX_AMOUNT = 100000;
-constexpr float PARTICLE_PER_SECOND = 15000.0f;
+constexpr unsigned int PARTICLE_MAX_AMOUNT = 60000;
+constexpr float PARTICLE_PER_SECOND = 12000.0f;
 //constexpr float PARTICLE_PER_SECOND = 5000.0f;
 constexpr float PARTICLE_PER_SECOND_SURFACE = 2000.0f;
 const glm::vec3 PARTICLE_GRAVITY = glm::vec3(0, -9.8, 0);
@@ -75,9 +85,13 @@ constexpr float PARTICLE_SIZEFACTOR = 0.65f;
 //constexpr float PARTICLE_SIZEFACTOR = 1.15f;
 
 // Explosions
-constexpr float EXPLOSION_SIZE = 0.3f;
+constexpr float EXPLOSION_SIZE = 1.5f;
 constexpr float EXPLOSION_SIZEVARIATION = 0.1f;
-constexpr int EXPLOSION_AMOUNT = 5000;
+constexpr int EXPLOSION_AMOUNT = 7500;
+constexpr float EXPLOSION_TIME = 1.0f;
+const glm::vec3 EXPLOSION_VELOCITY(15, 15, 15);
+const glm::vec3 EXPLOSION_ACCELERATION(0, -5, 0);
+const float BALL_EXPLOSION_TIME = 3 * EXPLOSION_TIME;
 
 
 // Physics
@@ -99,6 +113,7 @@ const glm::vec3 MAINMENU_OPTIONSCOLOR(0.5, 0.4f, 0.6f);
 
 
 constexpr float GAME_COOLDOWN_TIME = 4.0f;
+constexpr float GAME_COOLDOWN_TIME_WINNING = 7.0f;
 
 const glm::vec3 KICKER_POSITION[6] = {
 	glm::vec3(-0.25 * GROUND_WIDTH, 0, 0),

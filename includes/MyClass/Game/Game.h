@@ -43,8 +43,10 @@ enum MenuStateType {
 		GAMEMENU_GAMEMODE_GHOST = 11,
 		GAMEMENU_GAMEMODE_ICE = 12,
 		GAMEMENU_GAMEMODE_GHOST_ICE = 13,
-	GAMEMENU_BALLSELECT = 2,
-		GAMEMENU_BALLSELECT_NORMAL = 20,
+	GAMEMENU_SETTINGS = 2,
+		GAMEMENU_SETTINGS_KICKERMODEL = 20,
+		GAMEMENU_SETTINGS_EXPLODEBALL = 21,
+		GAMEMENU_SETTINGS_FIREEFFECT = 22,
 	GAMEMENU_HELP = 3,
 		GAMEMENU_HELP_CONTENTS = 30,
 };
@@ -101,7 +103,14 @@ class Game
 		void ShiftControlRight(int param1);
 		void ResetPosition();
 
-    private:
+		void initSound();
+
+		// Sounds
+		ISoundSource *bgm;
+		ISoundSource *selectionSound;
+		ISoundSource *ballExplosionSound;
+
+private:
 
 		// Camera
 		void updateCameras(float dt);
@@ -146,6 +155,8 @@ class Game
 		void updateStatus();
 		void updateConfigure();
 		void displayMenu();
+		void updateModels(float dt);
+		std::string GetKickerMenuText1();
 };
 
 #endif

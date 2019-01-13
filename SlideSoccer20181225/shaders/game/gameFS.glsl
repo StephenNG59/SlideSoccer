@@ -175,6 +175,9 @@ void main()
 		FragColor = vec4(texture(skybox, R).rgb, 1.0);
 
 	}
+
+	// test
+//	FragColor = vec4(fs_in.Normal, 1.0);
 	
 }
 

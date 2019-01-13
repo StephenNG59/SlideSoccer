@@ -1134,9 +1134,11 @@ CollisionInfo CollideSph2Wall(Object3Dcylinder * sphere, Object3Dcube * wall, bo
 
 	// normalize them to be the x, y, z unit vector
 
-	glm::vec3 cubeXNorm = glm::normalize(cubeX);
+	// TODO: collision
+	/*glm::vec3 cubeXNorm = glm::normalize(cubeX);
 	glm::vec3 cubeYNorm = glm::normalize(cubeY);
-	glm::vec3 cubeZNorm = glm::normalize(cubeZ);
+	glm::vec3 cubeZNorm = glm::normalize(cubeZ);	*/
+	glm::vec3 cubeXNorm(1, 0, 0), cubeYNorm(0, 1, 0), cubeZNorm(0, 0, 1);
 
 
 	// -------------

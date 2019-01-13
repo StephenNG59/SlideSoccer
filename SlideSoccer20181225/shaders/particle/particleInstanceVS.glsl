@@ -29,6 +29,8 @@ void main()
 	TexCoords = calcTexCoords();
 	Explosion = isExplosion;
 
+//	float size = 1;
+
 	vec3 vertexPosition_worldspace = xyzl.xyz + size * cameraRight * aPos.x + size * cameraUp * aPos.y;
 	gl_Position = projection * view * vec4(vertexPosition_worldspace, 1.0);
 

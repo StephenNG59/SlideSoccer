@@ -21,6 +21,11 @@ bool ghostMode = false;
 bool iceMode = false;
 bool sceneStatic = false;
 unsigned int ballModelCurrent = 0;
+bool kickersUseModel = true;
+bool explodeBallWhenGoal = false;
+unsigned int kickerModelIndex = 0;
+bool drawingLeft = true;
+bool activeFireEffect = true;
 
 // Screen
 extern unsigned int screenWidth, screenHeight;
@@ -107,7 +112,9 @@ void Game::Init()
 	GameTextManager = new TextManager(*TextShader);
 
 	// Sound
-	SoundEngine->play2D("resources/audio/BGClip.mp3", true);
+	this->initSound();
+
+	//SoundEngine->play2D("resources/audio/BGClip.mp3", true);
 
 }
 
@@ -120,6 +127,8 @@ void Game::Update(float dt)
 	updateCameras(dt);
 
 	updateObjects(dt);
+
+	updateModels(dt);
 	
 	updateLights(currentTime);
 
@@ -147,6 +156,7 @@ void Game::RenderWithDoubleCamera()
 
 	// Left side
 	// ---------
+	drawingLeft = true;
 	ViewportW = 0.5 * screenWidth;
 	ViewportH = screenHeight;
 	glm::vec3 center = gameKickers[GamePlayers[0]->CurrentControl]->GetPosition();
@@ -196,6 +206,7 @@ void Game::RenderWithDoubleCamera()
 
 	// Right side
 	// ----------
+	drawingLeft = false;
 	ViewportX = 0.5 * screenWidth;
 	ViewportY = 0;
 	center = gameKickers[GamePlayers[1]->CurrentControl]->GetPosition();
@@ -256,26 +267,39 @@ void Game::RenderScene(Shader *renderShader)
 
 	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
 	{
-		(*it)->Draw(*GameCamera, *renderShader);
+		//(*it)->Draw(*GameCamera, *renderShader);
 	}
-	//gameBallModels[0]->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.0f)));
+	Model *ball = gameBallModels[0];
+	if (ball->IsExploded == false)
+	{
+		ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.0f)));
+		//ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(0.1f)));
+	}
 
 	// Repeat for 2 times... don't know why...
 	// One before the walls, and one after... Otherwise it doesn't work
 	for (int i = 0; i < gameKickers.size(); i++)
 	{
+		int index = i % 6 / 3 + 2 * kickerModelIndex;
 		if (ghostMode)
 		{
+			if (i / 3 == drawingLeft) continue;
 			renderShader->use();
 			renderShader->setBool("ghostMode", false);
 			//gameKickers[i]->DrawWithoutCamera(*renderShader);
-			gameKickerModels[i]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
+			if (kickersUseModel)
+				gameKickerModels[index]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), kickerModelZoomRate[kickerModelIndex]));
+			else
+				gameKickers[i]->DrawWithoutCamera(*renderShader);
 			renderShader->setBool("ghostMode", true);
 		}
 		else
 		{
 			//gameKickers[i]->DrawWithoutCamera(*renderShader);
-			gameKickerModels[i]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), glm::vec3(0.028f)));
+			if (kickersUseModel)
+				gameKickerModels[index]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), kickerModelZoomRate[kickerModelIndex]));
+			else
+				gameKickers[i]->DrawWithoutCamera(*renderShader);
 		}
 	}
 
@@ -293,8 +317,11 @@ void Game::RenderScene(Shader *renderShader)
 		GameShader->setBool("isRefract", false);
 	glEnable(GL_CULL_FACE);
 
-
+	// TODO: this is weird, if delete, all things will be in shadow.
+	glm::vec3 oldPos = gameKickers[0]->GetPosition();
+	gameKickers[0]->SetPosition(oldPos - glm::vec3(0, 10, 0));
 	gameKickers[0]->DrawWithoutCamera(*renderShader);
+	gameKickers[0]->SetPosition(oldPos);
 
 	/*for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
@@ -310,7 +337,6 @@ void Game::RenderScene(Shader *renderShader)
 			(*it)->DrawWithoutCamera(*renderShader);
 		}
 	}*/
-
 
 	particleGenerator_tail_1->Draw();
 	particleGenerator_tail_2->Draw();
@@ -387,8 +413,7 @@ void Game::RenderInMainMenu()
 	ViewportW = screenWidth;
 	RenderWithShadow();
 
-	// TODO: uncomment after test
-	//displayMenu();
+	displayMenu();
 	
 	//GameTextManager->RenderText(*TextShader, "press -Enter- to begin", 0.5 * screenWidth, 0.4 * screenHeight, 0.7f, glm::vec3(0.3, 0.2f, 0.4f));
 
@@ -422,7 +447,6 @@ void Game::ProcessInput(float dt)
 			ResetPosition();
 
 			GameTextManager->UpdateAspect(0.5 * screenWidth, screenHeight);
-			// TODO: reset position here.
 			GameCamera->SetTrackingTarget(CameraTrackingTarget::Player1);
 			GameCamera->SmoothlyMoveTo(CAMERA_POS_2, CAMERA_CENTER_2, CAMERA_UPVECNORM_X, CAMERA_SMOOTHMOVING_TIME);
 
@@ -455,6 +479,8 @@ void Game::ProcessInput(float dt)
 			GamePlayers[0]->CurrentControl = 0;
 			GamePlayers[1]->CurrentControl = 3;
 
+			gameCoolDown = GAME_COOLDOWN_TIME;
+
 			if (GamePlayers[0]->GetScore() >= SCORE_MAX || GamePlayers[1]->GetScore() >= SCORE_MAX)
 			{
 				GamePlayers[0]->ResetScore();
@@ -463,72 +489,50 @@ void Game::ProcessInput(float dt)
 				GameTextManager->UpdateAspect(screenWidth, screenHeight);
 				GameCamera->SetTrackingTarget(CameraTrackingTarget::Ball);
 				GameCamera->SmoothlyMoveTo(CAMERA_POS_1, CAMERA_CENTER_1, CAMERA_UPVECNORM_Y, CAMERA_SMOOTHMOVING_TIME);
+				particleGeneratorInstance_tail_0->IsExplosion = false;
+				gameCoolDown = GAME_COOLDOWN_TIME_WINNING;
 			}
 			else
 				GameState = GameStateType::GAME_PLAYING;
 
 			GameBalls[0]->SetBallStatus(BallStatus::BallIsFree);
-			gameCoolDown = GAME_COOLDOWN_TIME;
 		}
 	}
 
 	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
-		float dV_max = ACCELERATION_BASIC * (1 + iceMode * 0.25);
-		float dV_min = ACCELERATION_BASIC * (1 - iceMode * 0.5);
+		float dV_obverse = ACCELERATION_BASIC * (1 + iceMode * 0.25);			// speeding-up: normal: 1.0, iceMode: 1.25
+		float dV_reverse = ACCELERATION_BASIC * (1.5f - iceMode * 0.5f);		// slowing-down: normal: 1.5, iceMode: 0.5
 
 		// Left player
+		Object3Dcylinder *kicker1 = gameKickers[GamePlayers[0]->CurrentControl];
 		if (this->KeysCurrent[GLFW_KEY_W])
 		{
-			if (iceMode)
-			{
-				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
-				if (kicker->GetVelocity().x < 0)
-					kicker->AddVelocity(glm::vec3(dV_min, 0, 0) * dt);
-				else
-					kicker->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
-			}
+			if (kicker1->GetVelocity().x < 0)
+				kicker1->AddVelocity(glm::vec3(dV_reverse, 0, 0) * dt);
 			else
-				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
+				kicker1->AddVelocity(glm::vec3(dV_obverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_S])
 		{
-			if (iceMode)
-			{
-				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
-				if (kicker->GetVelocity().x > 0)
-					kicker->AddVelocity(glm::vec3(-dV_min, 0, 0) * dt);
-				else
-					kicker->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
-			}
+			if (kicker1->GetVelocity().x > 0)
+				kicker1->AddVelocity(glm::vec3(-dV_reverse, 0, 0) * dt);
 			else
-				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
+				kicker1->AddVelocity(glm::vec3(-dV_obverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_A])
 		{
-			if (iceMode)
-			{
-				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
-				if (kicker->GetVelocity().z > 0)
-					kicker->AddVelocity(glm::vec3(0, 0, -dV_min) * dt);
-				else
-					kicker->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
-			}
+			if (kicker1->GetVelocity().z > 0)
+				kicker1->AddVelocity(glm::vec3(0, 0, -dV_reverse) * dt);
 			else
-				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
+				kicker1->AddVelocity(glm::vec3(0, 0, -dV_obverse) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_D])
 		{
-			if (iceMode)
-			{
-				Object3Dcylinder *kicker = gameKickers[GamePlayers[0]->CurrentControl];
-				if (kicker->GetVelocity().z < 0)
-					kicker->AddVelocity(glm::vec3(0, 0, dV_min) * dt);
-				else
-					kicker->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
-			}
+			if (kicker1->GetVelocity().z < 0)
+				kicker1->AddVelocity(glm::vec3(0, 0, dV_reverse) * dt);
 			else
-				this->gameKickers[GamePlayers[0]->CurrentControl]->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
+				kicker1->AddVelocity(glm::vec3(0, 0, dV_obverse) * dt);
 		}
 
 		if (this->KeysPressed[GLFW_KEY_Q])
@@ -555,21 +559,34 @@ void Game::ProcessInput(float dt)
 		}*/
 
 		// Right player
+		Object3Dcylinder *kicker2 = gameKickers[GamePlayers[1]->CurrentControl];
 		if (this->KeysCurrent[GLFW_KEY_I])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(-dV_max, 0, 0) * dt);
+			if (kicker2->GetVelocity().x < 0)
+				kicker2->AddVelocity(glm::vec3(-dV_reverse, 0, 0) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(-dV_obverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_K])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(dV_max, 0, 0) * dt);
+			if (kicker2->GetVelocity().x > 0)
+				kicker2->AddVelocity(glm::vec3(dV_reverse, 0, 0) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(dV_obverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_J])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, dV_max) * dt);
+			if (kicker2->GetVelocity().z > 0)
+				kicker2->AddVelocity(glm::vec3(0, 0, dV_reverse) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(0, 0, dV_obverse) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_L])
 		{
-			this->gameKickers[GamePlayers[1]->CurrentControl]->AddVelocity(glm::vec3(0, 0, -dV_max) * dt);
+			if (kicker2->GetVelocity().z < 0)
+				kicker2->AddVelocity(glm::vec3(0, 0, -dV_reverse) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(0, 0, -dV_obverse) * dt);
 		}
 
 		if (this->KeysPressed[GLFW_KEY_U])
@@ -596,26 +613,68 @@ void Game::ProcessInput(float dt)
 	{
 		if (this->KeysPressed[GLFW_KEY_DOWN])
 		{
-			// TODO: play sound effect
+			SoundEngine->play2D(selectionSound);
+			
+			if (MenuState == 3)
+				return;
+
 			MenuState += 1;
 			updateConfigure();
 		}
 		if (this->KeysPressed[GLFW_KEY_UP])
 		{
-			MenuState -= 1;
+			if (MenuState >= 1) 
+				MenuState -= 1;
+
+			SoundEngine->play2D(selectionSound);
+
 			updateConfigure();
 		}
 		if (this->KeysPressed[GLFW_KEY_RIGHT] || this->KeysPressed[GLFW_KEY_ENTER])
 		{
+			SoundEngine->play2D(selectionSound);
+
 			if (MenuState <= 3)
 			{
 				MenuState *= 10;
 				if (MenuState == 10) MenuState += (ghostMode + iceMode * 2);
 				updateConfigure();
 			}
+			else if (MenuState == GAMEMENU_SETTINGS_KICKERMODEL)
+			{
+				// if using LearnOpenGL currently
+				if (!kickersUseModel)
+				{
+					kickersUseModel = true;
+					kickerModelIndex = 0;
+				}
+				else
+				{
+					// if the rightest
+					if (kickerModelIndex == KICKER_MODEL_NUMBER - 1)
+					{
+						kickersUseModel = false;
+						kickerModelIndex = 0;
+					}
+					else
+					{
+						kickerModelIndex++;
+					}
+				}
+			}
+			else if (MenuState == GAMEMENU_SETTINGS_EXPLODEBALL)
+			{
+				explodeBallWhenGoal = !explodeBallWhenGoal;
+			}
+			else if (MenuState == GAMEMENU_SETTINGS_FIREEFFECT)
+			{
+				activeFireEffect = !activeFireEffect;
+			}
 		}
 		if (this->KeysPressed[GLFW_KEY_LEFT] || this->KeysPressed[GLFW_KEY_BACKSPACE])
 		{
+			SoundEngine->play2D(selectionSound);
+
 			if (MenuState >= 10)
 				MenuState /= 10;
 		}
@@ -671,26 +730,43 @@ void Game::ProcessInput(float dt)
 			{
 				P->SetStatic();
 			}
+			gameBallModels[0]->ResetExplosion();
 			ResetPosition();
 		}
 		else if (GameState == GAME_MAINMENU)
 		{
 			sceneStatic = !sceneStatic;
+			gameBallModels[0]->ResetExplosion();
 		}
 	}
 	if (this->KeysPressed[GLFW_KEY_B])								// explosion
 	{
-		GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
+		//GameBalls[0]->StartExplosion(3, glm::vec3(0, -5.0, 0));
+		gameBallModels[0]->StartExplosion(10.0f, -5.0f, 2.0f);
+		if (gameBallModels[0]->IsExploded)
+		{
+			gameBallModels[0]->ResetExplosion();
+		}
 	}
 
 	if (this->KeysPressed[GLFW_KEY_LEFT_CONTROL])
 	{
-		pgi_explosion->BuildExplosion(glm::vec3(0, 0, 5), 1.0f, glm::vec3(1, 1, 1), glm::vec3(0, 0, 0), EXPLOSION_AMOUNT, 4.5f, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
+		//pgi_explosion->BuildExplosion(glm::vec3(0, 0, 10), 1.0f, glm::vec3(3, 3, 3), glm::vec3(0, -5, 0), EXPLOSION_AMOUNT, 4.5f, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
+		particleGeneratorInstance_tail_0->BuildExplosion(GameBalls[0]->GetPosition(), 1.0f, EXPLOSION_VELOCITY, EXPLOSION_ACCELERATION, EXPLOSION_AMOUNT, EXPLOSION_TIME, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
+		//particleGeneratorInstance_explosion_0->BuildExplosion(glm::vec3(0, 0, 10), 1.0f, glm::vec3(3, 3, 3), glm::vec3(0, -5, 0), EXPLOSION_AMOUNT, 4.5f, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
 	}
 	if (this->KeysPressed[GLFW_KEY_SPACE])
 	{
-		pgi_explosion->IsExploding = true;
-		//std::cout << "space" << std::endl;
+		//pgi_explosion->IsExploding = true;
+		particleGeneratorInstance_tail_0->IsExploding = true;
+		gameBallModels[0]->StartExplosion(35.0f, -20.0f, EXPLOSION_TIME);
+
+		//GameBalls[0]->StartExplosion(7, EXPLOSION_ACCELERATION);
+		//particleGeneratorInstance_explosion_0->IsExploding = true;
+	}
+	if (this->KeysPressed[GLFW_KEY_TAB])
+	{
+		kickersUseModel = !kickersUseModel;
 	}
 
 	for (int i = 0; i < 1024; i++)
@@ -784,14 +860,21 @@ void Game::createObjects()
 		//gameWall->SetERestitution(1.2f);		// dangerous
 	}
 
+	// pumpkin
 	gameKickerModels.push_back(new Model("resources/objects/ball/pumpkin_02.obj"));
-	gameKickerModels.push_back(gameKickerModels[0]);
-	gameKickerModels.push_back(gameKickerModels[0]);
 	gameKickerModels.push_back(new Model("resources/objects/ball/pumpkin_04.obj"));
-	gameKickerModels.push_back(gameKickerModels[3]);
-	gameKickerModels.push_back(gameKickerModels[3]);
+
+	// curling (ice bottle)
+	gameKickerModels.push_back(new Model("resources/objects/kicker/curling/binghu red.obj"));	// TODO: obj file
+	gameKickerModels.push_back(new Model("resources/objects/kicker/curling/binghu yellow.obj"));
+
+	// coins
+	gameKickerModels.push_back(new Model("resources/objects/kicker/coin/coin.obj"));
+	gameKickerModels.push_back(gameKickerModels[4]);
+
 	
 	gameBallModels.push_back(new Model("resources/objects/ball/football1.obj"));
+	//gameBallModels.push_back(new Model("resources/objects/ball/pumpkin_01.obj"));
 
 }
 
@@ -925,26 +1008,31 @@ void Game::initParticle()
 	particleGenerator_tail_2 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_BLUE);
 	particleGenerator_tail_0 = new ParticleGenerator(particleShader, GameCamera, 500, PARTICLE_COLOR_GREEN);
 	particleGenerator_collide = new ParticleGenerator(particleShader, GameCamera, 200, PARTICLE_COLOR_YELLOW);
-	//particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, PARTICLE_SIZEFACTOR);
-	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas_8l8c.png", 8, 8, PARTICLE_SIZEFACTOR);
+	particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, PARTICLE_SIZEFACTOR);
+	//particleGeneratorInstance_tail_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas_8l8c.png", 8, 8, PARTICLE_SIZEFACTOR);
 	//particleGeneratorInstance_tail_0->SetGravity(-3.0f * glm::normalize(glm::vec3(-GROUND_WIDTH, 200, GROUND_DEPTH)));
 	particleGeneratorInstance_tail_0->UseGlow = true;
 	particleGeneratorInstance_tail_0->Life = 3.5f;
+	//particleGeneratorInstance_tail_0->Life = 1.0f;
 	particleGeneratorInstance_tail_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-BreakingGlass.png", 4, 8, PARTICLE_SIZEFACTOR);
 	//particleGeneratorInstance_tail_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas8l8c.png", 8, 8, PARTICLE_SIZEFACTOR);
 	particleGeneratorInstance_tail_1->UseGlow = true;
 	//particleGeneratorInstance_tail_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, PARTICLE_SIZEFACTOR);
 	particleGeneratorInstance_explosion_0 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, PARTICLE_SIZEFACTOR);
 	particleGeneratorInstance_explosion_0->SetGravity(glm::vec3(0, -1.5, 0));
+	particleGeneratorInstance_explosion_0->UseGlow = true;
 	particleGeneratorInstance_explosion_0->Life = 3.0f;
 	particleGeneratorInstance_explosion_1 = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/ParticleAtlas-Explosion.png", 4, 4, PARTICLE_SIZEFACTOR);
 	particleGeneratorInstance_explosion_1->SetGravity(glm::vec3(0, -1.5, 0));
+	particleGeneratorInstance_explosion_1->UseGlow = true;
 	particleGeneratorInstance_explosion_1->Life = 3.0f;
 	// TODO: find the ice texture atlas
 	particleGeneratorInstance_ice = new ParticleGeneratorInstance(particleInstanceShader, "resources/textures/particle/Snow2.png", 1, 1, ICEMODE_SIZEFACTOR);
 	particleGeneratorInstance_ice->SetGravity(glm::vec3(0, -0.25, 0));
 	particleGeneratorInstance_ice->Life = 20.0f;
 	particleGeneratorInstance_ice->ERestitution = 0.1f;
+	particleGeneratorInstance_ice->UseTexture = true;
+	particleGeneratorInstance_ice->UseGlow = true;
 
 	pgi_explosion = new ParticleGeneratorInstance(particleInstanceShader);
 	pgi_explosion->UseGlow = true;
@@ -1048,22 +1136,22 @@ void Game::updateObjects(float dt)
 		gameKickers[index]->AddVelocity(vDir * ACCELERATION_BASIC * dt * 3.0f);*/
 	}
 
-	if (GameBalls[0] != NULL)
+	if (GameBalls[0] != NULL && !(gameBallModels[0]->IsExploding) && !(gameBallModels[0]->IsExploded))
 	{
 		GameBalls[0]->UpdatePhysics(dt);
 	}
-	for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
-	{
-		(*it)->UpdatePhysics(dt);
-	}
+	//for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin(); it < gameWalls.end(); it++)
+	//{
+	//	(*it)->UpdatePhysics(dt);
+	//}
 	for (std::vector<Object3Dcylinder*>::iterator it = gameKickers.begin(); it < gameKickers.end(); it++)
 	{
 		(*it)->UpdatePhysics(dt);
 	}
-	for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin() + 4; it < gameWalls.end(); it++)
-	{
-		(*it)->UpdatePhysics(dt);
-	}
+	//for (std::vector<Object3Dcube*>::iterator it = gameWalls.begin() + 4; it < gameWalls.end(); it++)
+	//{
+	//	(*it)->UpdatePhysics(dt);
+	//}
 
 }
 
@@ -1114,12 +1202,28 @@ void Game::updateStatus()
 			whoGoal = 1;
 			GamePlayers[0]->AddScore(1);
 			SoundEngine->play3D("resources/audio/explosion1.wav", irrklang::vec3df(0, 0, 0), false);
+			if (explodeBallWhenGoal)
+			{
+				float power = vecMod(GameBalls[0]->GetVelocity()) / 10.0f;
+				particleGeneratorInstance_tail_0->BuildExplosion(GameBalls[0]->GetPosition(), 1.0f, EXPLOSION_VELOCITY * power, EXPLOSION_ACCELERATION , EXPLOSION_AMOUNT * power, BALL_EXPLOSION_TIME, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
+				particleGeneratorInstance_tail_0->IsExploding = true;
+				gameBallModels[0]->StartExplosion(35.0f, -25.0f, BALL_EXPLOSION_TIME);
+				SoundEngine->play2D(ballExplosionSound);
+			}
 		}
 		if (bInfo.Status == BallStatus::Score2)
 		{
 			whoGoal = 2;
 			GamePlayers[1]->AddScore(1);
 			SoundEngine->play3D("resources/audio/explosion1.wav", irrklang::vec3df(0, 0, 0), false);
+			if (explodeBallWhenGoal)
+			{
+				float power = vecMod(GameBalls[0]->GetVelocity()) / 10.0f;
+				particleGeneratorInstance_tail_0->BuildExplosion(GameBalls[0]->GetPosition(), 1.0f, EXPLOSION_VELOCITY * power, EXPLOSION_ACCELERATION, EXPLOSION_AMOUNT * power, EXPLOSION_TIME, EXPLOSION_SIZE, EXPLOSION_SIZEVARIATION);
+				particleGeneratorInstance_tail_0->IsExploding = true;
+				gameBallModels[0]->StartExplosion(35.0f, -25.0f, BALL_EXPLOSION_TIME);
+				SoundEngine->play2D(ballExplosionSound);
+			}
 		}
 		GameBalls[0]->SetBallStatus(BallStatus::WaitForReset);
 		GameState = GameStateType::GAME_COOLDOWN;
@@ -1159,7 +1263,7 @@ void Game::displayMenu()
 		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- New Game -", 0.3 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Help", 0.3 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 	}
 	else if (MenuState == GAMEMENU_GAMEMODE)
@@ -1167,15 +1271,15 @@ void Game::displayMenu()
 		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- Select Modes -", 0.3 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Help", 0.3 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 	}
-	else if (MenuState == GAMEMENU_BALLSELECT)
+	else if (MenuState == GAMEMENU_SETTINGS)
 	{
 		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "- Select Balls -", 0.3 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "- Settings -", 0.3 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Help", 0.3 * screenWidth, 0.35 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 	}
 	else if (MenuState == GAMEMENU_HELP)
@@ -1183,9 +1287,10 @@ void Game::displayMenu()
 		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
-		GameTextManager->RenderText(*TextShader, "Select Balls", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- Help -", 0.3 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 	}
+
 	else if (MenuState == GAMEMENU_GAMEMODE_NORMAL)
 	{
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
@@ -1222,6 +1327,46 @@ void Game::displayMenu()
 		GameTextManager->RenderText(*TextShader, "- Ghost & Ice -", 0.3 * screenWidth, 0.35 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "are you sure?", 0.6 * screenWidth, 0.35 * screenHeight, 0.75f, glm::vec3(0.5, 0.4f, 0.6f));
 	}
+
+	else if (MenuState == GAMEMENU_SETTINGS_KICKERMODEL)
+	{
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+
+		std::string text1 = GetKickerMenuText1();
+
+		std::string text2 = explodeBallWhenGoal ? ("Explode Ball When Goal       On") : ("Explode Ball When Goal       Off");
+
+		std::string text3 = activeFireEffect ? ("Active Fire Effect          On") : ("Active Fire Effect          Off");
+
+		GameTextManager->RenderText(*TextShader, text1, 0.1 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text2, 0.1 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text3, 0.1 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_SETTINGS_EXPLODEBALL)
+	{
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+
+		std::string text1 = GetKickerMenuText1();
+		std::string text2 = explodeBallWhenGoal ? ("Explode Ball When Goal     - On -") : ("Explode Ball When Goal     - Off -");
+		std::string text3 = activeFireEffect ? ("Active Fire Effect          On") : ("Active Fire Effect          Off");
+
+		GameTextManager->RenderText(*TextShader, text1, 0.1 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text2, 0.1 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text3, 0.1 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+	else if (MenuState == GAMEMENU_SETTINGS_FIREEFFECT)
+	{
+		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+
+		std::string text1 = GetKickerMenuText1();
+		std::string text2 = explodeBallWhenGoal ? ("Explode Ball When Goal       On") : ("Explode Ball When Goal       Off");
+		std::string text3 = activeFireEffect ? ("Active Fire Effect        - On -") : ("Active Fire Effect        - Off -");
+
+		GameTextManager->RenderText(*TextShader, text1, 0.1 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text2, 0.1 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, text3, 0.1 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
+	}
+
 	else if (MenuState == GAMEMENU_HELP_CONTENTS)
 	{
 		GameTextManager->RenderText(*TextShader, "Help", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
@@ -1230,6 +1375,35 @@ void Game::displayMenu()
 		GameTextManager->RenderText(*TextShader, "Player2", 0.2 * screenWidth, 0.40 * screenHeight, 1.0f, PARTICLE_COLOR_BLUE);
 		GameTextManager->RenderText(*TextShader, "i/k/j/l: move, u/o: switch player", 0.23 * screenWidth, 0.30 * screenHeight, 0.75f, PARTICLE_COLOR_BLUE);
 
+	}
+}
+
+void Game::updateModels(float dt)
+{
+	Model *ball = gameBallModels[0];
+	if (ball->IsExploded == false)
+	{
+		ball->Update(dt);
+	}
+}
+
+std::string Game::GetKickerMenuText1()
+{
+	if (!kickersUseModel)
+	{
+		return "Players Appearance       - LearnOpenGL -";
+	}
+	else if (kickerModelIndex == 0)
+	{
+		return "Players Appearance       - Pumpkin -";
+	}
+	else if (kickerModelIndex == 1)
+	{
+		return "Players Appearance       - Curling -";
+	}
+	else if (kickerModelIndex == 2)
+	{
+		return "Players Appearance       - Gold Coin -";
 	}
 }
 
@@ -1298,6 +1472,8 @@ void Game::ShiftControlRight(int playerIndex)
 
 void Game::ResetPosition()
 {
+	gameBallModels[0]->ResetExplosion();
+
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetVelocity(glm::vec3(0));
 	GameBalls[0]->SetOmega(glm::vec3(0, 5, 0));
@@ -1310,6 +1486,21 @@ void Game::ResetPosition()
 		gameKickers[i]->SetStatic();
 		gameKickers[i]->ResetRotation();
 	}
+
+}
+
+void Game::initSound()
+{
+	bgm = SoundEngine->addSoundSourceFromFile("resources/audio/BGClip.mp3");
+	bgm->setDefaultVolume(BGM_VOLUME);
+
+	selectionSound = SoundEngine->addSoundSourceFromFile("resources/audio/selection1.wav");
+	selectionSound->setDefaultVolume(SELECTION_VOLUME);
+
+	ballExplosionSound = SoundEngine->addSoundSourceFromFile("resources/audio/explosion3.wav");
+	ballExplosionSound->setDefaultVolume(0.5f);
+
+	SoundEngine->play2D(bgm, true);
 }
 
 void Game::updateParticles(float dt)
@@ -1334,8 +1525,8 @@ void Game::updateParticles(float dt)
 
 	particleGeneratorInstance_explosion_0->IsActive = GameState == GAME_COOLDOWN;
 	particleGeneratorInstance_explosion_1->IsActive = GameState == GAME_COOLDOWN;
-	particleGeneratorInstance_tail_0->IsActive = GameState == GAME_MAINMENU;
-	particleGeneratorInstance_tail_1->IsActive = GameState == GAME_MAINMENU;
+	particleGeneratorInstance_tail_0->IsActive = (GameState == GAME_MAINMENU && activeFireEffect);
+	particleGeneratorInstance_tail_1->IsActive = (GameState == GAME_MAINMENU && activeFireEffect);
 	particleGeneratorInstance_ice->IsActive = iceMode;
 
 	//if (particleGeneratorInstance_tail_1->IsActive)
@@ -1393,6 +1584,16 @@ void Game::updateParticles(float dt)
 	}
 
 	particleGeneratorInstance_ice->UpdateOnSurface(dt, -0.5f * SNOW_WIDTH, 0.5f * SNOW_WIDTH, -0.5f * SNOW_DEPTH, 0.5f * SNOW_DEPTH, GROUND_POSITION.y + SNOW_HEIGHT, glm::vec3(0, -1, 0), 1.0f, GameCamera->GetPosition());
+	//particleGeneratorInstance_ice->Update(
+	//	dt,
+	//	glm::vec3(0, -5, 0),
+	//	//gameKickers[GamePlayers[0]->CurrentControl]->GetPosition(),
+	//	glm::vec3(10 * sin(currentTime), 10, -10 * cos(currentTime)),
+	//	//v,
+	//	//vecMod(v),
+	//	20,
+	//	0.2,
+	//	GameCamera->GetPosition());
 
 	pgi_explosion->UpdateExplosion(dt, GameCamera->GetPosition());
 }

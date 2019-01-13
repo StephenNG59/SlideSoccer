@@ -319,10 +319,11 @@ ParticleGeneratorInstance::ParticleGeneratorInstance(Shader *shader)
 }
 
 
-void ParticleGeneratorInstance::BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, int amount, float time, float size, float sizeVariation)
+void ParticleGeneratorInstance::BuildExplosion(glm::vec3 originPos, float spreadPos, glm::vec3 velocity, glm::vec3 acceleration, unsigned int amount, float time, float size, float sizeVariation)
 {
+	IsExploding = false;
 	Life = time;
-	StaticAmount = amount;
+	StaticAmount = std::min(amount, PARTICLE_MAX_AMOUNT);
 	IsExplosion = true;
 	//UseTexture = false;
 	for (int i = 0; i < amount; i++)
@@ -566,6 +567,8 @@ void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_p
 				g_particle_color_data[4 * particleCounts + 1] = p.Color.g;
 				g_particle_color_data[4 * particleCounts + 2] = p.Color.b;
 				g_particle_color_data[4 * particleCounts + 3] = p.Color.a;
+
+				g_particle_size_data[particleCounts] = p.Size;
 			}
 			else
 			{
@@ -589,6 +592,15 @@ void ParticleGeneratorInstance::UpdateOnSurface(float dt, float x_neg, float x_p
 	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * 4 * sizeof(float), NULL, GL_STREAM_DRAW);
 	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * 4 * sizeof(float), g_particle_color_data);
 
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * sizeof(float), g_particle_size_data);
+
+
+	// Update size buffer
+	glBindBuffer(GL_ARRAY_BUFFER, VBO_size);
+	glBufferData(GL_ARRAY_BUFFER, PARTICLE_MAX_AMOUNT * sizeof(float), NULL, GL_STREAM_DRAW);
+	glBufferSubData(GL_ARRAY_BUFFER, 0, particleCounts * sizeof(float), g_particle_size_data);
 }
 
 extern bool iceMode;
@@ -616,7 +628,7 @@ void ParticleGeneratorInstance::Draw(Camera *camera)
 	this->shader->setVec3("cameraUp", camera->GetUpDirection());
 	this->shader->setInt("lineNum", lineNum);
 	this->shader->setInt("columnNum", columnNum);
-	this->shader->setBool("iceMode", iceMode);	// TODO: iceMode
+	this->shader->setBool("iceMode", iceMode);
 	this->shader->setFloat("isExplosion", IsExplosion * 1.0f);
 	this->shader->setBool("useTexture", UseTexture);
 
