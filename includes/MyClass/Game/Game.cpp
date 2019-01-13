@@ -96,7 +96,7 @@ void Game::Init()
 	//model = new Model("resources/objects/nanosuit/nanosuit.obj");
 	//model = new Model("resources/objects/ball/1212.obj");
 	//model = new Model("resources/objects/grass/grass.obj");
-	model = new Model("resources/objects/scene/slidesoccer_scene.obj");
+	model = new Model("resources/objects/scene-new/slidesoccer_scene.obj");
 
 	// Skybox
 	initSkybox();
@@ -262,13 +262,15 @@ bool isRefract = false;
 
 void Game::RenderScene(Shader *renderShader)
 {
-	GameShader->use();
-	GameShader->setBool("iceMode", iceMode);
+	renderShader->use();
+	renderShader->setBool("iceMode", iceMode);
 
 	for (std::vector<Object3Dsphere*>::iterator it = GameBalls.begin(); it < GameBalls.end(); it++)
 	{
 		//(*it)->Draw(*GameCamera, *renderShader);
 	}
+
+	renderShader->setBool("ghostMode", false);
 	Model *ball = gameBallModels[0];
 	if (ball->IsExploded == false)
 	{
@@ -283,18 +285,34 @@ void Game::RenderScene(Shader *renderShader)
 		int index = i % 6 / 3 + 2 * kickerModelIndex;
 		if (ghostMode)
 		{
-			if (i / 3 == drawingLeft) continue;
-			renderShader->use();
-			renderShader->setBool("ghostMode", false);
-			//gameKickers[i]->DrawWithoutCamera(*renderShader);
+			// TODO: drawing left?
+			if (GameState != GAME_MAINMENU && i / 3 == drawingLeft)
+			{
+				renderShader->setBool("ghostMode", true);			// when drawing left, i = 3,4,5 --> hide it.
+			}
+			else if (GameState != GAME_MAINMENU && i / 3 != drawingLeft)
+			{
+				renderShader->setBool("ghostMode", false);				
+			}
+			else if (GameState == GAME_MAINMENU)
+			{
+				renderShader->setBool("ghostMode", false);
+			}
+				//continue;
+				/*renderShader->setBool("ghostMode", true);
+			else 
+				renderShader->setBool("ghostMode", false);*/
+
+			//renderShader->setBool("ghostMode", true);
+
 			if (kickersUseModel)
 				gameKickerModels[index]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), kickerModelZoomRate[kickerModelIndex]));
 			else
 				gameKickers[i]->DrawWithoutCamera(*renderShader);
-			renderShader->setBool("ghostMode", true);
 		}
 		else
 		{
+			renderShader->setBool("ghostMode", false);
 			//gameKickers[i]->DrawWithoutCamera(*renderShader);
 			if (kickersUseModel)
 				gameKickerModels[index]->DrawWithoutCamera(*renderShader, glm::scale(gameKickers[i]->GetModelMatrix(), kickerModelZoomRate[kickerModelIndex]));
@@ -302,6 +320,8 @@ void Game::RenderScene(Shader *renderShader)
 				gameKickers[i]->DrawWithoutCamera(*renderShader);
 		}
 	}
+
+	renderShader->setBool("ghostMode", ghostMode);
 
 	glDisable(GL_CULL_FACE);
 		GameShader->setBool("isReflect", isReflect);
@@ -340,9 +360,9 @@ void Game::RenderScene(Shader *renderShader)
 
 	particleGenerator_tail_1->Draw();
 	particleGenerator_tail_2->Draw();
+	particleGenerator_collide->Draw();
 	if (!ghostMode || GameState == GAME_MAINMENU)
 		particleGenerator_tail_0->Draw();
-	particleGenerator_collide->Draw();
 
 
 	//GameShader->setFloat("material.shininess", 32);
@@ -351,7 +371,7 @@ void Game::RenderScene(Shader *renderShader)
 	GameShader->use();
 	GameShader->setBool("isReflect", isReflect);
 	GameShader->setBool("isRefract", isRefract);
-		model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), glm::vec3(9.5f)));
+		model->DrawWithoutCamera(*GameShader, glm::scale(ground.GetModelMatrix(), PITCH_SIZEFACTOR));
 	GameShader->setBool("isReflect", false);
 	GameShader->setBool("isRefract", false);  
 	GameSkybox->Draw(*GameCamera);
@@ -790,19 +810,29 @@ void Game::createObjects()
 
 	// wall-e
 	wall_e_s.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_s.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_e_n.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_n.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_e_pitch.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_e_pitch.IsGoal1 = true;
+	//wall_e_pitch.AddTexture("resources/textures/bricks2.jpg", Ambient); 
+	wall_e_pitch.AddTexture("resources/textures/ice.jpg", Emission);
+	//wall_e_pitch.AddTexture("resources/textures/container2_specular.png", Specular);
 	//wall_e_s.IsGoal1 = true;
 	// wall-w
 	wall_w_s.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_s.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_w_n.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_n.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_w_pitch.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_w_pitch.AddTexture("resources/textures/ice.jpg", Emission);
 	wall_w_pitch.IsGoal2 = true;
 	// wall-n
 	wall_n.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
+	wall_n.AddTexture("resources/textures/glass.jpg", Emission);
 	// wall-s
 	wall_s.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
+	wall_s.AddTexture("resources/textures/glass.jpg", Emission);
 	// wall-center
 	wall_center.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_center.SetOmega(glm::vec3(0, 0.2, 0));
@@ -1085,12 +1115,16 @@ void Game::updateObjects(float dt)
 	CollisionInfo cInfo = CollideSph2Cube(GameBalls, gameWalls, true, true);
 	if (cInfo.relation == Ambiguous)
 	{
+		//if (GameState == GAME_PLAYING)
+		//	SoundEngine->play2D(collisionSound);
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 	}
 
 	cInfo = CollideSph2Sph(gameKickers, true);
 	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */(!ghostMode || GameState == GAME_MAINMENU) && cInfo.relation == RelationType::Ambiguous)
 	{
+		if (GameState == GAME_PLAYING)
+			SoundEngine->play2D(collisionSound);
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 		//timeFromLastCollide = 0;
 	}
@@ -1098,6 +1132,8 @@ void Game::updateObjects(float dt)
 	cInfo = CollideSph2Wall(gameKickers, gameWalls, true);
 	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous && (!ghostMode || GameState == GAME_MAINMENU))
 	{
+		if (GameState == GAME_PLAYING)
+			SoundEngine->play2D(collisionSound);
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 		//timeFromLastCollide = 0;
 	}
@@ -1107,6 +1143,8 @@ void Game::updateObjects(float dt)
 	cInfo = CollideSph2Sph(gameKickers, GameBalls, true);
 	if (cInfo.relation == Ambiguous)
 	{
+		if (GameState == GAME_PLAYING)
+			SoundEngine->play2D(collisionSound);
 		//particleGenerator_tail_0->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 		particleGenerator_collide->SpawnParticle(cInfo, PARTICLE_COLLIDE_NUMBER);
 	}
@@ -1500,6 +1538,9 @@ void Game::initSound()
 	ballExplosionSound = SoundEngine->addSoundSourceFromFile("resources/audio/explosion3.wav");
 	ballExplosionSound->setDefaultVolume(0.5f);
 
+	collisionSound = SoundEngine->addSoundSourceFromFile("resources/audio/collision2.wav");
+	collisionSound->setDefaultVolume(0.5f);
+
 	SoundEngine->play2D(bgm, true);
 }
 
@@ -1533,7 +1574,7 @@ void Game::updateParticles(float dt)
 	glm::vec3 v = (0.2f + rand() % 11 / 20.0f) * gameKickers[GamePlayers[0]->CurrentControl]->GetVelocity();
 	particleGeneratorInstance_tail_1->Update(
 		dt,
-		glm::vec3(0, -5, 0),
+		glm::vec3(0, -2, 0),
 		//gameKickers[GamePlayers[0]->CurrentControl]->GetPosition(),
 		glm::vec3(10 * sin(currentTime), 10, -10 * cos(currentTime)),
 		//v,
@@ -1544,7 +1585,7 @@ void Game::updateParticles(float dt)
 	//if (particleGeneratorInstance_tail_0->IsActive)
 	particleGeneratorInstance_tail_0->Update(
 		dt, 
-		glm::vec3(GROUND_WIDTH * 0.5f, -5, -GROUND_DEPTH * 0.5f), 
+		glm::vec3(GROUND_WIDTH * 0.5f, -2, -GROUND_DEPTH * 0.5f), 
 		glm::vec3(-GROUND_WIDTH, 70, GROUND_DEPTH), 
 		//30, 
 		30,

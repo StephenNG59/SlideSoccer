@@ -20,11 +20,12 @@
 // settings
 constexpr int SCORE_MAX = 3;
 
-constexpr float GROUND_WIDTH = 77.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 52.0f;
+constexpr float GROUND_WIDTH = 72.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 48.0f;
 constexpr float SNOW_WIDTH = GROUND_WIDTH * 1.3f, SNOW_HEIGHT = 40.0f, SNOW_DEPTH = GROUND_DEPTH * 1.3f;
-constexpr float WALL_THICK = 3.0f, WALL_HEIGHT = 5.0f;
+constexpr float WALL_THICK = 2.0f, WALL_HEIGHT = 5.0f;
 constexpr float PITCH_WIDTH = 20.0f, PITCH_HEIGHT = 10.0f, PITCH_DEPTH = 2.0f;
 const glm::vec3 GROUND_POSITION(0, -5, 0);
+const glm::vec3 PITCH_SIZEFACTOR(11.0f);
 
 constexpr unsigned int SHADOW_WIDTH = 1024;
 constexpr unsigned int SHADOW_HEIGHT = 1024;
@@ -103,7 +104,7 @@ const glm::vec3 GRAVITY_OUTSIDE(0, -9.8f, 0);
 
 // Lights
 const float SPOTLIGHT_CUTOFF = glm::cos(glm::radians(25.0f));
-const float SPOTLIGHT_OUTERCUTOFF = glm::cos(glm::radians(45.0f));
+const float SPOTLIGHT_OUTERCUTOFF = glm::cos(glm::radians(65.0f));
 const float SPOTLIGHT_CUTOFF_BIG = glm::cos(glm::radians(45.0f));
 const float SPOTLIGHT_OUTERCUTOFF_BIG = glm::cos(glm::radians(75.0f));
 

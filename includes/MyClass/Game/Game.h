@@ -109,6 +109,7 @@ class Game
 		ISoundSource *bgm;
 		ISoundSource *selectionSound;
 		ISoundSource *ballExplosionSound;
+		ISoundSource* collisionSound;
 
 private:
 

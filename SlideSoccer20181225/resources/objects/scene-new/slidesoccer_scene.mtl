@@ -1,0 +1,61 @@
+newmtl slidesoccer_scene3:Mountains1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd diff2.jpg
+map_Ka diff2.jpg
+bump AO2.png -bm 1
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl slidesoccer_scene3:set1
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd field.jpg
+map_Ka field.jpg
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 10.00
+newmtl slidesoccer_scene3:set2
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd adboard.png
+map_Ka adboard.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 30.00
+newmtl slidesoccer_scene3:set4
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd pitch_captain_line.png
+map_Ka pitch_captain_line.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 30.00
+newmtl slidesoccer_scene3:set6
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd wall_concrete.png
+map_Ka wall_concrete.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 30.00
+newmtl slidesoccer_scene3:set8
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd multifreq_noise_placholder.png
+map_Ka multifreq_noise_placholder.png
+Ni 1.50
+Ks 0.00 0.00 0.00
+Ns 30.00
