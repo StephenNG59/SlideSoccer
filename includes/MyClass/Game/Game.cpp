@@ -583,30 +583,30 @@ void Game::ProcessInput(float dt)
 		if (this->KeysCurrent[GLFW_KEY_I])
 		{
 			if (kicker2->GetVelocity().x < 0)
-				kicker2->AddVelocity(glm::vec3(-dV_reverse, 0, 0) * dt);
-			else
 				kicker2->AddVelocity(glm::vec3(-dV_obverse, 0, 0) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(-dV_reverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_K])
 		{
 			if (kicker2->GetVelocity().x > 0)
-				kicker2->AddVelocity(glm::vec3(dV_reverse, 0, 0) * dt);
-			else
 				kicker2->AddVelocity(glm::vec3(dV_obverse, 0, 0) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(dV_reverse, 0, 0) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_J])
 		{
 			if (kicker2->GetVelocity().z > 0)
-				kicker2->AddVelocity(glm::vec3(0, 0, dV_reverse) * dt);
-			else
 				kicker2->AddVelocity(glm::vec3(0, 0, dV_obverse) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(0, 0, dV_reverse) * dt);
 		}
 		if (this->KeysCurrent[GLFW_KEY_L])
 		{
 			if (kicker2->GetVelocity().z < 0)
-				kicker2->AddVelocity(glm::vec3(0, 0, -dV_reverse) * dt);
-			else
 				kicker2->AddVelocity(glm::vec3(0, 0, -dV_obverse) * dt);
+			else
+				kicker2->AddVelocity(glm::vec3(0, 0, -dV_reverse) * dt);
 		}
 
 		if (this->KeysPressed[GLFW_KEY_U])

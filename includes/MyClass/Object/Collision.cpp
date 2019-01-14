@@ -1823,8 +1823,13 @@ CollisionInfo SimpleCollideCy2Wall(Object3Dcylinder * sph, Object3Dcube * wall)
 		return cInfo;
 	}
 	// collided!!
-	cInfo.relation = Ambiguous;
-	
+	if (!iceMode || wall->IsGoal1 || wall->IsGoal2)
+		cInfo.relation = Ambiguous;
+	else
+	{
+		cInfo.relation = Stranger;
+		return cInfo;
+	}
 
 	// calculate collision
 	// -------------------

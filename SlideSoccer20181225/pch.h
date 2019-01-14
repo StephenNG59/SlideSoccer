@@ -18,7 +18,7 @@
 #define FRAND_RANGE01() ((float)(rand()) / RAND_MAX)				/// 0 ~ 1
 
 // settings
-constexpr int SCORE_MAX = 3;
+constexpr int SCORE_MAX = 5;
 
 constexpr float GROUND_WIDTH = 72.0f, GROUND_HEIGHT = 0.2f, GROUND_DEPTH = 48.0f;
 constexpr float SNOW_WIDTH = GROUND_WIDTH * 1.3f, SNOW_HEIGHT = 40.0f, SNOW_DEPTH = GROUND_DEPTH * 1.3f;
