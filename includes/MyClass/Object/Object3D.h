@@ -29,6 +29,15 @@ enum ObjectTextureType
 	Emission = 3
 };
 
+enum WallFaceType
+{
+	NotWall = 0,
+	EastWall = 1,
+	SouthWall = 2, 
+	WestWall = 3,
+	NorthWall = 4,
+};
+
 const std::string ObjectTextureTypeToString[] = {
 	"ambient",
 	"diffuse",
@@ -75,6 +84,7 @@ class Object3D
 
 		bool IsBall = false;
 		bool IsGoal1 = false, IsGoal2 = false;
+		WallFaceType WallFace;
 		BallInfo GetBallInfo();
 		void SetBallStatus(BallStatus status);
 

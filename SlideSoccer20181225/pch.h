@@ -96,7 +96,7 @@ const float BALL_EXPLOSION_TIME = 3 * EXPLOSION_TIME;
 
 
 // Physics
-constexpr float ACCELERATION_BASIC = 40.0f;
+constexpr float ACCELERATION_BASIC = 48.0f;
 constexpr float FRICTION_CONSTANT = 7;
 constexpr float FRICTION_LINEAR = 0.40f;
 constexpr float GAMEMENU_RANDOM_SPEED = 10.0f;

@@ -1615,3 +1615,296 @@ CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vect
 
 	return cInfo;
 }
+
+
+// --------------------------------------------------------------------------------------
+
+CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall)
+{
+	CollisionInfo cInfo;
+	// not a wall, return
+	if (wall->WallFace == NotWall) return cInfo;
+
+	// detect collision
+	// ----------------
+	// position
+	glm::vec3 p_sph = sph->GetPosition(), p_wall = wall->GetPosition();
+	float x_half = 0.5f * wall->GetWidth(), y_half = 0.5f * wall->GetHeight(), z_half = 0.5f * wall->GetDepth();
+	float r = sph->GetRadius();
+	// y not fit
+	if (p_sph.y > p_wall.y + y_half || p_sph.y < p_wall.y - y_half)
+	{
+		cInfo.relation = Stranger;
+		return cInfo;
+	}
+	// velocity
+	glm::vec3 v_sph = sph->GetVelocity();
+	float omegaY = sph->GetOmega().y;
+	// check each type
+	bool colEast = 
+		wall->WallFace == EastWall 
+		&& p_sph.x + r >= p_wall.x - x_half 
+		&& v_sph.x >= 0
+		&& p_sph.z <= p_wall.z + z_half
+		&& p_sph.z >= p_wall.z - z_half;
+	bool colWest = wall->WallFace == WestWall 
+		&& p_sph.x - r <= p_wall.x + x_half 
+		&& v_sph.x <= 0
+		&& p_sph.z <= p_wall.z + z_half
+		&& p_sph.z >= p_wall.z - z_half;
+	bool colSouth = wall->WallFace == SouthWall && p_sph.z + r >= p_wall.z - z_half && v_sph.z >= 0;
+	bool colNorth = wall->WallFace == NorthWall && p_sph.z - r <= p_wall.z + z_half && v_sph.z <= 0;
+	// not touching
+	if (!colEast && !colWest && !colSouth && !colNorth)
+	{
+		cInfo.relation = Stranger;
+		return cInfo;
+	}
+	// collided!!
+	cInfo.relation = Ambiguous;
+	std::cout << sph->IsBall << std::endl;
+	if (sph->IsBall)
+	{
+		if (wall->IsGoal1)
+		{
+			sph->SetBallStatus(Score1);
+			std::cout << sph->GetBallInfo().Status << std::endl;
+		}
+		else if (wall->IsGoal2)
+		{
+			sph->SetBallStatus(Score2);
+			std::cout << sph->GetBallInfo().Status << std::endl;
+		}
+	}
+
+	// calculate collision
+	// -------------------
+	// physics
+	glm::vec3 v_after = v_sph;
+	float m = sph->GetMass(), I = sph->GetInertia();			// TODO: cylinder not the same here: 1/2 * mr^2
+	float e = sph->GetERestitution() * wall->GetERestitution();
+	float f = 0.5f * (sph->GetFriction() + wall->GetFriction());
+	// change linear velocity on center-center
+	float I_xstar_abs, v12touch_yzstar = omegaY * r;
+	if (colEast || colWest)
+	{
+		v_after.x = -e * v_sph.x;
+		I_xstar_abs = m * abs(v_sph.x) * (1 + e);
+	}
+	else if (colNorth || colSouth)
+	{
+		v_after.z = -e * v_sph.z;
+		I_xstar_abs = m * abs(v_sph.z) * (1 + e);
+	}
+	// change linear velocity on yzstar
+	float m_equivalent = 1 / ((r * r / I) + (1 / m));
+	float I_yzstar_abs = std::min(f * I_xstar_abs, abs(v12touch_yzstar) * m_equivalent);
+	float I_yzstar_y;
+	glm::vec3 yzstarSpeed;
+	if (colEast)
+	{
+		yzstarSpeed = glm::vec3(0, 0, v_sph.z - omegaY * r);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.z > 0 ? 1 : -1);
+		v_after.z -= I_yzstar_y / m;
+
+		cInfo.collidePos = glm::vec3(p_wall.x - x_half, p_sph.y, p_sph.z);
+	}
+	else if (colWest)
+	{
+		yzstarSpeed = glm::vec3(0, 0, v_sph.z + omegaY * r);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.z > 0 ? -1 : 1);
+		v_after.z += I_yzstar_y / m;
+
+		cInfo.collidePos = glm::vec3(p_wall.x + x_half, p_sph.y, p_sph.z);
+	}
+	else if (colNorth)
+	{
+		yzstarSpeed = glm::vec3(v_sph.x - omegaY * r, 0, 0);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.x > 0 ? 1 : -1);
+		v_after.x -= I_yzstar_y / m;
+		cInfo.collidePos = glm::vec3(p_sph.x, p_sph.y, p_wall.z + z_half);
+	}
+	else if (colSouth)
+	{
+		yzstarSpeed = glm::vec3(v_sph.x + omegaY * r, 0, 0);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.x > 0 ? -1 : 1);
+		v_after.x += I_yzstar_y / m;
+		cInfo.collidePos = glm::vec3(p_sph.x, p_sph.y, p_wall.z - z_half);
+	}
+	// cInfo
+	cInfo.v1After = v_after;
+	cInfo.angularImpulse1 = glm::vec3(0, r * I_yzstar_y, 0);
+	cInfo.yzstarSpeed = yzstarSpeed;
+	cInfo.relativeSpeed = v_sph + yzstarSpeed;
+
+	// deal collision
+	// ---------------
+	if (iceMode && !(wall->IsGoal1 || wall->IsGoal2) && !sph->IsBall)
+	{
+		return cInfo;
+	}
+	DealCollision(sph, wall, cInfo);
+	//printVec3("ball omegay", sph->GetOmega());
+	return cInfo;
+}
+
+CollisionInfo SimpleCollideSph2Wall(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &walls)
+{
+	CollisionInfo cInfo;
+
+	std::vector<Object3Dsphere*>::iterator sph_it = spheres.begin();
+	std::vector<Object3Dcube*>::iterator wall_it;
+
+	for (; sph_it < spheres.end(); sph_it++)
+	{
+		for (wall_it = walls.begin(); wall_it < walls.end(); wall_it++)
+		{
+			cInfo = SimpleCollideSph2Wall(*sph_it, *wall_it);
+
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
+		}
+	}
+
+	return cInfo;
+}
+
+CollisionInfo SimpleCollideCy2Wall(Object3Dcylinder * sph, Object3Dcube * wall)
+{
+	CollisionInfo cInfo;
+	// not a wall, return
+	if (wall->WallFace == NotWall) return cInfo;
+
+	// detect collision
+	// ----------------
+	// position
+	glm::vec3 p_sph = sph->GetPosition(), p_wall = wall->GetPosition();
+	float x_half = 0.5f * wall->GetWidth(), y_half = 0.5f * wall->GetHeight(), z_half = 0.5f * wall->GetDepth();
+	float r = sph->GetRadius();
+	// y not fit
+	if (p_sph.y > p_wall.y + y_half || p_sph.y < p_wall.y - y_half)
+	{
+		cInfo.relation = Stranger;
+		return cInfo;
+	}
+	// velocity
+	glm::vec3 v_sph = sph->GetVelocity();
+	float omegaY = sph->GetOmega().y;
+	// check each type
+	bool colEast =
+		wall->WallFace == EastWall
+		&& p_sph.x + r >= p_wall.x - x_half
+		&& v_sph.x >= 0
+		&& p_sph.z <= p_wall.z + z_half
+		&& p_sph.z >= p_wall.z - z_half;
+	bool colWest = wall->WallFace == WestWall
+		&& p_sph.x - r <= p_wall.x + x_half
+		&& v_sph.x <= 0
+		&& p_sph.z <= p_wall.z + z_half
+		&& p_sph.z >= p_wall.z - z_half;
+	bool colSouth = wall->WallFace == SouthWall && p_sph.z + r >= p_wall.z - z_half && v_sph.z >= 0;
+	bool colNorth = wall->WallFace == NorthWall && p_sph.z - r <= p_wall.z + z_half && v_sph.z <= 0;
+	// not touching
+	if (!colEast && !colWest && !colSouth && !colNorth)
+	{
+		cInfo.relation = Stranger;
+		return cInfo;
+	}
+	// collided!!
+	cInfo.relation = Ambiguous;
+	
+
+	// calculate collision
+	// -------------------
+	// physics
+	glm::vec3 v_after = v_sph;
+	float m = sph->GetMass(), I = sph->GetInertia();			// TODO: cylinder not the same here: 1/2 * mr^2
+	float e = sph->GetERestitution() * wall->GetERestitution();
+	float f = 0.5f * (sph->GetFriction() + wall->GetFriction());
+	// change linear velocity on center-center
+	float I_xstar_abs, v12touch_yzstar = omegaY * r;
+	if (colEast || colWest)
+	{
+		v_after.x = -e * v_sph.x;
+		I_xstar_abs = m * abs(v_sph.x) * (1 + e);
+	}
+	else if (colNorth || colSouth)
+	{
+		v_after.z = -e * v_sph.z;
+		I_xstar_abs = m * abs(v_sph.z) * (1 + e);
+	}
+	// change linear velocity on yzstar
+	float m_equivalent = 1 / ((r * r / I) + (1 / m));
+	float I_yzstar_abs = std::min(f * I_xstar_abs, abs(v12touch_yzstar) * m_equivalent);
+	float I_yzstar_y;
+	glm::vec3 yzstarSpeed;
+	if (colEast)
+	{
+		yzstarSpeed = glm::vec3(0, 0, v_sph.z - omegaY * r);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.z > 0 ? 1 : -1);
+		v_after.z -= I_yzstar_y / m;
+
+		cInfo.collidePos = glm::vec3(p_wall.x - x_half, p_sph.y, p_sph.z);
+	}
+	else if (colWest)
+	{
+		yzstarSpeed = glm::vec3(0, 0, v_sph.z + omegaY * r);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.z > 0 ? -1 : 1);
+		v_after.z += I_yzstar_y / m;
+
+		cInfo.collidePos = glm::vec3(p_wall.x + x_half, p_sph.y, p_sph.z);
+	}
+	else if (colNorth)
+	{
+		yzstarSpeed = glm::vec3(v_sph.x - omegaY * r, 0, 0);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.x > 0 ? 1 : -1);
+		v_after.x -= I_yzstar_y / m;
+		cInfo.collidePos = glm::vec3(p_sph.x, p_sph.y, p_wall.z + z_half);
+	}
+	else if (colSouth)
+	{
+		yzstarSpeed = glm::vec3(v_sph.x + omegaY * r, 0, 0);
+		I_yzstar_y = I_yzstar_abs * (yzstarSpeed.x > 0 ? -1 : 1);
+		v_after.x += I_yzstar_y / m;
+		cInfo.collidePos = glm::vec3(p_sph.x, p_sph.y, p_wall.z - z_half);
+	}
+	// cInfo
+	cInfo.v1After = v_after;
+	cInfo.angularImpulse1 = glm::vec3(0, r * I_yzstar_y, 0);
+	cInfo.yzstarSpeed = yzstarSpeed;
+	cInfo.relativeSpeed = v_sph + yzstarSpeed;
+
+	// deal collision
+	// ---------------
+	if (iceMode && !(wall->IsGoal1 || wall->IsGoal2) && !sph->IsBall)
+	{
+		return cInfo;
+	}
+	DealCollision(sph, wall, cInfo);
+	return cInfo;
+}
+
+CollisionInfo SimpleCollideCy2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object3Dcube*> &walls)
+{
+	CollisionInfo cInfo;
+
+	std::vector<Object3Dcylinder*>::iterator sph_it = spheres.begin();
+	std::vector<Object3Dcube*>::iterator wall_it;
+
+	for (; sph_it < spheres.end(); sph_it++)
+	{
+		for (wall_it = walls.begin(); wall_it < walls.end(); wall_it++)
+		{
+			cInfo = SimpleCollideCy2Wall(*sph_it, *wall_it);
+
+			if (cInfo.relation == RelationType::Ambiguous)
+			{
+				return cInfo;
+			}
+		}
+	}
+
+	return cInfo;
+}

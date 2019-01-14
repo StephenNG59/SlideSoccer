@@ -44,7 +44,12 @@ void testPrint(float f)
 
 bool outsideOfPitch(glm::vec3 pos)
 {
-	float x_pos = GROUND_POSITION.x + GROUND_WIDTH * 0.5f, x_neg = GROUND_POSITION.x - GROUND_WIDTH * 0.5f;
+	//if (pos.y < -1)
+	//{
+	//	return true;
+	//}
+
+	float x_pos = GROUND_POSITION.x + GROUND_WIDTH * 0.5f + PITCH_DEPTH, x_neg = GROUND_POSITION.x - GROUND_WIDTH * 0.5f;
 	if (pos.x > x_pos || pos.x < x_neg)
 		return true;
 

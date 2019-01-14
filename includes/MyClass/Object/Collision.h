@@ -71,3 +71,7 @@ void DealCollision(Object3D * obj1, Object3D * obj2, CollisionInfo cInfo);
 
 
 
+CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall);
+CollisionInfo SimpleCollideSph2Wall(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &walls);
+CollisionInfo SimpleCollideCy2Wall(Object3Dcylinder * sph, Object3Dcube * wall);
+CollisionInfo SimpleCollideCy2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object3Dcube*> &walls);

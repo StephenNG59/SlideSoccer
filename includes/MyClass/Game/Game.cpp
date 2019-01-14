@@ -270,11 +270,11 @@ void Game::RenderScene(Shader *renderShader)
 		//(*it)->Draw(*GameCamera, *renderShader);
 	}
 
-	renderShader->setBool("ghostMode", false);
+	renderShader->setBool("ghostMode", ghostMode && GameState != GAME_MAINMENU);	// when playing, ghostMode.
 	Model *ball = gameBallModels[0];
 	if (ball->IsExploded == false)
 	{
-		ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.0f)));
+		ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.62f)));
 		//ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(0.1f)));
 	}
 
@@ -522,7 +522,7 @@ void Game::ProcessInput(float dt)
 	if (GameState != GameStateType::GAME_COOLDOWN)
 	{
 		float dV_obverse = ACCELERATION_BASIC * (1 + iceMode * 0.25);			// speeding-up: normal: 1.0, iceMode: 1.25
-		float dV_reverse = ACCELERATION_BASIC * (1.5f - iceMode * 0.5f);		// slowing-down: normal: 1.5, iceMode: 0.5
+		float dV_reverse = ACCELERATION_BASIC * (2.0f - iceMode * 1.5f);		// slowing-down: normal: 2.0, iceMode: 0.5
 
 		// Left player
 		Object3Dcylinder *kicker1 = gameKickers[GamePlayers[0]->CurrentControl];
@@ -810,10 +810,13 @@ void Game::createObjects()
 
 	// wall-e
 	wall_e_s.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_s.WallFace = EastWall;
 	wall_e_s.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_e_n.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_e_n.WallFace = EastWall;
 	wall_e_n.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_e_pitch.SetPosition(GROUND_POSITION + glm::vec3(0.5f * GROUND_WIDTH + PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_e_pitch.WallFace = EastWall;
 	wall_e_pitch.IsGoal1 = true;
 	//wall_e_pitch.AddTexture("resources/textures/bricks2.jpg", Ambient); 
 	wall_e_pitch.AddTexture("resources/textures/ice.jpg", Emission);
@@ -821,23 +824,28 @@ void Game::createObjects()
 	//wall_e_s.IsGoal1 = true;
 	// wall-w
 	wall_w_s.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_s.WallFace = WestWall;
 	wall_w_s.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_w_n.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.25 * (GROUND_DEPTH + PITCH_WIDTH)));
+	wall_w_n.WallFace = WestWall;
 	wall_w_n.AddTexture("resources/textures/glass.jpg", Emission);
 	wall_w_pitch.SetPosition(GROUND_POSITION + glm::vec3(-0.5f * GROUND_WIDTH - PITCH_DEPTH, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
+	wall_w_pitch.WallFace = WestWall;
 	wall_w_pitch.AddTexture("resources/textures/ice.jpg", Emission);
 	wall_w_pitch.IsGoal2 = true;
 	// wall-n
 	wall_n.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, -0.5f * GROUND_DEPTH));
+	wall_n.WallFace = NorthWall;
 	wall_n.AddTexture("resources/textures/glass.jpg", Emission);
 	// wall-s
 	wall_s.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0.5f * GROUND_DEPTH));
+	wall_s.WallFace = SouthWall;
 	wall_s.AddTexture("resources/textures/glass.jpg", Emission);
 	// wall-center
 	wall_center.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_center.SetOmega(glm::vec3(0, 0.2, 0));
 
-	GameBalls.push_back(new Object3Dsphere(1.3f, 20, 16));
+	GameBalls.push_back(new Object3Dsphere(1.5f, 20, 16));
 	GameBalls[0]->IsBall = true;
 	//GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
@@ -1112,7 +1120,9 @@ void Game::updateCameras(float dt)
 void Game::updateObjects(float dt)
 {
 	//CollideSph2Ground(gameBalls, &ground);
-	CollisionInfo cInfo = CollideSph2Cube(GameBalls, gameWalls, true, true);
+	// TODO: test simple collision
+	CollisionInfo cInfo = SimpleCollideSph2Wall(GameBalls, gameWalls);
+	//CollisionInfo cInfo = CollideSph2Cube(GameBalls, gameWalls, true, true);
 	if (cInfo.relation == Ambiguous)
 	{
 		//if (GameState == GAME_PLAYING)
@@ -1129,7 +1139,8 @@ void Game::updateObjects(float dt)
 		//timeFromLastCollide = 0;
 	}
 
-	cInfo = CollideSph2Wall(gameKickers, gameWalls, true);
+	//cInfo = CollideSph2Wall(gameKickers, gameWalls, true);
+	cInfo = SimpleCollideCy2Wall(gameKickers, gameWalls);
 	if (/*timeFromLastCollide >= PARTICLE_COLLIDE_COOLDOWN && */cInfo.relation == RelationType::Ambiguous && (!ghostMode || GameState == GAME_MAINMENU))
 	{
 		if (GameState == GAME_PLAYING)
