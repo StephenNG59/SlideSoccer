@@ -1619,6 +1619,9 @@ CollisionInfo CollideSph2Sph(std::vector<Object3Dcylinder*> &spheres1, std::vect
 
 // --------------------------------------------------------------------------------------
 
+
+
+
 CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall)
 {
 	CollisionInfo cInfo;
@@ -1662,13 +1665,11 @@ CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall)
 	}
 	// collided!!
 	cInfo.relation = Ambiguous;
-	std::cout << sph->IsBall << std::endl;
 	if (sph->IsBall)
 	{
 		if (wall->IsGoal1)
 		{
 			sph->SetBallStatus(Score1);
-			std::cout << sph->GetBallInfo().Status << std::endl;
 		}
 		else if (wall->IsGoal2)
 		{
@@ -1748,6 +1749,15 @@ CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall)
 	return cInfo;
 }
 
+//************************************
+// Method:    SimpleCollideSph2Wall
+// FullName:  SimpleCollideSph2Wall
+// Access:    public 
+// Returns:   CollisionInfo
+// Qualifier: If the cube is a wall, set its WallFace variable to EastWall/WestWall/NorthWall/SouthWall, and no more wall-through bugs!
+// Parameter: std::vector<Object3Dsphere * > & spheres
+// Parameter: std::vector<Object3Dcube * > & walls
+//************************************
 CollisionInfo SimpleCollideSph2Wall(std::vector<Object3Dsphere*> &spheres, std::vector<Object3Dcube*> &walls)
 {
 	CollisionInfo cInfo;
@@ -1886,6 +1896,15 @@ CollisionInfo SimpleCollideCy2Wall(Object3Dcylinder * sph, Object3Dcube * wall)
 	return cInfo;
 }
 
+//************************************
+// Method:    SimpleCollideCy2Wall
+// FullName:  SimpleCollideCy2Wall
+// Access:    public 
+// Returns:   CollisionInfo
+// Qualifier: If the cube is a wall, set its WallFace variable to EastWall/WestWall/NorthWall/SouthWall, and no more wall-through bugs!
+// Parameter: std::vector<Object3Dcylinder * > & spheres
+// Parameter: std::vector<Object3Dcube * > & walls
+//************************************
 CollisionInfo SimpleCollideCy2Wall(std::vector<Object3Dcylinder*> &spheres, std::vector<Object3Dcube*> &walls)
 {
 	CollisionInfo cInfo;

@@ -64,8 +64,8 @@ int main()
 	// create a window
 	// ---------------
 	GLFWmonitor* pMonitor = glfwGetPrimaryMonitor();
-	GLFWwindow* window = glfwCreateWindow(screenWidth / 2, screenHeight / 2, "Slide Soccer", NULL, NULL);
-	//GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
+	//GLFWwindow* window = glfwCreateWindow(screenWidth / 2, screenHeight / 2, "Slide Soccer", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(screenWidth, screenHeight, "Slide Soccer", pMonitor, NULL);
 	if (window == NULL)
 	{
 		std::cout << "Failed to create GLFW window" << std::endl;

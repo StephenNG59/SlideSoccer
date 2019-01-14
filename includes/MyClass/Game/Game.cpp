@@ -25,7 +25,7 @@ bool kickersUseModel = true;
 bool explodeBallWhenGoal = false;
 unsigned int kickerModelIndex = 0;
 bool drawingLeft = true;
-bool activeFireEffect = true;
+bool activeFireEffect = false;
 
 // Screen
 extern unsigned int screenWidth, screenHeight;
@@ -848,6 +848,7 @@ void Game::createObjects()
 	GameBalls.push_back(new Object3Dsphere(1.5f, 20, 16));
 	GameBalls[0]->IsBall = true;
 	//GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+	GameBalls[0]->SetMass(BALL_MASS);
 	GameBalls[0]->SetPosition(glm::vec3(0, 0, 0));
 	GameBalls[0]->SetERestitution(1.2f);
 	GameBalls[0]->SetGravity(glm::vec3(0, 0, 0));
@@ -861,7 +862,11 @@ void Game::createObjects()
 		//glm::vec3 pos = glm::vec3(i * 3 - 12, -4.8, i * 2 - 9);
 		glm::vec3 pos = glm::vec3(i * 3 - 12, 0, i * 2 - 9);
 		gameKickers[i]->SetPosition(pos);
-		gameKickers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+		if (i < 3)
+			gameKickers[i]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
+		else
+			gameKickers[i]->AddTexture("resources/textures/github.png", ObjectTextureType::Emission);
+
 		gameKickers[i]->SetFriction(1.0f);
 		//gameKickers[i]->SetVelocity(glm::vec3(rand() % 50 - 25, 0, rand() % 40 - 20) / 10.0f);
 		gameKickers[i]->SetOmega(glm::vec3(0, rand() % 20, 0));
@@ -1570,6 +1575,16 @@ void Game::updateParticles(float dt)
 		particleGenerator_tail_1->Update(dt, *gameKickers[GamePlayers[0]->CurrentControl], 2);
 		particleGenerator_tail_2->Update(dt, *gameKickers[GamePlayers[1]->CurrentControl], 2);
 	}
+
+	/*int a = (int)(currentTime / 10.0f) % 4;
+	if (a == 0)
+		particleGeneratorInstance_tail_0->Life = 3.5f;
+	else if (a == 1)
+		particleGeneratorInstance_tail_0->Life = 2.5f;
+	else if (a == 2)
+		particleGeneratorInstance_tail_0->Life = 1.5f;
+	else if (a == 3)
+		particleGeneratorInstance_tail_0->Life = 0.5f;*/
 
 	particleGenerator_tail_0->Update(dt, *GameBalls[0], 2);
 

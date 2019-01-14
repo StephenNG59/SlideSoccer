@@ -5,7 +5,7 @@ Ka 0.00 0.00 0.00
 Tf 1.00 1.00 1.00
 map_Kd diff2.jpg
 map_Ka diff2.jpg
-bump AO2.png -bm 1
+bump AO2.png
 Ni 1.50
 Ks 0.00 0.00 0.00
 Ns 10.00
