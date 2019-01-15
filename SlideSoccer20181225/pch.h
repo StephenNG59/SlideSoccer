@@ -99,9 +99,10 @@ const float BALL_EXPLOSION_TIME = 3 * EXPLOSION_TIME;
 
 // Physics
 constexpr float BALL_MASS = 0.7f;
-constexpr float ACCELERATION_BASIC = 48.0f;
+constexpr float ACCELERATION_BASIC = 65.0f;
 constexpr float FRICTION_CONSTANT = 4;
-constexpr float FRICTION_LINEAR = 0.44f;
+//constexpr float FRICTION_LINEAR = 0.44f;
+constexpr float FRICTION_LINEAR = 0.80f;
 constexpr float GAMEMENU_RANDOM_SPEED = 10.0f;
 const glm::vec3 GRAVITY_OUTSIDE(0, -9.8f, 0);
 

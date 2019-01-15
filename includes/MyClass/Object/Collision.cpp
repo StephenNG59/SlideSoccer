@@ -1674,7 +1674,6 @@ CollisionInfo SimpleCollideSph2Wall(Object3Dsphere * sph, Object3Dcube * wall)
 		else if (wall->IsGoal2)
 		{
 			sph->SetBallStatus(Score2);
-			std::cout << sph->GetBallInfo().Status << std::endl;
 		}
 	}
 

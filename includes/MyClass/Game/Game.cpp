@@ -635,18 +635,17 @@ void Game::ProcessInput(float dt)
 		{
 			SoundEngine->play2D(selectionSound);
 			
-			if (MenuState == 3)
-				return;
+			if (!(MenuState == 3 || MenuState == 13 || MenuState == 22 || MenuState == 30))
+				MenuState += 1;
 
-			MenuState += 1;
 			updateConfigure();
 		}
 		if (this->KeysPressed[GLFW_KEY_UP])
 		{
-			if (MenuState >= 1) 
-				MenuState -= 1;
-
 			SoundEngine->play2D(selectionSound);
+			
+			if (MenuState % 10 != 0) 
+				MenuState -= 1;
 
 			updateConfigure();
 		}
@@ -1314,7 +1313,7 @@ void Game::displayMenu()
 {
 	if (MenuState == GAMEMENU_STARTGAME)
 	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Smash Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- New Game -", 0.3 * screenWidth, 0.65 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
@@ -1322,7 +1321,7 @@ void Game::displayMenu()
 	}
 	else if (MenuState == GAMEMENU_GAMEMODE)
 	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Smash Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- Select Modes -", 0.3 * screenWidth, 0.55 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
@@ -1330,7 +1329,7 @@ void Game::displayMenu()
 	}
 	else if (MenuState == GAMEMENU_SETTINGS)
 	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Smash Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "- Settings -", 0.3 * screenWidth, 0.45 * screenHeight, 1.2f, glm::vec3(0.5, 0.4f, 0.6f));
@@ -1338,7 +1337,7 @@ void Game::displayMenu()
 	}
 	else if (MenuState == GAMEMENU_HELP)
 	{
-		GameTextManager->RenderText(*TextShader, "Slide Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
+		GameTextManager->RenderText(*TextShader, "Smash Soccer", 0.3 * screenWidth, 0.75 * screenHeight, 1.5f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "New Game", 0.3 * screenWidth, 0.65 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Select Modes", 0.3 * screenWidth, 0.55 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
 		GameTextManager->RenderText(*TextShader, "Settings", 0.3 * screenWidth, 0.45 * screenHeight, 1.0f, glm::vec3(0.5, 0.4f, 0.6f));
