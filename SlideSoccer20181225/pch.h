@@ -37,6 +37,8 @@ constexpr float SELECTION_VOLUME = 0.2f;
 
 // Model
 constexpr int BALLMODEL_TOTAL = 1;
+const glm::vec3 BALLMODEL_SIZEFACTOR(5.54f);
+constexpr float BALL_RADIUS = 1.8f;
 constexpr int KICKER_MODEL_NUMBER = 3;
 const glm::vec3 kickerModelZoomRate[KICKER_MODEL_NUMBER] = {
 	glm::vec3(0.028f),		// pumpkin
@@ -96,10 +98,10 @@ const float BALL_EXPLOSION_TIME = 3 * EXPLOSION_TIME;
 
 
 // Physics
-constexpr float BALL_MASS = 1.2f;
-constexpr float ACCELERATION_BASIC = 42.0f;
-constexpr float FRICTION_CONSTANT = 7;
-constexpr float FRICTION_LINEAR = 0.40f;
+constexpr float BALL_MASS = 0.7f;
+constexpr float ACCELERATION_BASIC = 48.0f;
+constexpr float FRICTION_CONSTANT = 4;
+constexpr float FRICTION_LINEAR = 0.44f;
 constexpr float GAMEMENU_RANDOM_SPEED = 10.0f;
 const glm::vec3 GRAVITY_OUTSIDE(0, -9.8f, 0);
 

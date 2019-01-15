@@ -21,7 +21,7 @@ bool ghostMode = false;
 bool iceMode = false;
 bool sceneStatic = false;
 unsigned int ballModelCurrent = 0;
-bool kickersUseModel = true;
+bool kickersUseModel = false;
 bool explodeBallWhenGoal = false;
 unsigned int kickerModelIndex = 0;
 bool drawingLeft = true;
@@ -274,7 +274,7 @@ void Game::RenderScene(Shader *renderShader)
 	Model *ball = gameBallModels[0];
 	if (ball->IsExploded == false)
 	{
-		ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(4.62f)));
+		ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), BALLMODEL_SIZEFACTOR));
 		//ball->Draw(*GameCamera, *renderShader, glm::scale(GameBalls[0]->GetModelMatrix(), glm::vec3(0.1f)));
 	}
 
@@ -845,7 +845,7 @@ void Game::createObjects()
 	wall_center.SetPosition(GROUND_POSITION + glm::vec3(0, 0.5f * WALL_HEIGHT + 0.5f * GROUND_HEIGHT, 0));
 	wall_center.SetOmega(glm::vec3(0, 0.2, 0));
 
-	GameBalls.push_back(new Object3Dsphere(1.5f, 20, 16));
+	GameBalls.push_back(new Object3Dsphere(BALL_RADIUS, 20, 16));
 	GameBalls[0]->IsBall = true;
 	//GameBalls[0]->AddTexture("resources/textures/awesomeface.png", ObjectTextureType::Emission);
 	GameBalls[0]->SetMass(BALL_MASS);
