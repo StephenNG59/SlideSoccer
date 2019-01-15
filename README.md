@@ -20,5 +20,23 @@
   * f5 to set all objects static
   * Esc to exit
 
+![Screenshot of Goal](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_230016.png "Screenshot of Goal")
+### Modes
+1. Normal
+ * Sunny and shiny
+ * Safe to run around
+2. Ghost
+ * Dark and thrilling
+ * Spotlights to trace your kickers
+ * Observe the sparks to catch the ball
+3. Ice
+ * Slippy and dangerous
+ * The wall dissapeared, be careful!
+4. Ghost and Ice
+ * Are you sure?
+![Ghost Mode](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_224548.png "Ghost Mode")
+![Ice Mode](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_225703.png "Ice Mode")
+![Fire Effect](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_224458.png "Fire Effect")
+
 ## Credits
 Joey de Vries and his great tutorial https://learnopengl.com/
