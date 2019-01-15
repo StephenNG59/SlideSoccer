@@ -1,4 +1,4 @@
-# SlideSoccer
+# SmashSoccer
 
 ## An PVP Game
 ![Cover](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_221117.png "Cover")
@@ -32,7 +32,7 @@
 ![Ghost Mode](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_224548.png "Ghost Mode")
 3. Ice
  * Slippy and dangerous
- * The wall dissapeared, be careful!
+ * The wall disappeared, be careful!
 ![Ice Mode](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_225703.png "Ice Mode")
 4. Ghost and Ice
  * Are you sure?
@@ -48,10 +48,11 @@
 ### Tips
 1. I suggest not moving the mouse in main menu (although you certainly could try it). If you move it mistakenly, you can **press F1** to get the camera back to a not-weird way.
 2. If you want to stop the camera movement, **press F5** in main menu.
-3. When playing, if some accidents happen (e.g. all players, or the ball, go out of the pitch), you can **press F5** to reset positions of them.
+3. When playing, if some accidents happen (e.g. all players, or the ball, go out of the pitch), you can **press F5** to reset positions of them. Don't use it when your opponent is about to score though :)
 4. The normal way to change game modes is in the main menu. But if you want to change it when playing, **press 3/4** could help you.
 
 ### Bugs Currently
+0. The title in main menu is still 'Slide Soccer' (the original name of this game). And everytime I would forget to change it. And the colors don't have enough contrast. Will fix it some time.
 1. Selection in menu: if you press ↓ or ↑ too much the text will dissappear. This is easy to fix but the designer do not have time currently.
 2. If the kicker (or the ball) closely touches the goal wall and then move to the wall, it will continuously 'collides' with the wall. This is because of some not-correct optimization in collision detection. Will fix it some time.
 3. Sometimes in the game if you press Esc to try to get back to menu, the rendering of the pitch will have problems. Reason for this has not been figured out (or not cared yet). You can press F1 to reset the camera position in menu.
