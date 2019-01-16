@@ -40,10 +40,8 @@
 ![Fire Effect](https://github.com/StephenNG59/SmashSoccer/blob/master/screenshots/2019-01-14_224458.png "Fire Effect")
 
 ### How to Run
-1. Run SmashSoccer/Debug/SmashSoccer.msi to setup, you would get a .exe file
-2. Copy SlideSoccer20181225/resources/ folder as well as SlideSoccer20181225/shaders/ folder to the setup path (same as the .exe)
-3. Copy all .dll files in dll/ to the setup path (same as the .exe)
-4. Run the .exe file and have fun playing!
+1. Run **SmashSoccer/Debug/SmashSoccer.msi** or **SmashSoccer/Debug/setup.exe** to setup on any path you want, you would get a .exe file;
+2. Run the .exe file and have fun playing!
 
 ### Tips
 1. I suggest not moving the mouse in main menu (although you certainly could try it). If you move it mistakenly, you can **press F1** to get the camera back to a not-weird way.
@@ -52,8 +50,7 @@
 4. The normal way to change game modes is in the main menu. But if you want to change it when playing, **press 3/4** could help you.
 
 ### Bugs Currently
-0. The title in main menu is still 'Slide Soccer' (the original name of this game). And everytime I would forget to change it. And the colors don't have enough contrast. Will fix it some time.
-1. Selection in menu: if you press ↓ or ↑ too much the text will dissappear. This is easy to fix but the designer do not have time currently.
+1. The colors in main menu don't have enough contrast. Will fix it some time.
 2. If the kicker (or the ball) closely touches the goal wall and then move to the wall, it will continuously 'collides' with the wall. This is because of some not-correct optimization in collision detection. Will fix it some time.
 3. Sometimes in the game if you press Esc to try to get back to menu, the rendering of the pitch will have problems. Reason for this has not been figured out (or not cared yet). You can press F1 to reset the camera position in menu.
 
